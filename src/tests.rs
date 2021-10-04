@@ -4,6 +4,17 @@ use frame_support::{assert_ok, dispatch::{
     Vec,
 }};
 
+#[test]
+fn it_works_get_unexisting_file() {
+	new_test_ext().execute_with(|| {
+        let owner = 3;
+        let standard = 1;
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard);
+        let option = CarbonCredits::get_proj_by_id(2);
+
+        assert_eq!(true, match option { None => true, Some(_) => false})
+	});
+}
 
 #[test]
 fn it_works_for_create_new_file() {
