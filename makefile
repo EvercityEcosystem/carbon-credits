@@ -9,3 +9,9 @@ build:
 
 test:
 	SKIP_WASM_BUILD= cargo test
+
+check:
+	cargo check
+
+check-tests:
+	cargo check --tests
