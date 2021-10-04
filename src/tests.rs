@@ -13,6 +13,9 @@ fn it_works_for_create_new_file() {
         let create_project_result = CarbonCredits::create_project(Origin::signed(owner), standard);
         let project = CarbonCredits::get_proj_by_id(1).unwrap();
 
+        assert_eq!(owner, project.owner);
+        assert_eq!(standard, project.standard);
+        assert_eq!(1, project.id);
         assert_ok!(create_project_result, ());
 	});
 }

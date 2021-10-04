@@ -5,17 +5,15 @@ use frame_support::{
 
 
 pub const PROJECT_OWNER: u8 = 1u8;
-pub const PROJECT_DEVELOPER: u8 = 2u8;
+pub const AUDITOR: u8 = 2u8;
 pub const STANDART: u8 = 4u8;
 pub const INVESTOR_ROLE_MASK: u8 = 8u8;
-pub const AUDITOR_ROLE_MASK: u8 = 16u8;
-pub const REGISTRY: u8 = 32u8;
+pub const REGISTRY: u8 = 16u8;
 
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug)]
 pub struct CarbonCreditAccountStruct<Moment> {
-    pub roles: u8,
-    // #[codec(compact)]
-    // pub identity: u64,
+    pub role: u8,
+
     #[codec(compact)]
     pub create_time: Moment,
 }

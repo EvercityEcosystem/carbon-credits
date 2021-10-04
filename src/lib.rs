@@ -50,7 +50,10 @@ decl_storage! {
 decl_error! {
     pub enum Error for Module<T: Config> {
         AddressNotAuditor,
-        AddressNotOwner
+        AddressNotOwner,
+        AddressNotStandard,
+        AddressNotRegistry,
+        AddressNotInvestor,
     }
 }
 

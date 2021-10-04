@@ -15,3 +15,6 @@ check:
 
 check-tests:
 	cargo check --tests
+
+clippy:
+	cargo clippy --all-targets
