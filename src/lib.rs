@@ -24,6 +24,7 @@ use frame_support::sp_std::{
 };
 
 use project::ProjectStruct;
+use standard::Standard;
 
 pub mod account;
 pub mod standard;
@@ -41,7 +42,7 @@ decl_storage! {
         ProjectById
             get(fn project_by_id):
             map hasher(blake2_128_concat) u32 => ProjectStruct<T::AccountId>;
-            
+
         LastID: u32;
     }
 }
@@ -55,11 +56,15 @@ decl_error! {
 
 decl_module! {
     pub struct Module<T: Config> for enum Call where origin: T::Origin {
-
         #[weight = 10_000]
-        pub fn test1(origin) -> DispatchResult {
+        pub fn create_project(origin, standard: Standard) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-            Self::test()
+            
+            let new_id = LastID::get() + 1;
+            let new_file = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller, new_id, standard);
+            <ProjectById<T>>::insert(new_id, new_file);
+            LastID::mutate(|x| *x = x.checked_add(1).unwrap());
+            Ok(())
         }
     }
 }
