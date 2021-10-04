@@ -41,7 +41,7 @@ decl_storage! {
     trait Store for Module<T: Config> as CarbonCredits {
         ProjectById
             get(fn project_by_id):
-            map hasher(blake2_128_concat) u32 => ProjectStruct<T::AccountId>;
+            map hasher(blake2_128_concat) u32 => Option<ProjectStruct<T::AccountId>>;
 
         LastID: u32;
     }
@@ -61,8 +61,8 @@ decl_module! {
             let caller = ensure_signed(origin)?;
             
             let new_id = LastID::get() + 1;
-            let new_file = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller, new_id, standard);
-            <ProjectById<T>>::insert(new_id, new_file);
+            let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller, new_id, standard);
+            <ProjectById<T>>::insert(new_id, new_project);
             LastID::mutate(|x| *x = x.checked_add(1).unwrap());
             Ok(())
         }
@@ -76,6 +76,11 @@ impl<T: Config> Module<T> {
             *x = 1;
             Ok(())
         })
+    }
+
+    #[cfg(test)]
+    pub fn get_proj_by_id(id: u32) -> Option<ProjectStruct<T::AccountId>> {
+        ProjectById::<T>::get(id)
     }
 }
 

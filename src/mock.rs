@@ -3,6 +3,7 @@ use frame_support::sp_runtime::{
     traits::{BlakeTwo256, IdentityLookup},
 };
 use sp_core::H256;
+use crate as pallet_carbon_credits;
 
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<TestRuntime>;
@@ -16,6 +17,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Module, Call, Config, Storage},
+		CarbonCredits: pallet_carbon_credits::{Module, Call, Storage},
 	}
 );
 
@@ -42,6 +44,10 @@ impl frame_system::Config for TestRuntime {
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
 	type SS58Prefix = ();
+}
+
+impl pallet_carbon_credits::Config for TestRuntime {
+
 }
 
 // Build genesis storage according to the mock runtime.
