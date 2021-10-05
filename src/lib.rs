@@ -37,17 +37,6 @@ pub mod tests;
 
 pub trait Config: frame_system::Config {}
 
-// pub trait Config: frame_system::Config + pallet_timestamp::Config {
-//     // type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
-//     // type BurnRequestTtl: Get<u32>;
-//     // type MintRequestTtl: Get<u32>;
-//     // type MaxMintAmount: Get<EverUSDBalance>;
-//     // type TimeStep: Get<BondPeriod>;
-//     // type WeightInfo: WeightInfo;
-//     // type OnAddAccount: OnAddAccount<Self::AccountId, Self::Moment>;
-//     // type OnAddBond: OnAddBond<Self::AccountId, Self::Moment, Self::Hash>;
-// }
-
 decl_storage! {
     trait Store for Module<T: Config> as CarbonCredits {
         Fuse get(fn fuse)
@@ -77,6 +66,10 @@ decl_error! {
         AccountNotStandard,
         AccountNotRegistry,
         AccountNotInvestor,
+        AccountToAddAlreadyExists,
+        AccountRoleParamIncorrect,
+        InvalidAction,
+        AccountNotExist,
     }
 }
 
@@ -85,10 +78,7 @@ decl_module! {
         #[weight = 10_000]
         pub fn create_project(origin, standard: Standard) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-            let new_id = LastID::get() + 1;
-            let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller, new_id, standard);
-            <ProjectById<T>>::insert(new_id, new_project);
-            LastID::mutate(|x| *x = x.checked_add(1).unwrap());
+
             Ok(())
         }
 
@@ -101,15 +91,25 @@ decl_module! {
         // }
 
         #[weight = 10_000]
-        fn account_add_with_role_and_data(origin, who: T::AccountId, role: u8, #[compact] identity: u64) -> DispatchResult {
+        fn account_add_with_role_and_data(origin, who: T::AccountId, role: u8) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             ensure!(Self::account_is_master(&caller), Error::<T>::AccountNotAuthorized);
-            // ensure!(!AccountRegistry::<T>::contains_key(&who), Error::<T>::AccountToAddAlreadyExists);
-            // ensure!(is_roles_correct(role), Error::<T>::AccountRoleParamIncorrect);
+            ensure!(!AccountRegistry::<T>::contains_key(&who), Error::<T>::AccountToAddAlreadyExists);
+            ensure!(is_roles_correct(role), Error::<T>::AccountRoleParamIncorrect);
+            Self::account_add(&who, CarbonCreditAccountStruct::new(role));
+            Ok(())
+        }
 
-            // Self::account_add( &who, EvercityAccountStructT { roles: role, identity, create_time: Timestamp::<T>::get() } );
+        #[weight = 10_000]
+        fn account_set_with_role_and_data(origin, who: T::AccountId, role: u8) -> DispatchResult {
+            let caller = ensure_signed(origin)?;
+            ensure!(caller != who, Error::<T>::InvalidAction);
+            ensure!(Self::account_is_master(&caller), Error::<T>::AccountNotAuthorized);
+            ensure!(AccountRegistry::<T>::contains_key(&who), Error::<T>::AccountNotExist);
+            ensure!(is_roles_correct(role), Error::<T>::AccountRoleParamIncorrect);
 
-            // Self::deposit_event(RawEvent::AccountAdd(caller, who, role, identity));
+            Self::account_set(&who, role);
+
             Ok(())
         }
     }
@@ -117,10 +117,14 @@ decl_module! {
 
 // Atomic operations here
 impl<T: Config> Module<T> {
-    fn account_add(account: &T::AccountId, mut data: CarbonCreditAccountStruct) {
-        // data.create_time = Timestamp::<T>::get();
+    fn account_set(who: &T::AccountId, role: u8) {
+        AccountRegistry::<T>::mutate(&who,|acc|{
+            acc.roles |= role;
+        });
+    }
+
+    fn account_add(account: &T::AccountId, data: CarbonCreditAccountStruct) {
         AccountRegistry::<T>::insert(account, &data);
-        // T::OnAddAccount::on_add_account(account, &data);
     }
 
     /// <pre>
@@ -130,10 +134,37 @@ impl<T: Config> Module<T> {
     /// Checks if the acc has global Master role
     /// </pre>
     pub fn account_is_master(acc: &T::AccountId) -> bool {
-        AccountRegistry::<T>::get(acc).role == MASTER
+        AccountRegistry::<T>::get(acc).roles & MASTER_ROLE_MASK != 0
     }
 
-    pub fn submit_pdd_for_rewiev(caller: T::AccountId, proj_id: u32) {
+    pub fn account_is_project_owner(acc: &T::AccountId) -> bool {
+        AccountRegistry::<T>::get(acc).roles & PROJECT_OWNER_ROLE_MASK != 0
+    }
+
+    pub fn account_is_auditor(acc: &T::AccountId) -> bool {
+        AccountRegistry::<T>::get(acc).roles & AUDITOR_ROLE_MASK != 0
+    }
+
+    pub fn account_is_standard(acc: &T::AccountId) -> bool {
+        AccountRegistry::<T>::get(acc).roles & STANDARD_ROLE_MASK != 0
+    }
+
+    pub fn account_is_investor(acc: &T::AccountId) -> bool {
+        AccountRegistry::<T>::get(acc).roles & INVESTOR_ROLE_MASK != 0
+    }
+
+    pub fn account_is_registry(acc: &T::AccountId) -> bool {
+        AccountRegistry::<T>::get(acc).roles & REGISTRY_ROLE_MASK != 0
+    }
+
+    pub fn create_pdd(caller: T::AccountId, standard: Standard) {
+        let new_id = LastID::get() + 1;
+        let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller, new_id, standard);
+        <ProjectById<T>>::insert(new_id, new_project);
+        LastID::mutate(|x| *x = x.checked_add(1).unwrap());
+    }
+
+    pub fn submit_pdd_for_review(caller: T::AccountId, proj_id: u32) {
 
     }
 

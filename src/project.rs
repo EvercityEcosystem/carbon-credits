@@ -10,7 +10,7 @@ pub struct ProjectStruct<AccountId> {
     pub owner: AccountId,
     pub id: u32,
     pub standard: Standard,
-    pub status: ProjectStatus
+    pub status: ProjectStatus,
 }
 
 impl<AccountId> ProjectStruct<AccountId> {
@@ -20,7 +20,7 @@ impl<AccountId> ProjectStruct<AccountId> {
             owner,
             id,
             standard,
-            status: ProjectStatus::Preparing
+            status: ProjectStatus::default(), 
         }
     }
 }
