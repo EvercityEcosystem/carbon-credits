@@ -10,6 +10,7 @@ pub struct ProjectStruct<AccountId> {
     pub owner: AccountId,
     pub id: u32,
     pub standard: Standard,
+    pub status: ProjectStatus
 }
 
 impl<AccountId> ProjectStruct<AccountId> {
@@ -18,7 +19,21 @@ impl<AccountId> ProjectStruct<AccountId> {
         ProjectStruct{
             owner,
             id,
-            standard
+            standard,
+            status: ProjectStatus::Preparing
         }
+    }
+}
+
+#[derive(Encode, Decode, Clone, RuntimeDebug)]
+pub enum ProjectStatus {
+    Preparing,
+    Registration,
+    Issuance,
+}
+
+impl Default for ProjectStatus {
+    fn default() -> Self {
+        ProjectStatus::Preparing
     }
 }
