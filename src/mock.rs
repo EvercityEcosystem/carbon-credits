@@ -46,9 +46,8 @@ impl frame_system::Config for TestRuntime {
 	type SS58Prefix = ();
 }
 
-impl pallet_carbon_credits::Config for TestRuntime {
-
-}
+impl pallet_carbon_credits::Config for TestRuntime {}
+impl pallet_evercity_accounts::Config for TestRuntime {}
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> frame_support::sp_io::TestExternalities {

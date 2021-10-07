@@ -16,5 +16,5 @@ check:
 check-tests:
 	cargo check --tests
 
-clippy:
+lint:
 	cargo clippy --all-targets
