@@ -4,6 +4,7 @@ use frame_support::sp_runtime::{
 };
 use sp_core::H256;
 use crate as pallet_carbon_credits;
+use pallet_evercity_accounts::accounts::*;
 
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<TestRuntime>;
@@ -18,6 +19,7 @@ frame_support::construct_runtime!(
 	{
 		System: frame_system::{Module, Call, Config, Storage},
 		CarbonCredits: pallet_carbon_credits::{Module, Call, Storage},
+		EvercityAccounts: pallet_evercity_accounts::{Module, Call, Storage},
 	}
 );
 
@@ -49,7 +51,37 @@ impl frame_system::Config for TestRuntime {
 impl pallet_carbon_credits::Config for TestRuntime {}
 impl pallet_evercity_accounts::Config for TestRuntime {}
 
+// (AccountId, role)
+pub static ROLES: [(u64, RoleMask); 6] = [
+    (1_u64, MASTER_ROLE_MASK),
+    (2_u64, CC_PROJECT_OWNER_ROLE_MASK),
+    (3_u64, CC_AUDITOR_ROLE_MASK),
+    (4_u64, CC_STANDARD_ROLE_MASK),
+    (5_u64, CC_INVESTOR_ROLE_MASK),
+    (6_u64, CC_REGISTRY_ROLE_MASK),
+];
+
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> frame_support::sp_io::TestExternalities {
-	frame_system::GenesisConfig::default().build_storage::<TestRuntime>().unwrap().into()
+    let mut t = frame_system::GenesisConfig::default()
+        .build_storage::<TestRuntime>()
+        .unwrap();
+
+	pallet_evercity_accounts::GenesisConfig::<TestRuntime> {
+        // Accounts for tests
+        genesis_account_registry: ROLES
+            .iter()
+            .map(|(acc, role)| {
+                (
+                    *acc,
+                    CarbonCreditAccountStruct {
+                        roles: *role
+                    },
+                )
+            })
+            .collect(),
+    }
+    .assimilate_storage(&mut t)
+    .unwrap();
+    t.into()
 }

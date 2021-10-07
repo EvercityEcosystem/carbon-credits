@@ -18,7 +18,7 @@ use frame_support::sp_std::{
         Eq, 
         PartialEq}, 
 };
-use pallet_evercity_accounts;
+use pallet_evercity_accounts as accounts;
 use project::ProjectStruct;
 use standard::Standard;
 
@@ -63,7 +63,7 @@ decl_module! {
         #[weight = 10_000]
         pub fn create_project(origin, standard: Standard) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-
+            Self::create_pdd(caller, standard)?;
             Ok(())
         }
     }
@@ -71,11 +71,13 @@ decl_module! {
 
 // Atomic operations here
 impl<T: Config> Module<T> {
-    pub fn create_pdd(caller: T::AccountId, standard: Standard) {
+    pub fn create_pdd(caller: T::AccountId, standard: Standard) -> DispatchResult {
+        ensure!(accounts::Module::<T>::account_is_project_owner(&caller), Error::<T>::AccountNotOwner);
         let new_id = LastID::get() + 1;
         let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller, new_id, standard);
         <ProjectById<T>>::insert(new_id, new_project);
         LastID::mutate(|x| *x = x.checked_add(1).unwrap());
+        Ok(())
     }
 
     pub fn submit_pdd_for_review(caller: T::AccountId, proj_id: u32) {
@@ -99,7 +101,7 @@ impl<T: Config> Module<T> {
     pub fn approve_carbon_credit_issuance(caller: T::AccountId, proj_id: u32) {
     }
 
-    pub fn issue_carbon_Credit(caller: T::AccountId, proj_id: u32) {
+    pub fn issue_carbon_credit(caller: T::AccountId, proj_id: u32) {
     }
 
     #[cfg(test)]
