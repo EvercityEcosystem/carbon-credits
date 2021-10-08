@@ -48,3 +48,7 @@ std = [
     'pallet-timestamp/std',
     'pallet-evercity-accounts/std',
 ]
+
+[dependencies.fixed-hash]
+version = "0.7"
+default-features = false 

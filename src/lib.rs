@@ -19,7 +19,7 @@ use frame_support::sp_std::{
         PartialEq}, 
 };
 use pallet_evercity_accounts as accounts;
-use project::ProjectStruct;
+use project::{ProjectStruct, H256};
 use standard::Standard;
 
 pub mod standard;
@@ -60,9 +60,9 @@ decl_error! {
 decl_module! {
     pub struct Module<T: Config> for enum Call where origin: T::Origin {
         #[weight = 10_000]
-        pub fn create_project(origin, standard: Standard) -> DispatchResult {
+        pub fn create_project(origin, standard: Standard, filehash: H256) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-            Self::create_pdd(caller, standard)?;
+            Self::create_pdd(caller, standard, &filehash)?;
             Ok(())
         }
     }
@@ -70,10 +70,10 @@ decl_module! {
 
 // Atomic operations here
 impl<T: Config> Module<T> {
-    pub fn create_pdd(caller: T::AccountId, standard: Standard) -> DispatchResult {
+    pub fn create_pdd(caller: T::AccountId, standard: Standard, filehash: &H256) -> DispatchResult {
         ensure!(accounts::Module::<T>::account_is_project_owner(&caller), Error::<T>::AccountNotOwner);
         let new_id = LastID::get() + 1;
-        let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller, new_id, standard);
+        let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller, new_id, standard, filehash);
         <ProjectById<T>>::insert(new_id, new_project);
         LastID::mutate(|x| *x = x.checked_add(1).unwrap());
         Ok(())
