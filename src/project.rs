@@ -36,6 +36,25 @@ impl<AccountId> ProjectStruct<AccountId> {
             signatures: Vec::new()
         }
     }
+
+    pub fn change_project_state(&mut self, signaturer: AccountId) -> Result<(), ProjectError> {
+        match &mut self.standard {
+            GoldStandard  => {
+                match self.state {
+                    PROJECT_OWNER_SIGN_PENDING => {
+                        //check that is project owner
+                        todo!("check that is project owner");
+
+                        self.state = AUDITOR_SIGN_PENDING;
+                    },
+                    _ => return Err(ProjectError::InvalidState)
+                }
+
+                Ok(())
+            },
+            _ => Err(ProjectError::InvalidStandard),
+        }
+    }
 }
 
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug)]
@@ -60,4 +79,11 @@ impl Default for ProjectStatus {
     fn default() -> Self {
         ProjectStatus::Preparing
     }
+}
+
+
+pub enum ProjectError {
+    InvalidStandard,
+    NotAnOwner,
+    InvalidState
 }

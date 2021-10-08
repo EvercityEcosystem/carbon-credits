@@ -19,7 +19,7 @@ use frame_support::sp_std::{
         PartialEq}, 
 };
 use pallet_evercity_accounts as accounts;
-use project::{ProjectStruct, H256};
+use project::{ProjectStruct, H256, ProjectError};
 use standard::Standard;
 
 pub mod standard;
@@ -55,6 +55,8 @@ decl_error! {
         AccountRoleParamIncorrect,
         InvalidAction,
         AccountNotExist,
+
+        ProjectNotExist,
     }
 }
 
@@ -66,17 +68,39 @@ decl_module! {
             Self::create_pdd(caller, standard, &filehash)?;
             Ok(())
         }
+
+        #[weight = 10_000]
+        pub fn sign_project(origin, proj_id: u32) -> DispatchResult {
+            let caller = ensure_signed(origin)?;
+            Self::sign_pdd(caller, proj_id)?;
+            Ok(())
+        }
     }
 }
 
 // Atomic operations here
 impl<T: Config> Module<T> {
     pub fn create_pdd(caller: T::AccountId, standard: Standard, filehash: &H256) -> DispatchResult {
-        ensure!(accounts::Module::<T>::account_is_project_owner(&caller), Error::<T>::AccountNotOwner);
+        // check if caller has CC_PROJECT_OWNER role
+        ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+
         let new_id = LastID::get() + 1;
         let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller, new_id, standard, filehash);
         <ProjectById<T>>::insert(new_id, new_project);
         LastID::mutate(|x| *x = x.checked_add(1).unwrap());
+        Ok(())
+    }
+
+    pub fn sign_pdd(caller: T::AccountId, proj_id: u32) -> DispatchResult {
+        ProjectById::<T>::try_mutate(
+            proj_id, |project_to_mutate| -> DispatchResult {
+                ensure!(project_to_mutate.is_some(), Error::<T>::AccountNotOwner);
+                let result = project_to_mutate.as_mut().unwrap().change_project_state(caller);
+                if let Err(err) = result {
+                    ensure!(false, Self::convert_project_err_to_module_err(&err));
+                }
+                Ok(())
+         })?;
         Ok(())
     }
 
@@ -104,11 +128,21 @@ impl<T: Config> Module<T> {
     pub fn issue_carbon_credit(caller: T::AccountId, proj_id: u32) {
     }
 
+    fn convert_project_err_to_module_err(err: &ProjectError) -> Error<T> {
+        match err {
+            ProjectError::InvalidStandard => Error::<T>::InvalidAction,
+            ProjectError::NotAnOwner => Error::<T>::AccountNotOwner,
+            _ => Error::<T>::InvalidAction
+        }
+    }
+    
+
     #[cfg(test)]
     pub fn get_proj_by_id(id: u32) -> Option<ProjectStruct<T::AccountId>> {
         ProjectById::<T>::get(id)
     }
 }
+
 
 fn process_request<T, K>(func: impl FnOnce(K) -> DispatchResult, arg: K) -> DispatchResult where T: Config {
     func(arg)

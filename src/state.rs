@@ -15,4 +15,3 @@ pub const AUDITOR_SIGN_PENDING: StateMask = 2;
 pub const STANDARD_SIGN_PENDING: StateMask = 4;
 pub const INVESTOR_SIGN_PENDING: StateMask = 8;
 pub const REGISTRY_OWNER_SIGN_PENDING: StateMask = 16;
-

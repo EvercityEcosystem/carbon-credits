@@ -32,7 +32,7 @@ frame-support = { default-features = false, version = '3.0.0' }
 frame-system = { default-features = false, version = '3.0.0' }
 pallet-timestamp = { default-features = false, version = '3.0.0' }
 sp-api = { default-features = false, version = '3.0.0' }
-pallet-evercity-accounts = { default-features = false, version = '0.1.0', git = 'https://github.com/EvercityEcosystem/evercity-accounts' }
+pallet-evercity-accounts = { default-features = false, version = '0.1.1', git = 'https://github.com/EvercityEcosystem/evercity-accounts' }
 
 [dev-dependencies]
 sp-core = {  version = '3.0.0' }
