@@ -18,8 +18,9 @@ pub struct ProjectStruct<AccountId> {
     pub id: u32,
     pub standard: Standard,
     pub status: ProjectStatus,
-    pub filehash: H256,
     pub state: StateMask,
+    pub document_versions: Vec<ProjectDocument>,
+    pub signatures: Vec<AccountId>,
 }
 
 impl<AccountId> ProjectStruct<AccountId> {
@@ -30,9 +31,21 @@ impl<AccountId> ProjectStruct<AccountId> {
             id,
             standard,
             status: ProjectStatus::default(), 
-            filehash: *filehash,
-            state: PROJECT_OWNER_SIGN_PENDING
+            state: PROJECT_OWNER_SIGN_PENDING,
+            document_versions: vec![ProjectDocument::new(filehash)],
+            signatures: Vec::new()
         }
+    }
+}
+
+#[derive(Encode, Decode, Clone, Default, RuntimeDebug)]
+pub struct ProjectDocument {
+    pub filehash: H256,
+}
+
+impl ProjectDocument {
+    fn new(filehash: &H256) -> Self {
+        Self {filehash: *filehash}
     }
 }
 
