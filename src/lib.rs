@@ -22,7 +22,6 @@ use pallet_evercity_accounts as accounts;
 use project::ProjectStruct;
 use standard::Standard;
 
-// pub mod account;
 pub mod standard;
 pub mod project;
 #[cfg(test)]
