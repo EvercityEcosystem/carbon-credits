@@ -4,6 +4,7 @@ use frame_support::{
 };
 use fixed_hash::construct_fixed_hash;
 use crate::standard::Standard;
+use crate::state::*;
 
 construct_fixed_hash! {
     /// 256 bit hash type for signing files
@@ -18,6 +19,7 @@ pub struct ProjectStruct<AccountId> {
     pub standard: Standard,
     pub status: ProjectStatus,
     pub filehash: H256,
+    pub state: StateMask,
 }
 
 impl<AccountId> ProjectStruct<AccountId> {
@@ -28,7 +30,8 @@ impl<AccountId> ProjectStruct<AccountId> {
             id,
             standard,
             status: ProjectStatus::default(), 
-            filehash: *filehash
+            filehash: *filehash,
+            state: PROJECT_OWNER_SIGN_PENDING
         }
     }
 }
