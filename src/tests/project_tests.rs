@@ -1,7 +1,6 @@
 use crate::mock::*;
 use frame_support::{assert_ok, dispatch::{
-    DispatchResult, 
-    Vec,
+    DispatchResult
 }};
 use crate::H256;
 use crate::standard::Standard;
@@ -115,8 +114,8 @@ fn it_fails_sign_project_gold_standard_not_an_owner() {
             .filter(|x| x.1 != CC_PROJECT_OWNER_ROLE_MASK)
             .map(|x| x.0)
             .for_each(|x| {
-            let owner_sign_result = CarbonCredits::sign_project(Origin::signed(x), 1);
-            assert_ne!(owner_sign_result, DispatchResult::Ok(()));
+                let owner_sign_result = CarbonCredits::sign_project(Origin::signed(x), 1);
+                assert_ne!(owner_sign_result, DispatchResult::Ok(()));
             });
     });
 }
@@ -124,7 +123,20 @@ fn it_fails_sign_project_gold_standard_not_an_owner() {
 #[test]
 fn it_fails_sign_project_gold_standard_not_an_auditor() {
     new_test_ext().execute_with(|| {
-        todo!();
+        let owner = ROLES[1].0;
+        let standard = Standard::GoldStandard;
+        let filehash = H256::from([0x66; 32]);
+
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+
+        let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
+        ROLES.iter()
+            .filter(|x| x.1 != CC_AUDITOR_ROLE_MASK)
+            .map(|x| x.0)
+            .for_each(|x| {
+                let auditor_sign_result = CarbonCredits::sign_project(Origin::signed(x), 1);
+                assert_ne!(auditor_sign_result, DispatchResult::Ok(()));
+            });
     });
 }
 
