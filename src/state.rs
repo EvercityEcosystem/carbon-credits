@@ -1,13 +1,3 @@
-
-
-// pub enum State {
-//     ProjectOwnerSignPending,
-//     AuditorSignPending,
-//     StandardSignPending,
-//     InvestorSignPending,
-//     RegistrySignPending,
-// }
-
 pub type StateMask = u16;
 
 pub const PROJECT_OWNER_SIGN_PENDING: StateMask = 1;

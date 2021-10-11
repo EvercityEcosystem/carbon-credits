@@ -1,4 +1,4 @@
-use crate::mock::*;
+use crate::tests::mock::*;
 use frame_support::{assert_ok, dispatch::{
     DispatchResult
 }};
