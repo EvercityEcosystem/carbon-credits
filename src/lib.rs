@@ -110,10 +110,11 @@ impl<T: Config> Module<T> {
 
     pub fn change_project_state(project: &mut ProjectStruct<T::AccountId>, caller: T::AccountId) -> DispatchResult {
         match &mut project.standard {
-            // Owner submits PDD => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD
+            // Project Owner submits PDD (changing status to Registration) => 
+            // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
             Standard::GoldStandard  => {
                 match project.state {
-                    state::AUDITOR_SIGN_PENDING => {
+                    state::PROJECT_OWNER_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
                         project.state = state::AUDITOR_SIGN_PENDING;
                         project.status = project::ProjectStatus::Registration;
@@ -121,13 +122,15 @@ impl<T: Config> Module<T> {
                     state::AUDITOR_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
                         project.state = state::AUDITOR_SIGN_PENDING;
-                        // Ok(())
                     },
                     _ => ensure!(false, Error::<T>::InvalidState)
                 }
                 Ok(())
             },
-                _ => {ensure!(false, Error::<T>::InvalidStandard); Ok(())},
+            _ => {
+                ensure!(false, Error::<T>::InvalidStandard); 
+                Ok(())
+            },
         }
     }
 
