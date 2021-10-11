@@ -98,6 +98,7 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
         assert_eq!(*project_after_registry_sign.get_standard(), Standard::GoldStandard);
         assert_eq!(1, project_after_registry_sign.document_versions.len());
         assert_eq!(project_after_registry_sign.document_versions[0].filehash, filehash);
+        assert_eq!(0, project_after_registry_sign.annual_reports.len());
     });
 }
 

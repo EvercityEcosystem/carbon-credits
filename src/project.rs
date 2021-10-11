@@ -5,6 +5,7 @@ use frame_support::{
 use fixed_hash::construct_fixed_hash;
 use crate::standard::Standard;
 use crate::state::*;
+use crate::annual_report::*;
 
 construct_fixed_hash! {
     /// 256 bit hash type for signing files
@@ -20,6 +21,7 @@ pub struct ProjectStruct<AccountId> {
     pub state: StateMask,
     pub document_versions: Vec<ProjectDocument>,
     pub signatures: Vec<AccountId>,
+    pub annual_reports: Vec<AnnualReportStruct>,
     standard: Standard,
 }
 
@@ -33,7 +35,8 @@ impl<AccountId> ProjectStruct<AccountId> {
             status: ProjectStatus::default(), 
             state: PROJECT_OWNER_SIGN_PENDING,
             document_versions: vec![ProjectDocument::new(filehash)],
-            signatures: Vec::new()
+            signatures: Vec::new(),
+            annual_reports: Vec::new(),
         }
     }
 
