@@ -19,7 +19,7 @@ use frame_support::sp_std::{
         PartialEq}, 
 };
 use pallet_evercity_accounts as accounts;
-use project::{ProjectStruct, H256, ProjectError};
+use project::{ProjectStruct, H256};
 use standard::Standard;
 
 pub mod standard;
@@ -53,9 +53,11 @@ decl_error! {
         AccountNotInvestor,
         AccountToAddAlreadyExists,
         AccountRoleParamIncorrect,
-        InvalidAction,
         AccountNotExist,
 
+        InvalidAction,
+        InvalidState,
+        InvalidStandard,
         ProjectNotExist,
     }
 }
@@ -95,47 +97,72 @@ impl<T: Config> Module<T> {
         ProjectById::<T>::try_mutate(
             proj_id, |project_to_mutate| -> DispatchResult {
                 ensure!(project_to_mutate.is_some(), Error::<T>::AccountNotOwner);
-                let result = project_to_mutate.as_mut().unwrap().change_project_state(caller);
-                if let Err(err) = result {
-                    ensure!(false, Self::convert_project_err_to_module_err(&err));
-                }
+                // let result = project_to_mutate.as_mut().unwrap().change_project_state(caller);
+
+                Self::change_project_state(&mut project_to_mutate.as_mut().unwrap(), caller)?;
+                // if let Err(err) = result {
+                //     ensure!(false, Self::convert_project_err_to_module_err(&err));
+                // }
                 Ok(())
          })?;
         Ok(())
     }
 
-    pub fn submit_pdd_for_review(caller: T::AccountId, proj_id: u32) {
-    }
-
-    pub fn approve_pdd(caller: T::AccountId, proj_id: u32) {
-    }
-
-    pub fn certify_pdd(caller: T::AccountId, proj_id: u32) {
-    }
-
-    pub fn register_pdd(caller: T::AccountId, proj_id: u32) {
-    }
-
-    pub fn request_pdd_for_verification(caller: T::AccountId, proj_id: u32) {
-    }
-
-    pub fn submit_pdd_verification(caller: T::AccountId, proj_id: u32) {
-    }
-
-    pub fn approve_carbon_credit_issuance(caller: T::AccountId, proj_id: u32) {
-    }
-
-    pub fn issue_carbon_credit(caller: T::AccountId, proj_id: u32) {
-    }
-
-    fn convert_project_err_to_module_err(err: &ProjectError) -> Error<T> {
-        match err {
-            ProjectError::InvalidStandard => Error::<T>::InvalidAction,
-            ProjectError::NotAnOwner => Error::<T>::AccountNotOwner,
-            _ => Error::<T>::InvalidAction
+    pub fn change_project_state(project: &mut ProjectStruct<T::AccountId>, caller: T::AccountId) -> DispatchResult {
+        match &mut project.standard {
+            // Owner submits PDD => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD
+            Standard::GoldStandard  => {
+                match project.state {
+                    state::AUDITOR_SIGN_PENDING => {
+                        ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+                        project.state = state::AUDITOR_SIGN_PENDING;
+                        project.status = project::ProjectStatus::Registration;
+                    },
+                    state::AUDITOR_SIGN_PENDING => {
+                        ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
+                        project.state = state::AUDITOR_SIGN_PENDING;
+                        // Ok(())
+                    },
+                    _ => ensure!(false, Error::<T>::InvalidState)
+                }
+                Ok(())
+            },
+                _ => {ensure!(false, Error::<T>::InvalidStandard); Ok(())},
         }
     }
-    
+
+    // pub fn submit_pdd_for_review(caller: T::AccountId, proj_id: u32) {
+    // }
+
+    // pub fn approve_pdd(caller: T::AccountId, proj_id: u32) {
+    // }
+
+    // pub fn certify_pdd(caller: T::AccountId, proj_id: u32) {
+    // }
+
+    // pub fn register_pdd(caller: T::AccountId, proj_id: u32) {
+    // }
+
+    // pub fn request_pdd_for_verification(caller: T::AccountId, proj_id: u32) {
+    // }
+
+    // pub fn submit_pdd_verification(caller: T::AccountId, proj_id: u32) {
+    // }
+
+    // pub fn approve_carbon_credit_issuance(caller: T::AccountId, proj_id: u32) {
+    // }
+
+    // pub fn issue_carbon_credit(caller: T::AccountId, proj_id: u32) {
+    // }
+
+    // fn convert_project_err_to_module_err(err: &ProjectError) -> Error<T> {
+    //     match err {
+    //         ProjectError::InvalidStandard => Error::<T>::InvalidAction,
+    //         ProjectError::NotAnOwner => Error::<T>::AccountNotOwner,
+    //         _ => Error::<T>::InvalidAction
+    //     }
+    // }
+
 
     #[cfg(test)]
     pub fn get_proj_by_id(id: u32) -> Option<ProjectStruct<T::AccountId>> {
@@ -144,6 +171,6 @@ impl<T: Config> Module<T> {
 }
 
 
-fn process_request<T, K>(func: impl FnOnce(K) -> DispatchResult, arg: K) -> DispatchResult where T: Config {
-    func(arg)
-}
+// fn process_request<T, K>(func: impl FnOnce(K) -> DispatchResult, arg: K) -> DispatchResult where T: Config {
+//     func(arg)
+// }

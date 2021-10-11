@@ -1,12 +1,12 @@
 
 
-pub enum State {
-    ProjectOwnerSignPending,
-    AuditorSignPending,
-    StandardSignPending,
-    InvestorSignPending,
-    RegistrySignPending,
-}
+// pub enum State {
+//     ProjectOwnerSignPending,
+//     AuditorSignPending,
+//     StandardSignPending,
+//     InvestorSignPending,
+//     RegistrySignPending,
+// }
 
 pub type StateMask = u16;
 
