@@ -49,7 +49,7 @@ fn it_fails_for_create_new_project_not_owner_role() {
     });
 }
 
-
+// Main flow test
 // Project Owner submits PDD (changing status to Registration) => 
 // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
 #[test]
@@ -137,6 +137,8 @@ fn it_fails_sign_project_gold_standard_not_an_auditor() {
                 let auditor_sign_result = CarbonCredits::sign_project(Origin::signed(x), 1);
                 assert_ne!(auditor_sign_result, DispatchResult::Ok(()));
             });
+
+        assert_eq!(1, CarbonCredits::get_proj_by_id(1).unwrap().signatures.len());
     });
 }
 
@@ -159,6 +161,8 @@ fn it_fails_sign_project_gold_standard_not_an_auditor() {
                 let standard_sign_result = CarbonCredits::sign_project(Origin::signed(x), 1);
                 assert_ne!(standard_sign_result, DispatchResult::Ok(()));
             });
+
+        assert_eq!(2, CarbonCredits::get_proj_by_id(1).unwrap().signatures.len());
     });
 }
 
@@ -183,5 +187,41 @@ fn it_fails_sign_project_gold_standard_not_a_registry() {
                 let registry_sign_result = CarbonCredits::sign_project(Origin::signed(x), 1);
                 assert_ne!(registry_sign_result, DispatchResult::Ok(()));
             });
+        
+        assert_eq!(3, CarbonCredits::get_proj_by_id(1).unwrap().signatures.len());
+    });
+}
+
+#[test]
+fn it_fails_sign_project_gold_standard_already_registered_project() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let auditor = ROLES[2].0;
+        let standard_acc = ROLES[3].0;
+        let registry = ROLES[5].0;
+        let standard = Standard::GoldStandard;
+        let filehash = H256::from([0x66; 32]);
+        let some_new_acc = 7;
+
+        let all_roles = ROLES.iter().map(|x| x.1).reduce(|x, y| x + y).unwrap();
+        let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(0), some_new_acc, all_roles);
+
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+        let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
+        let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
+        let _ = CarbonCredits::sign_project(Origin::signed(standard_acc), 1);
+        let _ = CarbonCredits::sign_project(Origin::signed(registry), 1);
+
+        // check that acc with any role can sign it
+        let some_new_acc_sign_result = CarbonCredits::sign_project(Origin::signed(some_new_acc), 1);
+        assert_ne!(some_new_acc_sign_result, DispatchResult::Ok(()));
+
+        // check all separate existing roles
+        ROLES.iter()
+            .map(|x| x.0)
+            .for_each(|x| {
+                let sign_result = CarbonCredits::sign_project(Origin::signed(x), 1);
+                assert_ne!(sign_result, DispatchResult::Ok(()));
+            });        
     });
 }

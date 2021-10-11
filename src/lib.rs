@@ -5,9 +5,7 @@ use frame_support::{
     decl_module, 
     decl_storage,
     dispatch::{
-        DispatchResult, 
-        DispatchError, 
-        Vec,
+        DispatchResult,
     },
 };
 use frame_system::{
@@ -26,6 +24,7 @@ pub mod standard;
 pub mod project;
 pub mod state;
 pub mod annual_report;
+
 #[cfg(test)]    
 pub mod tests;
 
@@ -79,7 +78,6 @@ decl_module! {
     }
 }
 
-// Atomic operations here
 impl<T: Config> Module<T> {
     pub fn create_pdd(caller: T::AccountId, standard: Standard, filehash: &H256) -> DispatchResult {
         // check if caller has CC_PROJECT_OWNER role
@@ -136,15 +134,6 @@ impl<T: Config> Module<T> {
             }
         }
     }
-
-    // fn convert_project_err_to_module_err(err: &ProjectError) -> Error<T> {
-    //     match err {
-    //         ProjectError::InvalidStandard => Error::<T>::InvalidAction,
-    //         ProjectError::NotAnOwner => Error::<T>::AccountNotOwner,
-    //         _ => Error::<T>::InvalidAction
-    //     }
-    // }
-
 
     #[cfg(test)]
     pub fn get_proj_by_id(id: u32) -> Option<ProjectStruct<T::AccountId>> {
