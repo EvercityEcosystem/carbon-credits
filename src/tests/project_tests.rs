@@ -54,7 +54,7 @@ fn it_fails_for_create_new_project_not_owner_role() {
 // Project Owner submits PDD (changing status to Registration) => 
 // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
 #[test]
-fn it_works_for_owner_sign_project_gold_standard() {
+fn it_works_for_full_cycle_sign_project_gold_standard() {
 	new_test_ext().execute_with(|| {
                 let owner = ROLES[1].0;
                 let auditor = ROLES[2].0;
@@ -92,6 +92,11 @@ fn it_works_for_owner_sign_project_gold_standard() {
                 assert_eq!(crate::project::ProjectStatus::Registration, project_after_auditor_sign.status);
                 assert_eq!(crate::project::ProjectStatus::Registration, project_after_standard_sign.status);
                 assert_eq!(crate::project::ProjectStatus::Issuance, project_after_registry_sign.status);
+
+                assert!(project_after_registry_sign.signatures.iter().any(|x| *x == owner));
+                assert!(project_after_registry_sign.signatures.iter().any(|x| *x == auditor));
+                assert!(project_after_registry_sign.signatures.iter().any(|x| *x == standard_acc));
+                assert!(project_after_registry_sign.signatures.iter().any(|x| *x == registry));
 	});
 }
 

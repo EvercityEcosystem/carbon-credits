@@ -118,10 +118,23 @@ impl<T: Config> Module<T> {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
                         project.state = state::AUDITOR_SIGN_PENDING;
                         project.status = project::ProjectStatus::Registration;
+                        project.signatures.push(caller);
                     },
                     state::AUDITOR_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
-                        project.state = state::AUDITOR_SIGN_PENDING;
+                        project.state = state::STANDARD_SIGN_PENDING;
+                        project.signatures.push(caller);
+                    },
+                    state::STANDARD_SIGN_PENDING => {
+                        ensure!(accounts::Module::<T>::account_is_cc_standard(&caller), Error::<T>::AccountNotAuditor);
+                        project.state = state::REGISTRY_SIGN_PENDING;
+                        project.signatures.push(caller);
+                    },
+                    state::REGISTRY_SIGN_PENDING => {
+                        ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotAuditor);
+                        project.state = state::REGISTERED;
+                        project.status = project::ProjectStatus::Issuance;
+                        project.signatures.push(caller);
                     },
                     _ => ensure!(false, Error::<T>::InvalidState)
                 }
