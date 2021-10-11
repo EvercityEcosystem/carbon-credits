@@ -69,7 +69,7 @@ impl ProjectDocument {
     }
 }
 
-#[derive(Encode, Decode, Clone, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq)]
 pub enum ProjectStatus {
     Preparing,
     Registration,
