@@ -11,7 +11,7 @@ use frame_support::{
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq)]
 pub enum Standard {
-    GoldStandard
+    GoldStandard,
 }
 
 impl Default for Standard {

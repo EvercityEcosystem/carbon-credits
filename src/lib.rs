@@ -97,19 +97,14 @@ impl<T: Config> Module<T> {
         ProjectById::<T>::try_mutate(
             proj_id, |project_to_mutate| -> DispatchResult {
                 ensure!(project_to_mutate.is_some(), Error::<T>::AccountNotOwner);
-                // let result = project_to_mutate.as_mut().unwrap().change_project_state(caller);
-
                 Self::change_project_state(&mut project_to_mutate.as_mut().unwrap(), caller)?;
-                // if let Err(err) = result {
-                //     ensure!(false, Self::convert_project_err_to_module_err(&err));
-                // }
                 Ok(())
          })?;
         Ok(())
     }
 
     pub fn change_project_state(project: &mut ProjectStruct<T::AccountId>, caller: T::AccountId) -> DispatchResult {
-        match &mut project.standard {
+        match &mut project.get_standard() {
             // Project Owner submits PDD (changing status to Registration) => 
             // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
             Standard::GoldStandard  => {
@@ -126,12 +121,12 @@ impl<T: Config> Module<T> {
                         project.signatures.push(caller);
                     },
                     state::STANDARD_SIGN_PENDING => {
-                        ensure!(accounts::Module::<T>::account_is_cc_standard(&caller), Error::<T>::AccountNotAuditor);
+                        ensure!(accounts::Module::<T>::account_is_cc_standard(&caller), Error::<T>::AccountNotStandard);
                         project.state = state::REGISTRY_SIGN_PENDING;
                         project.signatures.push(caller);
                     },
                     state::REGISTRY_SIGN_PENDING => {
-                        ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotAuditor);
+                        ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
                         project.state = state::REGISTERED;
                         project.status = project::ProjectStatus::Issuance;
                         project.signatures.push(caller);
@@ -139,37 +134,9 @@ impl<T: Config> Module<T> {
                     _ => ensure!(false, Error::<T>::InvalidState)
                 }
                 Ok(())
-            },
-            _ => {
-                ensure!(false, Error::<T>::InvalidStandard); 
-                Ok(())
-            },
+            }
         }
     }
-
-    // pub fn submit_pdd_for_review(caller: T::AccountId, proj_id: u32) {
-    // }
-
-    // pub fn approve_pdd(caller: T::AccountId, proj_id: u32) {
-    // }
-
-    // pub fn certify_pdd(caller: T::AccountId, proj_id: u32) {
-    // }
-
-    // pub fn register_pdd(caller: T::AccountId, proj_id: u32) {
-    // }
-
-    // pub fn request_pdd_for_verification(caller: T::AccountId, proj_id: u32) {
-    // }
-
-    // pub fn submit_pdd_verification(caller: T::AccountId, proj_id: u32) {
-    // }
-
-    // pub fn approve_carbon_credit_issuance(caller: T::AccountId, proj_id: u32) {
-    // }
-
-    // pub fn issue_carbon_credit(caller: T::AccountId, proj_id: u32) {
-    // }
 
     // fn convert_project_err_to_module_err(err: &ProjectError) -> Error<T> {
     //     match err {
@@ -185,8 +152,3 @@ impl<T: Config> Module<T> {
         ProjectById::<T>::get(id)
     }
 }
-
-
-// fn process_request<T, K>(func: impl FnOnce(K) -> DispatchResult, arg: K) -> DispatchResult where T: Config {
-//     func(arg)
-// }

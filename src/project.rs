@@ -16,11 +16,11 @@ construct_fixed_hash! {
 pub struct ProjectStruct<AccountId> {
     pub owner: AccountId,
     pub id: u32,
-    pub standard: Standard,
     pub status: ProjectStatus,
     pub state: StateMask,
     pub document_versions: Vec<ProjectDocument>,
     pub signatures: Vec<AccountId>,
+    standard: Standard,
 }
 
 impl<AccountId> ProjectStruct<AccountId> {
@@ -35,6 +35,10 @@ impl<AccountId> ProjectStruct<AccountId> {
             document_versions: vec![ProjectDocument::new(filehash)],
             signatures: Vec::new()
         }
+    }
+
+    pub fn get_standard(&self) -> &Standard {
+        &self.standard
     }
 
     // pub fn change_project_state(&mut self, signaturer: AccountId) -> Result<(), ProjectError> {
@@ -81,10 +85,3 @@ impl Default for ProjectStatus {
         ProjectStatus::Preparing
     }
 }
-
-
-// pub enum ProjectError {
-//     InvalidStandard,
-//     NotAnOwner,
-//     InvalidState
-// }

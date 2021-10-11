@@ -29,7 +29,7 @@ fn it_works_for_create_new_project() {
         let project = CarbonCredits::get_proj_by_id(1).unwrap();
 
         assert_eq!(owner, project.owner);
-        assert_eq!(standard, project.standard);
+        assert_eq!(standard, *project.get_standard());
         assert_eq!(1, project.id);
         assert_ok!(create_project_result, ());
     });
@@ -95,7 +95,7 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
         assert!(project_after_registry_sign.signatures.iter().any(|x| *x == standard_acc));
         assert!(project_after_registry_sign.signatures.iter().any(|x| *x == registry));
 
-        assert_eq!(project_after_registry_sign.standard, Standard::GoldStandard);
+        assert_eq!(*project_after_registry_sign.get_standard(), Standard::GoldStandard);
         assert_eq!(1, project_after_registry_sign.document_versions.len());
         assert_eq!(project_after_registry_sign.document_versions[0].filehash, filehash);
     });
@@ -128,8 +128,8 @@ fn it_fails_sign_project_gold_standard_not_an_auditor() {
         let filehash = H256::from([0x66; 32]);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
-
         let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
+
         ROLES.iter()
             .filter(|x| x.1 != CC_AUDITOR_ROLE_MASK)
             .map(|x| x.0)
@@ -143,13 +143,45 @@ fn it_fails_sign_project_gold_standard_not_an_auditor() {
 #[test]
     fn it_fails_sign_project_gold_standard_not_a_standard_acc() {
     new_test_ext().execute_with(|| {
-        todo!();
+        let owner = ROLES[1].0;
+        let auditor = ROLES[2].0;
+        let standard = Standard::GoldStandard;
+        let filehash = H256::from([0x66; 32]);
+
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+        let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
+        let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
+
+        ROLES.iter()
+            .filter(|x| x.1 != CC_STANDARD_ROLE_MASK)
+            .map(|x| x.0)
+            .for_each(|x| {
+                let standard_sign_result = CarbonCredits::sign_project(Origin::signed(x), 1);
+                assert_ne!(standard_sign_result, DispatchResult::Ok(()));
+            });
     });
 }
 
 #[test]
 fn it_fails_sign_project_gold_standard_not_a_registry() {
     new_test_ext().execute_with(|| {
-        todo!();
+        let owner = ROLES[1].0;
+        let auditor = ROLES[2].0;
+        let standard_acc = ROLES[3].0;
+        let standard = Standard::GoldStandard;
+        let filehash = H256::from([0x66; 32]);
+
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+        let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
+        let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
+        let _ = CarbonCredits::sign_project(Origin::signed(standard_acc), 1);
+
+        ROLES.iter()
+            .filter(|x| x.1 != CC_REGISTRY_ROLE_MASK)
+            .map(|x| x.0)
+            .for_each(|x| {
+                let registry_sign_result = CarbonCredits::sign_project(Origin::signed(x), 1);
+                assert_ne!(registry_sign_result, DispatchResult::Ok(()));
+            });
     });
 }
