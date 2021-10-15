@@ -17,14 +17,16 @@ pub struct AnnualReportStruct<AccountId> {
     pub filehash: H256,
     pub state: AnnualReportState,
     pub signatures: Vec<AccountId>,
+    pub carbon_credits_count: u64
 }
 
 impl<AccountId> AnnualReportStruct<AccountId> {
-    pub fn new(filehash: H256) -> Self {
+    pub fn new(filehash: H256, carbon_credits_count: u64) -> Self {
         AnnualReportStruct{
             filehash,
             state: REPORT_PROJECT_OWNER_SIGN_PENDING,
             signatures: Vec::new(),
+            carbon_credits_count
         }
     }
 }

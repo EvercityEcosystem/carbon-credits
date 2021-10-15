@@ -81,9 +81,9 @@ decl_module! {
         }
 
         #[weight = 10_000]
-        pub fn create_annual_report(origin, project_id: u32, filehash: H256) -> DispatchResult {
+        pub fn create_annual_report(origin, project_id: u32, filehash: H256, carbon_credits_count: u64) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-            Self::impl_create_annual_report(caller, project_id, &filehash)?;
+            Self::impl_create_annual_report(caller, project_id, &filehash, carbon_credits_count)?;
             Ok(())
         }
 
@@ -118,7 +118,7 @@ impl<T: Config> Module<T> {
         Ok(())
     }
 
-    fn impl_create_annual_report(caller: T::AccountId, proj_id: u32, filehash: &H256) -> DispatchResult {
+    fn impl_create_annual_report(caller: T::AccountId, proj_id: u32, filehash: &H256, carbon_credits_count: u64) -> DispatchResult {
         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
         ProjectById::<T>::try_mutate(
             proj_id, |project_to_mutate| -> DispatchResult {
@@ -129,7 +129,7 @@ impl<T: Config> Module<T> {
                             .all(|x| x.state == annual_report::REPORT_ISSUED),
                     Error::<T>::NotIssuedAnnualReportsExist
                 );
-                project_to_mutate.as_mut().unwrap().annual_reports.push(annual_report::AnnualReportStruct::new(*filehash));
+                project_to_mutate.as_mut().unwrap().annual_reports.push(annual_report::AnnualReportStruct::new(*filehash, carbon_credits_count));
                 Ok(())
          })?;
         Ok(())
