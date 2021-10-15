@@ -8,7 +8,6 @@ use crate::annual_report::*;
 use crate::file_hash::*;
 use frame_support::sp_std::{
     cmp::{
-        Eq, 
         PartialEq}, 
 };
 
@@ -20,8 +19,6 @@ pub const STANDARD_SIGN_PENDING: ProjectStateMask = 4;
 pub const INVESTOR_SIGN_PENDING: ProjectStateMask = 8;
 pub const REGISTRY_SIGN_PENDING: ProjectStateMask = 16;
 pub const REGISTERED: ProjectStateMask = 32;
-
-
 
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
 pub struct ProjectStruct<AccountId> where AccountId: PartialEq {

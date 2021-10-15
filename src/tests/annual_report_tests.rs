@@ -151,16 +151,27 @@ fn it_works_for_full_cycle_sign_annual_report_gold_standard() {
         let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_hash);
 
         vec![
-            owner, 
-            auditor,
-            standard_acc, 
-            registry,
+            (owner, REPORT_AUDITOR_SIGN_PENDING), 
+            (auditor, REPORT_STANDARD_SIGN_PENDING),
+            (standard_acc, REPORT_REGISTRY_SIGN_PENDING), 
+            (registry, REPORT_ISSUED),
         ].iter()
-            .map(|account| (account, CarbonCredits::sign_last_annual_report(Origin::signed(*account), project_id)))
-            .for_each(|tuple|{
-                assert_ok!(tuple.1, ());
+            .map(|account_state_tuple| {
+                let acc = account_state_tuple.0;
+                let state = account_state_tuple.1;
+                let result = CarbonCredits::sign_last_annual_report(Origin::signed(acc), project_id);
+
+                (acc, state, result)
+            })
+            .for_each(|account_state_result_tuple|{
+                let acc = account_state_result_tuple.0;
+                let state = account_state_result_tuple.1;
+                let result = account_state_result_tuple.2;
                 let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
-                assert!(project.annual_reports.last().unwrap().signatures.last().unwrap() == tuple.0);
+
+                assert_ok!(result, ());
+                assert_eq!(acc, *project.annual_reports.last().unwrap().signatures.last().unwrap());
+                assert_eq!(state, project.annual_reports.last().unwrap().state);
             });
     });
 }

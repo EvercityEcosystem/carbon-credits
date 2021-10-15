@@ -204,7 +204,7 @@ impl<T: Config> Module<T> {
                     },
                     annual_report::REPORT_REGISTRY_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
-                        report.state = annual_report::REPORT_REGISTRY_SIGN_PENDING;
+                        report.state = annual_report::REPORT_ISSUED;
                         report.signatures.push(caller);
 
                         /*
