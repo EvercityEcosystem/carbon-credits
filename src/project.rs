@@ -2,9 +2,15 @@ use frame_support::{
     codec::{Decode, Encode},
     sp_runtime::RuntimeDebug,
 };
-use fixed_hash::construct_fixed_hash;
+
 use crate::standard::Standard;
 use crate::annual_report::*;
+use crate::file_hash::*;
+use frame_support::sp_std::{
+    cmp::{
+        Eq, 
+        PartialEq}, 
+};
 
 pub type ProjectStateMask = u16;
 
@@ -15,14 +21,10 @@ pub const INVESTOR_SIGN_PENDING: ProjectStateMask = 8;
 pub const REGISTRY_SIGN_PENDING: ProjectStateMask = 16;
 pub const REGISTERED: ProjectStateMask = 32;
 
-construct_fixed_hash! {
-    /// 256 bit hash type for signing files
-    #[derive(Encode, Decode)]
-    pub struct H256(32);
-}
 
-#[derive(Encode, Decode, Clone, Default, RuntimeDebug)]
-pub struct ProjectStruct<AccountId> {
+
+#[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
+pub struct ProjectStruct<AccountId> where AccountId: PartialEq {
     pub owner: AccountId,
     pub id: u32,
     pub status: ProjectStatus,
@@ -33,7 +35,7 @@ pub struct ProjectStruct<AccountId> {
     standard: Standard,
 }
 
-impl<AccountId> ProjectStruct<AccountId> {
+impl<AccountId> ProjectStruct<AccountId> where AccountId: PartialEq {
     /// constructor for project
     pub fn new(owner: AccountId, id: u32, standard: Standard, filehash: &H256) -> Self {
         ProjectStruct{
@@ -54,7 +56,7 @@ impl<AccountId> ProjectStruct<AccountId> {
     }
 }
 
-#[derive(Encode, Decode, Clone, Default, RuntimeDebug)]
+#[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
 pub struct ProjectDocument {
     pub filehash: H256,
 }

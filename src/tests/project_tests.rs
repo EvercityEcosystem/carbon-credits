@@ -8,7 +8,7 @@ use pallet_evercity_accounts::accounts::*;
 
 
 #[test]
-fn it_works_get_unexisting_project() {
+fn it_works_get_unexisting_project_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::default();
@@ -20,7 +20,7 @@ fn it_works_get_unexisting_project() {
 }
 
 #[test]
-fn it_works_for_create_new_project() {
+fn it_works_for_create_new_project_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::default();
@@ -36,7 +36,7 @@ fn it_works_for_create_new_project() {
 }
 
 #[test]
-fn it_fails_for_create_new_project_not_owner_role() {
+fn it_fails_for_create_new_project_not_owner_role_gold_standard() {
     new_test_ext().execute_with(|| {
         let auditor = ROLES[3].0;
         let standard = Standard::default();
@@ -103,7 +103,7 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
 }
 
 #[test]
-fn it_fails_sign_project_gold_standard_not_an_owner() {
+fn it_fails_sign_project_gold_standard_not_an_owner_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::GoldStandard;
@@ -122,7 +122,7 @@ fn it_fails_sign_project_gold_standard_not_an_owner() {
 }
 
 #[test]
-fn it_fails_sign_project_gold_standard_not_an_auditor() {
+fn it_fails_sign_project_gold_standard_not_an_auditor_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::GoldStandard;
@@ -144,7 +144,7 @@ fn it_fails_sign_project_gold_standard_not_an_auditor() {
 }
 
 #[test]
-    fn it_fails_sign_project_gold_standard_not_a_standard_acc() {
+    fn it_fails_sign_project_gold_standard_not_a_standard_acc_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;
@@ -168,7 +168,7 @@ fn it_fails_sign_project_gold_standard_not_an_auditor() {
 }
 
 #[test]
-fn it_fails_sign_project_gold_standard_not_a_registry() {
+fn it_fails_sign_project_gold_standard_not_a_registry_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;
@@ -194,7 +194,7 @@ fn it_fails_sign_project_gold_standard_not_a_registry() {
 }
 
 #[test]
-fn it_fails_sign_project_gold_standard_already_registered_project() {
+fn it_fails_sign_project_gold_standard_already_registered_project_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;

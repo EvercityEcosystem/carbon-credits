@@ -17,12 +17,14 @@ use frame_support::sp_std::{
         PartialEq}, 
 };
 use pallet_evercity_accounts as accounts;
-use project::{ProjectStruct, H256};
+use project::{ProjectStruct};
 use standard::Standard;
+use crate::file_hash::*;
 
 pub mod standard;
 pub mod project;
 pub mod annual_report;
+pub mod file_hash;
 
 #[cfg(test)]    
 pub mod tests;
@@ -56,6 +58,7 @@ decl_error! {
         InvalidState,
         InvalidStandard,
         ProjectNotExist,
+        ProjectNotRegistered,
     }
 }
 
@@ -69,17 +72,16 @@ decl_module! {
         }
 
         #[weight = 10_000]
-        pub fn create_annual_report(origin, project_id: u32, filehash: H256) -> DispatchResult {
-            let caller = ensure_signed(origin)?;
-           
-            todo!();
-            // Ok(())
-        }
-
-        #[weight = 10_000]
         pub fn sign_project(origin, proj_id: u32) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             Self::sign_pdd(caller, proj_id)?;
+            Ok(())
+        }
+
+        #[weight = 10_000]
+        pub fn create_annual_report(origin, project_id: u32, filehash: H256) -> DispatchResult {
+            let caller = ensure_signed(origin)?;
+            Self::impl_create_annual_report(caller, project_id, &filehash)?;
             Ok(())
         }
     }
@@ -100,15 +102,24 @@ impl<T: Config> Module<T> {
     pub fn sign_pdd(caller: T::AccountId, proj_id: u32) -> DispatchResult {
         ProjectById::<T>::try_mutate(
             proj_id, |project_to_mutate| -> DispatchResult {
-                ensure!(project_to_mutate.is_some(), Error::<T>::AccountNotOwner);
+                ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
                 Self::change_project_state(&mut project_to_mutate.as_mut().unwrap(), caller)?;
                 Ok(())
          })?;
         Ok(())
     }
 
-    pub fn impl_create_annual_report(caller: T::AccountId, proj_id: u32, filehash: H256){
-
+    pub fn impl_create_annual_report(caller: T::AccountId, proj_id: u32, filehash: &H256) -> DispatchResult {
+        ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+        ProjectById::<T>::try_mutate(
+            proj_id, |project_to_mutate| -> DispatchResult {
+                ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
+                ensure!(*&project_to_mutate.as_ref().unwrap().owner == caller, Error::<T>::AccountNotOwner);
+                ensure!(*&project_to_mutate.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
+                project_to_mutate.as_mut().unwrap().annual_reports.push(annual_report::AnnualReportStruct::new(*filehash));
+                Ok(())
+         })?;
+        Ok(())
     }
 
     pub fn change_project_state(project: &mut ProjectStruct<T::AccountId>, caller: T::AccountId) -> DispatchResult {
