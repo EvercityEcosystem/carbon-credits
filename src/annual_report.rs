@@ -15,12 +15,14 @@ pub const REPORT_ISSUED: AnnualReportState = 32;
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
 pub struct AnnualReportStruct {
     pub filehash: H256,
+    pub state: AnnualReportState,
 }
 
 impl AnnualReportStruct {
     pub fn new(filehash: H256) -> Self {
         AnnualReportStruct{
-            filehash
+            filehash,
+            state: REPORT_PROJECT_OWNER_SIGN_PENDING,
         }
     }
 }

@@ -4,26 +4,9 @@ use frame_support::{assert_ok, dispatch::{
 }};
 use crate::H256;
 use crate::standard::Standard;
-use crate::project::*;
+use crate::project;
+use crate::annual_report::*;
 use pallet_evercity_accounts::accounts::*;
-
-fn get_registerd_project_and_owner_gold_standard() -> (ProjectStruct<u64>, u32, u64) {
-    let owner = ROLES[1].0;
-    let auditor = ROLES[2].0;
-    let standard_acc = ROLES[3].0;
-    let registry = ROLES[5].0;
-    let standard = Standard::GoldStandard;
-    let filehash = H256::from([0x66; 32]);
-
-    let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
-    let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
-    let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
-    let _ = CarbonCredits::sign_project(Origin::signed(standard_acc), 1);
-    let _ = CarbonCredits::sign_project(Origin::signed(registry), 1);
-    let project = CarbonCredits::get_proj_by_id(1).unwrap();
-    (project, 1, owner)
-}
-
 
 #[test]
 fn it_works_for_create_new_annual_report_gold_standard() {
@@ -36,10 +19,10 @@ fn it_works_for_create_new_annual_report_gold_standard() {
 
         assert_eq!(project.annual_reports.len() + 1, project_with_report.annual_reports.len());
         assert_eq!(report_hash, project_with_report.annual_reports.last().unwrap().filehash);
+        assert_eq!(REPORT_PROJECT_OWNER_SIGN_PENDING, project_with_report.annual_reports.last().unwrap().state);
         assert_ok!(create_report_result, ());
     });
 }
-
 
 #[test]
 fn it_fails_for_create_new_annual_report_gold_standard_not_registered() {
@@ -71,7 +54,6 @@ fn it_fails_for_create_new_annual_report_gold_standard_not_registered() {
         report_results.push(CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_hash));
         projects.push(CarbonCredits::get_proj_by_id(1).unwrap());
 
-
         // assertion after all steps
         report_results.iter().for_each(|res|{
             assert_ne!(*res, DispatchResult::Ok(()));
@@ -97,7 +79,6 @@ fn it_fails_for_create_new_annual_report_gold_standard_not_an_owner_role() {
     });
 }
 
-
 #[test]
 fn it_fails_for_create_new_annual_report_gold_standard_not_an_owner_of_the_project() {
     new_test_ext().execute_with(|| {
@@ -116,4 +97,23 @@ fn it_fails_for_create_new_annual_report_gold_standard_not_an_owner_of_the_proje
         assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
         assert_ne!(create_report_result, DispatchResult::Ok(()));
     });
+}
+
+/// Return tuple -> (project, project_id, project_owner)
+fn get_registerd_project_and_owner_gold_standard() -> (project::ProjectStruct<u64>, u32, u64) {
+    let owner = ROLES[1].0;
+    let auditor = ROLES[2].0;
+    let standard_acc = ROLES[3].0;
+    let registry = ROLES[5].0;
+    let standard = Standard::GoldStandard;
+    let filehash = H256::from([0x66; 32]);
+
+    let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+    let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
+    let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
+    let _ = CarbonCredits::sign_project(Origin::signed(standard_acc), 1);
+    let _ = CarbonCredits::sign_project(Origin::signed(registry), 1);
+    let project = CarbonCredits::get_proj_by_id(1).unwrap();
+
+    (project, 1, owner)
 }
