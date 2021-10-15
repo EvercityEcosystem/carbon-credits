@@ -59,6 +59,7 @@ decl_error! {
         InvalidStandard,
         ProjectNotExist,
         ProjectNotRegistered,
+        NoAnnualReports,
     }
 }
 
@@ -86,10 +87,10 @@ decl_module! {
         }
 
         #[weight = 10_000]
-        pub fn sign_last_annual_report(origin, project_id: u32, filehash: H256) -> DispatchResult {
+        pub fn sign_last_annual_report(origin, project_id: u32) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-            // Self::impl_create_annual_report(caller, project_id, &filehash)?;
-            todo!();
+            Self::impl_sign_annual_report(caller, project_id)?;
+            Ok(())
         }
     }
 }
@@ -169,6 +170,8 @@ impl<T: Config> Module<T> {
         ProjectById::<T>::try_mutate(
             proj_id, |project_to_mutate| -> DispatchResult {
                 ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
+                ensure!(project_to_mutate.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
+
                 let standard = project_to_mutate.as_mut().unwrap().get_standard().clone();
                 let owner = project_to_mutate.as_mut().unwrap().owner.clone();
                 Self::change_annual_report_state(project_to_mutate.as_mut().unwrap().annual_reports.last_mut().unwrap(), caller, standard, owner)?;
@@ -190,13 +193,24 @@ impl<T: Config> Module<T> {
                         report.signatures.push(caller);
                     },
                     annual_report::REPORT_AUDITOR_SIGN_PENDING => {
-                        todo!()
+                        ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
+                        report.state = annual_report::REPORT_STANDARD_SIGN_PENDING;
+                        report.signatures.push(caller);
                     },
                     annual_report::REPORT_STANDARD_SIGN_PENDING => {
-                        todo!()
+                        ensure!(accounts::Module::<T>::account_is_cc_standard(&caller), Error::<T>::AccountNotStandard);
+                        report.state = annual_report::REPORT_REGISTRY_SIGN_PENDING;
+                        report.signatures.push(caller);
                     },
                     annual_report::REPORT_REGISTRY_SIGN_PENDING => {
-                        todo!()
+                        ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
+                        report.state = annual_report::REPORT_REGISTRY_SIGN_PENDING;
+                        report.signatures.push(caller);
+
+                        /*
+                            !!!!!!!!!!!_TODO_!!!!!!!!!!!
+                            HERE ISSUE CARBON CREDITS
+                        */
                     },
                     _ => ensure!(false, Error::<T>::InvalidState)
                 }
