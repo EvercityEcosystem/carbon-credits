@@ -60,6 +60,7 @@ decl_error! {
         ProjectNotExist,
         ProjectNotRegistered,
         NoAnnualReports,
+        NotIssuedAnnualReportsExist,
     }
 }
 
@@ -124,6 +125,10 @@ impl<T: Config> Module<T> {
                 ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
                 ensure!(*&project_to_mutate.as_ref().unwrap().owner == caller, Error::<T>::AccountNotOwner);
                 ensure!(*&project_to_mutate.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
+                ensure!(*&project_to_mutate.as_ref().unwrap().annual_reports.iter()
+                            .all(|x| x.state == annual_report::REPORT_ISSUED),
+                    Error::<T>::NotIssuedAnnualReportsExist
+                );
                 project_to_mutate.as_mut().unwrap().annual_reports.push(annual_report::AnnualReportStruct::new(*filehash));
                 Ok(())
          })?;

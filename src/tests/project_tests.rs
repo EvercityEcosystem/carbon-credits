@@ -103,7 +103,7 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
 }
 
 #[test]
-fn it_fails_sign_project_gold_standard_not_an_owner_role_gold_standard() {
+fn it_fails_sign_project_not_an_owner_role_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::GoldStandard;
@@ -122,7 +122,7 @@ fn it_fails_sign_project_gold_standard_not_an_owner_role_gold_standard() {
 }
 
 #[test]
-fn it_fails_sign_project_gold_standard_not_an_owner_of_project_gold_standard() {
+fn it_fails_sign_project_not_an_owner_of_project_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::GoldStandard;
@@ -142,7 +142,7 @@ fn it_fails_sign_project_gold_standard_not_an_owner_of_project_gold_standard() {
 }
 
 #[test]
-fn it_fails_sign_project_gold_standard_not_an_auditor_gold_standard() {
+fn it_fails_sign_project_not_an_auditor_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::GoldStandard;
@@ -164,7 +164,7 @@ fn it_fails_sign_project_gold_standard_not_an_auditor_gold_standard() {
 }
 
 #[test]
-    fn it_fails_sign_project_gold_standard_not_a_standard_acc_gold_standard() {
+    fn it_fails_sign_project_not_a_standard_acc_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;
@@ -188,7 +188,7 @@ fn it_fails_sign_project_gold_standard_not_an_auditor_gold_standard() {
 }
 
 #[test]
-fn it_fails_sign_project_gold_standard_not_a_registry_gold_standard() {
+fn it_fails_sign_project_not_a_registry_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;
@@ -214,7 +214,7 @@ fn it_fails_sign_project_gold_standard_not_a_registry_gold_standard() {
 }
 
 #[test]
-fn it_fails_sign_project_gold_standard_already_registered_project_gold_standard() {
+fn it_fails_sign_project_already_registered_project_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;
@@ -233,7 +233,7 @@ fn it_fails_sign_project_gold_standard_already_registered_project_gold_standard(
         let _ = CarbonCredits::sign_project(Origin::signed(standard_acc), 1);
         let _ = CarbonCredits::sign_project(Origin::signed(registry), 1);
 
-        // check that acc with any role can sign it
+        // check that acc with any role cant sign it
         let some_new_acc_sign_result = CarbonCredits::sign_project(Origin::signed(some_new_acc), 1);
         assert_ne!(some_new_acc_sign_result, DispatchResult::Ok(()));
 

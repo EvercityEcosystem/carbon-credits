@@ -43,6 +43,7 @@ fn it_works_for_create_new_annual_report_gold_standard() {
         assert_ok!(create_report_result, ());
     });
 }
+
 #[test]
 fn it_works_for_create_new_annual_report_multiple_annual_reports_gold_standard() {
     new_test_ext().execute_with(|| {
@@ -176,3 +177,133 @@ fn it_works_for_full_cycle_sign_annual_report_gold_standard() {
     });
 }
 
+#[test]
+fn it_fails_sign_annual_report_not_an_owner_of_project_gold_standard() {
+    new_test_ext().execute_with(|| {
+        get_registerd_project_and_owner_gold_standard();
+        // let standard = Standard::GoldStandard;
+        // let filehash = H256::from([0x66; 32]);
+
+        // Create new acc with owner role
+        let new_owner_id = 555;
+        let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
+        let is_owner = EvercityAccounts::account_is_cc_project_owner(&new_owner_id);
+        let owner_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(new_owner_id), 1);
+
+        assert!(is_owner);
+        assert_ne!(owner_sign_result, DispatchResult::Ok(()));
+    });
+}
+
+#[test]
+fn it_fails_sign_annual_report_not_an_owner_role_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_hash = H256::from([0x69; 32]);
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_hash);
+
+        ROLES.iter()
+        .filter(|x| x.1 != CC_PROJECT_OWNER_ROLE_MASK)
+        .map(|x| x.0)
+        .for_each(|x| {
+            let owner_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(x), 1);
+            assert_ne!(owner_sign_result, DispatchResult::Ok(()));
+        });
+
+    });
+}
+
+#[test]
+fn it_fails_sign_annual_report_not_an_auditor_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_hash = H256::from([0x69; 32]);
+
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_hash);
+        let _ = CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id);
+
+        ROLES.iter()
+            .filter(|x| x.1 != CC_AUDITOR_ROLE_MASK)
+            .map(|x| x.0)
+            .for_each(|x| {
+                let auditor_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(x), project_id);
+                assert_ne!(auditor_sign_result, DispatchResult::Ok(()));
+            });
+
+        assert_eq!(1, CarbonCredits::get_proj_by_id(project_id).unwrap().annual_reports.last().unwrap().signatures.len());
+    });
+}
+
+#[test]
+fn it_fails_sign_annual_report_not_a_standard_role_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_hash = H256::from([0x69; 32]);
+        let auditor = ROLES[2].0;
+
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_hash);
+        let _ = CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id);
+        let _ = CarbonCredits::sign_last_annual_report(Origin::signed(auditor), project_id);
+
+        ROLES.iter()
+            .filter(|x| x.1 != CC_STANDARD_ROLE_MASK)
+            .map(|x| x.0)
+            .for_each(|x| {
+                let standard_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(x), project_id);
+                assert_ne!(standard_sign_result, DispatchResult::Ok(()));
+            });
+
+        assert_eq!(2, CarbonCredits::get_proj_by_id(project_id).unwrap().annual_reports.last().unwrap().signatures.len());
+    });
+}
+
+#[test]
+fn it_fails_sign_annual_report_not_an_registry_role_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_hash = H256::from([0x69; 32]);
+        let auditor = ROLES[2].0;
+        let standard_acc = ROLES[3].0;
+
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_hash);
+        let _ = CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id);
+        let _ = CarbonCredits::sign_last_annual_report(Origin::signed(auditor), project_id);
+        let _ = CarbonCredits::sign_last_annual_report(Origin::signed(standard_acc), project_id);
+
+        ROLES.iter()
+            .filter(|x| x.1 != CC_REGISTRY_ROLE_MASK)
+            .map(|x| x.0)
+            .for_each(|x| {
+                let sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(x), project_id);
+                assert_ne!(sign_result, DispatchResult::Ok(()));
+            });
+
+        assert_eq!(3, CarbonCredits::get_proj_by_id(project_id).unwrap().annual_reports.last().unwrap().signatures.len());
+    });
+}
+
+#[test]
+fn it_fails_sign_annual_report_already_issued_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_hash = H256::from([0x69; 32]);
+        let auditor = ROLES[2].0;
+        let standard_acc = ROLES[3].0;
+        let registry = ROLES[5].0;
+
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_hash);
+        let _ = CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id);
+        let _ = CarbonCredits::sign_last_annual_report(Origin::signed(auditor), project_id);
+        let _ = CarbonCredits::sign_last_annual_report(Origin::signed(standard_acc), project_id);
+        let _ = CarbonCredits::sign_last_annual_report(Origin::signed(registry), project_id);
+
+        ROLES.iter()
+            .map(|x| x.0)
+            .for_each(|x| {
+                let sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(x), project_id);
+                assert_ne!(sign_result, DispatchResult::Ok(()));
+            });
+
+        assert_eq!(4, CarbonCredits::get_proj_by_id(project_id).unwrap().annual_reports.last().unwrap().signatures.len());
+    });
+}
