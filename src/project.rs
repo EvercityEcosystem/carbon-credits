@@ -4,8 +4,16 @@ use frame_support::{
 };
 use fixed_hash::construct_fixed_hash;
 use crate::standard::Standard;
-use crate::state::*;
 use crate::annual_report::*;
+
+pub type ProjectStateMask = u16;
+
+pub const PROJECT_OWNER_SIGN_PENDING: ProjectStateMask = 1;
+pub const AUDITOR_SIGN_PENDING: ProjectStateMask = 2;
+pub const STANDARD_SIGN_PENDING: ProjectStateMask = 4;
+pub const INVESTOR_SIGN_PENDING: ProjectStateMask = 8;
+pub const REGISTRY_SIGN_PENDING: ProjectStateMask = 16;
+pub const REGISTERED: ProjectStateMask = 32;
 
 construct_fixed_hash! {
     /// 256 bit hash type for signing files

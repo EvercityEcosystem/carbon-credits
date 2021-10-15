@@ -80,10 +80,10 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
         assert_ok!(standard_acc_sign_result, ());
         assert_ok!(registry_acc_sign_result, ());
 
-        assert_eq!(crate::state::AUDITOR_SIGN_PENDING, project_after_owner_sign.state);
-        assert_eq!(crate::state::STANDARD_SIGN_PENDING, project_after_auditor_sign.state);
-        assert_eq!(crate::state::REGISTRY_SIGN_PENDING, project_after_standard_sign.state);
-        assert_eq!(crate::state::REGISTERED, project_after_registry_sign.state);
+        assert_eq!(crate::project::AUDITOR_SIGN_PENDING, project_after_owner_sign.state);
+        assert_eq!(crate::project::STANDARD_SIGN_PENDING, project_after_auditor_sign.state);
+        assert_eq!(crate::project::REGISTRY_SIGN_PENDING, project_after_standard_sign.state);
+        assert_eq!(crate::project::REGISTERED, project_after_registry_sign.state);
 
         assert_eq!(crate::project::ProjectStatus::Registration, project_after_owner_sign.status);
         assert_eq!(crate::project::ProjectStatus::Registration, project_after_auditor_sign.status);

@@ -22,7 +22,6 @@ use standard::Standard;
 
 pub mod standard;
 pub mod project;
-pub mod state;
 pub mod annual_report;
 
 #[cfg(test)]    
@@ -70,6 +69,14 @@ decl_module! {
         }
 
         #[weight = 10_000]
+        pub fn create_annual_report(origin, project_id: u32, filehash: H256) -> DispatchResult {
+            let caller = ensure_signed(origin)?;
+           
+            todo!();
+            // Ok(())
+        }
+
+        #[weight = 10_000]
         pub fn sign_project(origin, proj_id: u32) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             Self::sign_pdd(caller, proj_id)?;
@@ -100,31 +107,35 @@ impl<T: Config> Module<T> {
         Ok(())
     }
 
+    pub fn impl_create_annual_report(caller: T::AccountId, proj_id: u32, filehash: H256){
+
+    }
+
     pub fn change_project_state(project: &mut ProjectStruct<T::AccountId>, caller: T::AccountId) -> DispatchResult {
         match &mut project.get_standard() {
             // Project Owner submits PDD (changing status to Registration) => 
             // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
             Standard::GoldStandard  => {
                 match project.state {
-                    state::PROJECT_OWNER_SIGN_PENDING => {
+                    project::PROJECT_OWNER_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
-                        project.state = state::AUDITOR_SIGN_PENDING;
+                        project.state = project::AUDITOR_SIGN_PENDING;
                         project.status = project::ProjectStatus::Registration;
                         project.signatures.push(caller);
                     },
-                    state::AUDITOR_SIGN_PENDING => {
+                    project::AUDITOR_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
-                        project.state = state::STANDARD_SIGN_PENDING;
+                        project.state = project::STANDARD_SIGN_PENDING;
                         project.signatures.push(caller);
                     },
-                    state::STANDARD_SIGN_PENDING => {
+                    project::STANDARD_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_standard(&caller), Error::<T>::AccountNotStandard);
-                        project.state = state::REGISTRY_SIGN_PENDING;
+                        project.state = project::REGISTRY_SIGN_PENDING;
                         project.signatures.push(caller);
                     },
-                    state::REGISTRY_SIGN_PENDING => {
+                    project::REGISTRY_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
-                        project.state = state::REGISTERED;
+                        project.state = project::REGISTERED;
                         project.status = project::ProjectStatus::Issuance;
                         project.signatures.push(caller);
                     },
