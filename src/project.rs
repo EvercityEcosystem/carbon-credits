@@ -12,7 +12,6 @@ use frame_support::sp_std::{
 };
 
 pub type ProjectStateMask = u16;
-
 pub const PROJECT_OWNER_SIGN_PENDING: ProjectStateMask = 1;
 pub const AUDITOR_SIGN_PENDING: ProjectStateMask = 2;
 pub const STANDARD_SIGN_PENDING: ProjectStateMask = 4;
