@@ -5,6 +5,7 @@ use frame_support::{assert_ok, dispatch::{
 use crate::H256;
 use crate::standard::Standard;
 use pallet_evercity_accounts::accounts::*;
+use crate::project::*;
 
 
 #[test]
@@ -66,35 +67,34 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
 
         // sign here:
-        let owner_sign_result = CarbonCredits::sign_project(Origin::signed(owner), 1);
-        let project_after_owner_sign = CarbonCredits::get_proj_by_id(1).unwrap();
-        let auditor_sign_result = CarbonCredits::sign_project(Origin::signed(auditor), 1);
-        let project_after_auditor_sign = CarbonCredits::get_proj_by_id(1).unwrap();
-        let standard_acc_sign_result = CarbonCredits::sign_project(Origin::signed(standard_acc), 1);
-        let project_after_standard_sign = CarbonCredits::get_proj_by_id(1).unwrap();
-        let registry_acc_sign_result = CarbonCredits::sign_project(Origin::signed(registry), 1);
-        let project_after_registry_sign = CarbonCredits::get_proj_by_id(1).unwrap();
+        vec![
+            (owner, AUDITOR_SIGN_PENDING, ProjectStatus::Registration), 
+            (auditor, STANDARD_SIGN_PENDING, ProjectStatus::Registration),
+            (standard_acc, REGISTRY_SIGN_PENDING, ProjectStatus::Registration), 
+            (registry, REGISTERED, ProjectStatus::Issuance),
+        ].iter()
+            .map(|account_state_tuple| {
+                let acc = account_state_tuple.0;
+                let state = account_state_tuple.1;
+                let result = CarbonCredits::sign_project(Origin::signed(acc), 1);
+                let status = account_state_tuple.2.clone();
+            
+                (acc, state, result, status)
+            })
+            .for_each(|account_state_result_status_tuple|{
+                let acc = account_state_result_status_tuple.0;
+                let state = account_state_result_status_tuple.1;
+                let result = account_state_result_status_tuple.2;
+                let status = account_state_result_status_tuple.3;
+                let project = CarbonCredits::get_proj_by_id(1).unwrap();
 
-        assert_ok!(owner_sign_result, ());
-        assert_ok!(auditor_sign_result, ());
-        assert_ok!(standard_acc_sign_result, ());
-        assert_ok!(registry_acc_sign_result, ());
+                assert_ok!(result, ());
+                assert_eq!(state, project.state);
+                assert_eq!(acc, *project.signatures.last().unwrap());
+                assert_eq!(status, project.status);
+            });
 
-        assert_eq!(crate::project::AUDITOR_SIGN_PENDING, project_after_owner_sign.state);
-        assert_eq!(crate::project::STANDARD_SIGN_PENDING, project_after_auditor_sign.state);
-        assert_eq!(crate::project::REGISTRY_SIGN_PENDING, project_after_standard_sign.state);
-        assert_eq!(crate::project::REGISTERED, project_after_registry_sign.state);
-
-        assert_eq!(crate::project::ProjectStatus::Registration, project_after_owner_sign.status);
-        assert_eq!(crate::project::ProjectStatus::Registration, project_after_auditor_sign.status);
-        assert_eq!(crate::project::ProjectStatus::Registration, project_after_standard_sign.status);
-        assert_eq!(crate::project::ProjectStatus::Issuance, project_after_registry_sign.status);
-
-        assert!(project_after_registry_sign.signatures.iter().any(|x| *x == owner));
-        assert!(project_after_registry_sign.signatures.iter().any(|x| *x == auditor));
-        assert!(project_after_registry_sign.signatures.iter().any(|x| *x == standard_acc));
-        assert!(project_after_registry_sign.signatures.iter().any(|x| *x == registry));
-
+        let project_after_registry_sign = CarbonCredits::get_proj_by_id(1).unwrap();    
         assert_eq!(*project_after_registry_sign.get_standard(), Standard::GoldStandard);
         assert_eq!(1, project_after_registry_sign.document_versions.len());
         assert_eq!(project_after_registry_sign.document_versions[0].filehash, filehash);

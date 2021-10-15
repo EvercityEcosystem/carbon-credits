@@ -172,7 +172,7 @@ fn it_works_for_full_cycle_sign_annual_report_gold_standard() {
                 assert_ok!(result, ());
                 assert_eq!(acc, *project.annual_reports.last().unwrap().signatures.last().unwrap());
                 assert_eq!(state, project.annual_reports.last().unwrap().state);
-            });
+            })
     });
 }
 
