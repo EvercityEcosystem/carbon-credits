@@ -31,7 +31,7 @@ pub struct ProjectStruct<AccountId> where AccountId: PartialEq {
     pub state: ProjectStateMask,
     pub document_versions: Vec<ProjectDocument>,
     pub signatures: Vec<AccountId>,
-    pub annual_reports: Vec<AnnualReportStruct>,
+    pub annual_reports: Vec<AnnualReportStruct<AccountId>>,
     standard: Standard,
 }
 

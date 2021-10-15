@@ -13,16 +13,18 @@ pub const REPORT_REGISTRY_SIGN_PENDING: AnnualReportState = 16;
 pub const REPORT_ISSUED: AnnualReportState = 32;
 
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
-pub struct AnnualReportStruct {
+pub struct AnnualReportStruct<AccountId> {
     pub filehash: H256,
     pub state: AnnualReportState,
+    pub signatures: Vec<AccountId>,
 }
 
-impl AnnualReportStruct {
+impl<AccountId> AnnualReportStruct<AccountId> {
     pub fn new(filehash: H256) -> Self {
         AnnualReportStruct{
             filehash,
             state: REPORT_PROJECT_OWNER_SIGN_PENDING,
+            signatures: Vec::new(),
         }
     }
 }

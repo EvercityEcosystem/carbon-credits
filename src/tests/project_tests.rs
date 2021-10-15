@@ -103,7 +103,7 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
 }
 
 #[test]
-fn it_fails_sign_project_gold_standard_not_an_owner_gold_standard() {
+fn it_fails_sign_project_gold_standard_not_an_owner_role_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::GoldStandard;
@@ -118,6 +118,26 @@ fn it_fails_sign_project_gold_standard_not_an_owner_gold_standard() {
                 let owner_sign_result = CarbonCredits::sign_project(Origin::signed(x), 1);
                 assert_ne!(owner_sign_result, DispatchResult::Ok(()));
             });
+    });
+}
+
+#[test]
+fn it_fails_sign_project_gold_standard_not_an_owner_of_project_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let standard = Standard::GoldStandard;
+        let filehash = H256::from([0x66; 32]);
+
+        // Create new acc with owner role
+        let new_owner_id = 555;
+        let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
+        let is_owner = EvercityAccounts::account_is_cc_project_owner(&new_owner_id);
+
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+        let owner_sign_result = CarbonCredits::sign_project(Origin::signed(new_owner_id), 1);
+
+        assert!(is_owner);
+        assert_ne!(owner_sign_result, DispatchResult::Ok(()));
     });
 }
 

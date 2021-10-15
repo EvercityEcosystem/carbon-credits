@@ -65,22 +65,26 @@ fn it_fails_for_create_new_annual_report_gold_standard_not_registered() {
 }
 
 #[test]
-fn it_fails_for_create_new_annual_report_gold_standard_not_an_owner_role() {
+fn it_fails_for_create_new_annual_report_not_an_owner_role_gold_standard() {
     new_test_ext().execute_with(|| {
         let (project, project_id, _) = get_registerd_project_and_owner_gold_standard();
         let report_hash = H256::from([0x69; 32]);
-        let auditor = ROLES[2].0;
 
-        let create_report_result = CarbonCredits::create_annual_report(Origin::signed(auditor), project_id, report_hash);
-        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+        ROLES.iter()
+            .filter(|x| x.1 != CC_PROJECT_OWNER_ROLE_MASK)
+            .map(|x| x.0)
+            .for_each(|x| {
+                let create_report_result = CarbonCredits::create_annual_report(Origin::signed(x), project_id, report_hash);
+                let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
 
-        assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
-        assert_ne!(create_report_result, DispatchResult::Ok(()));
+                assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
+                assert_ne!(create_report_result, DispatchResult::Ok(()));
+            });
     });
 }
 
 #[test]
-fn it_fails_for_create_new_annual_report_gold_standard_not_an_owner_of_the_project() {
+fn it_fails_for_create_new_annual_report_not_an_owner_of_the_project_gold_standard() {
     new_test_ext().execute_with(|| {
         let (project, project_id, _) = get_registerd_project_and_owner_gold_standard();
         let report_hash = H256::from([0x69; 32]);

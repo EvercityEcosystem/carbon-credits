@@ -84,6 +84,13 @@ decl_module! {
             Self::impl_create_annual_report(caller, project_id, &filehash)?;
             Ok(())
         }
+
+        #[weight = 10_000]
+        pub fn sign_last_annual_report(origin, project_id: u32, filehash: H256) -> DispatchResult {
+            let caller = ensure_signed(origin)?;
+            // Self::impl_create_annual_report(caller, project_id, &filehash)?;
+            todo!();
+        }
     }
 }
 
@@ -99,7 +106,7 @@ impl<T: Config> Module<T> {
         Ok(())
     }
 
-    pub fn sign_pdd(caller: T::AccountId, proj_id: u32) -> DispatchResult {
+    fn sign_pdd(caller: T::AccountId, proj_id: u32) -> DispatchResult {
         ProjectById::<T>::try_mutate(
             proj_id, |project_to_mutate| -> DispatchResult {
                 ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
@@ -109,7 +116,7 @@ impl<T: Config> Module<T> {
         Ok(())
     }
 
-    pub fn impl_create_annual_report(caller: T::AccountId, proj_id: u32, filehash: &H256) -> DispatchResult {
+    fn impl_create_annual_report(caller: T::AccountId, proj_id: u32, filehash: &H256) -> DispatchResult {
         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
         ProjectById::<T>::try_mutate(
             proj_id, |project_to_mutate| -> DispatchResult {
@@ -122,7 +129,7 @@ impl<T: Config> Module<T> {
         Ok(())
     }
 
-    pub fn change_project_state(project: &mut ProjectStruct<T::AccountId>, caller: T::AccountId) -> DispatchResult {
+    fn change_project_state(project: &mut ProjectStruct<T::AccountId>, caller: T::AccountId) -> DispatchResult {
         match &mut project.get_standard() {
             // Project Owner submits PDD (changing status to Registration) => 
             // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
@@ -130,6 +137,7 @@ impl<T: Config> Module<T> {
                 match project.state {
                     project::PROJECT_OWNER_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+                        ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
                         project.state = project::AUDITOR_SIGN_PENDING;
                         project.status = project::ProjectStatus::Registration;
                         project.signatures.push(caller);
@@ -155,6 +163,47 @@ impl<T: Config> Module<T> {
                 Ok(())
             }
         }
+    }
+
+    fn impl_sign_annual_report(caller: T::AccountId, proj_id: u32) -> DispatchResult {
+        ProjectById::<T>::try_mutate(
+            proj_id, |project_to_mutate| -> DispatchResult {
+                ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
+                let standard = project_to_mutate.as_mut().unwrap().get_standard().clone();
+                let owner = project_to_mutate.as_mut().unwrap().owner.clone();
+                Self::change_annual_report_state(project_to_mutate.as_mut().unwrap().annual_reports.last_mut().unwrap(), caller, standard, owner)?;
+                Ok(())
+         })?;
+        Ok(())
+    }
+
+    fn change_annual_report_state(report: &mut annual_report::AnnualReportStruct<T::AccountId>, caller: T::AccountId, standard: Standard, owner: T::AccountId) -> DispatchResult {
+        match standard {
+            // Project Owner sends report for verification =>  Auditor provides and submits verification report => 
+            // Standard Approves carbon credit issuance => Registry issues carbon credits
+            Standard::GoldStandard  => {
+                match report.state {
+                    annual_report::REPORT_PROJECT_OWNER_SIGN_PENDING => {
+                        ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+                        ensure!(owner == caller, Error::<T>::AccountNotOwner);
+                        report.state = annual_report::REPORT_AUDITOR_SIGN_PENDING;
+                        report.signatures.push(caller);
+                    },
+                    annual_report::REPORT_AUDITOR_SIGN_PENDING => {
+                        todo!()
+                    },
+                    annual_report::REPORT_STANDARD_SIGN_PENDING => {
+                        todo!()
+                    },
+                    annual_report::REPORT_REGISTRY_SIGN_PENDING => {
+                        todo!()
+                    },
+                    _ => ensure!(false, Error::<T>::InvalidState)
+                }
+                Ok(())
+            },
+        }
+        
     }
 
     #[cfg(test)]
