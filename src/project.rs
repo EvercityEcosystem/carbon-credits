@@ -18,7 +18,7 @@ pub struct ProjectStruct<AccountId> {
     pub owner: AccountId,
     pub id: u32,
     pub status: ProjectStatus,
-    pub state: StateMask,
+    pub state: ProjectStateMask,
     pub document_versions: Vec<ProjectDocument>,
     pub signatures: Vec<AccountId>,
     pub annual_reports: Vec<AnnualReportStruct>,
@@ -40,29 +40,10 @@ impl<AccountId> ProjectStruct<AccountId> {
         }
     }
 
+    // Standart must be guaranted immutable for lifetime of the progect on register and issuance step 
     pub fn get_standard(&self) -> &Standard {
         &self.standard
     }
-
-    // pub fn change_project_state(&mut self, signaturer: AccountId) -> Result<(), ProjectError> {
-    //     match &mut self.standard {
-    //         GoldStandard  => {
-    //             match self.state {
-    //                 PROJECT_OWNER_SIGN_PENDING => {
-    //                     //check that is project owner
-    //                     // todo!("check that is project owner");
-    //                     // crate::accounts::
-
-    //                     self.state = AUDITOR_SIGN_PENDING;
-    //                 },
-    //                 _ => return Err(ProjectError::InvalidState)
-    //             }
-
-    //             Ok(())
-    //         },
-    //         _ => Err(ProjectError::InvalidStandard),
-    //     }
-    // }
 }
 
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug)]
