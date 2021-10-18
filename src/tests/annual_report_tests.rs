@@ -1,6 +1,7 @@
 use crate::tests::mock::*;
 use frame_support::{assert_ok, dispatch::{
-    DispatchResult
+    DispatchResult,
+    Vec,
 }};
 use crate::H256;
 use crate::standard::Standard;
@@ -152,12 +153,13 @@ fn it_works_for_full_cycle_sign_annual_report_gold_standard() {
 
         let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_hash, TEST_CARBON_CREDITS_COUNT);
 
-        vec![
-            (owner, REPORT_AUDITOR_SIGN_PENDING), 
-            (auditor, REPORT_STANDARD_SIGN_PENDING),
-            (standard_acc, REPORT_REGISTRY_SIGN_PENDING), 
-            (registry, REPORT_ISSUED),
-        ].iter()
+        let mut tuple_vec = Vec::new();
+        tuple_vec.push((owner, REPORT_AUDITOR_SIGN_PENDING));
+        tuple_vec.push((auditor, REPORT_STANDARD_SIGN_PENDING));
+        tuple_vec.push((standard_acc, REPORT_REGISTRY_SIGN_PENDING));
+        tuple_vec.push((registry, REPORT_ISSUED));
+
+        tuple_vec.iter()
             .map(|account_state_tuple| {
                 let acc = account_state_tuple.0;
                 let state = account_state_tuple.1;

@@ -1,6 +1,7 @@
 use crate::tests::mock::*;
 use frame_support::{assert_ok, dispatch::{
-    DispatchResult
+    DispatchResult,
+    Vec,
 }};
 use crate::H256;
 use crate::standard::Standard;
@@ -66,13 +67,14 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
 
+        let mut tuple_vec = Vec::new();
+        tuple_vec.push((owner, AUDITOR_SIGN_PENDING, ProjectStatus::Registration));
+        tuple_vec.push((auditor, STANDARD_SIGN_PENDING, ProjectStatus::Registration));
+        tuple_vec.push((standard_acc, REGISTRY_SIGN_PENDING, ProjectStatus::Registration));
+        tuple_vec.push((registry, REGISTERED, ProjectStatus::Issuance));
+
         // sign here:
-        vec![
-            (owner, AUDITOR_SIGN_PENDING, ProjectStatus::Registration), 
-            (auditor, STANDARD_SIGN_PENDING, ProjectStatus::Registration),
-            (standard_acc, REGISTRY_SIGN_PENDING, ProjectStatus::Registration), 
-            (registry, REGISTERED, ProjectStatus::Issuance),
-        ].iter()
+        tuple_vec.iter()
             .map(|account_state_tuple| {
                 let acc = account_state_tuple.0;
                 let state = account_state_tuple.1;

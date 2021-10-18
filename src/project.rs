@@ -1,6 +1,7 @@
 use frame_support::{
     codec::{Decode, Encode},
     sp_runtime::RuntimeDebug,
+    dispatch::Vec,
 };
 
 use crate::standard::Standard;
