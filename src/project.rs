@@ -70,6 +70,7 @@ impl ProjectDocument {
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq)]
+#[allow(non_camel_case_types)]
 pub enum ProjectStatus {
     PREPARING,
     REGISTRATION,
