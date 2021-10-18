@@ -35,13 +35,18 @@ pub struct ProjectStruct<AccountId> where AccountId: PartialEq {
 impl<AccountId> ProjectStruct<AccountId> where AccountId: PartialEq {
     /// constructor for project
     pub fn new(owner: AccountId, id: u32, standard: Standard, filehash: &H256) -> Self {
+
+        // Add first version of document
+        let mut document_versions = Vec::with_capacity(1);
+        document_versions.push(ProjectDocument::new(filehash));
+
         ProjectStruct{
             owner,
             id,
             standard,
             status: ProjectStatus::default(), 
             state: PROJECT_OWNER_SIGN_PENDING,
-            document_versions: vec![ProjectDocument::new(filehash)],
+            document_versions,
             signatures: Vec::new(),
             annual_reports: Vec::new(),
         }
