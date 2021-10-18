@@ -1,0 +1,35 @@
+{
+    "Standard": {
+        "_enum": [
+        "GoldStandard"
+      ]
+    },
+    "ProjectStateMask": "u16",
+    "ProjectStatus": {
+        "_enum": [
+          "Preparing",
+          "Registration",
+          "Issuance"
+      ]
+    },
+    "ProjectDocument": {
+        "filehash": "H256"
+    },
+    "ProjectStruct": {
+        "owner": "AccountId",
+        "id": "u32",
+        "status": "ProjectStatus",
+        "state": "ProjectStateMask",
+        "document_versions": "Vec<ProjectDocument>",
+        "signatures": "Vec<AccountId>",
+        "annual_reports": "Vec<AnnualReportStruct<AccountId>>",
+        "standard": "Standard"
+    },
+    "AnnualReportStateMask": "u16",
+    "AnnualReportStruct": {
+      "filehash": "H256",
+      "state": "AnnualReportStateMask",
+      "signatures": "Vec<AccountId>",
+      "carbon_credits_count": "u64"
+    }
+}
