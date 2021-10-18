@@ -5,11 +5,11 @@ use frame_support::{
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq)]
 pub enum Standard {
-    GoldStandard,
+    GOLD_STANDARD,
 }
 
 impl Default for Standard {
     fn default() -> Standard {
-        Standard::GoldStandard
+        Standard::GOLD_STANDARD
     }
 }

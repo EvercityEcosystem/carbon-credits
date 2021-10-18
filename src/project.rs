@@ -71,13 +71,13 @@ impl ProjectDocument {
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq)]
 pub enum ProjectStatus {
-    Preparing,
-    Registration,
-    Issuance,
+    PREPARING,
+    REGISTRATION,
+    ISSUANCE,
 }
 
 impl Default for ProjectStatus {
     fn default() -> Self {
-        ProjectStatus::Preparing
+        ProjectStatus::PREPARING
     }
 }

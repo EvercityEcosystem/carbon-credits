@@ -15,7 +15,7 @@ fn get_registerd_project_and_owner_gold_standard() -> (project::ProjectStruct<u6
     let auditor = ROLES[2].0;
     let standard_acc = ROLES[3].0;
     let registry = ROLES[5].0;
-    let standard = Standard::GoldStandard;
+    let standard = Standard::GOLD_STANDARD;
     let filehash = H256::from([0x66; 32]);
 
     let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
@@ -67,7 +67,7 @@ fn it_fails_for_create_new_annual_report_gold_standard_not_registered() {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;
         let standard_acc = ROLES[3].0;
-        let standard = Standard::GoldStandard;
+        let standard = Standard::GOLD_STANDARD;
         let filehash = H256::from([0x66; 32]);
         let report_hash = H256::from([0x69; 32]);
         let project_id = 1;

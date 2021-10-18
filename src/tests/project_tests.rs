@@ -62,16 +62,16 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
         let standard_acc = ROLES[3].0;
         let registry = ROLES[5].0;
 
-        let standard = Standard::GoldStandard;
+        let standard = Standard::GOLD_STANDARD;
         let filehash = H256::from([0x66; 32]);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
 
         let mut tuple_vec = Vec::new();
-        tuple_vec.push((owner, AUDITOR_SIGN_PENDING, ProjectStatus::Registration));
-        tuple_vec.push((auditor, STANDARD_SIGN_PENDING, ProjectStatus::Registration));
-        tuple_vec.push((standard_acc, REGISTRY_SIGN_PENDING, ProjectStatus::Registration));
-        tuple_vec.push((registry, REGISTERED, ProjectStatus::Issuance));
+        tuple_vec.push((owner, AUDITOR_SIGN_PENDING, ProjectStatus::REGISTRATION));
+        tuple_vec.push((auditor, STANDARD_SIGN_PENDING, ProjectStatus::REGISTRATION));
+        tuple_vec.push((standard_acc, REGISTRY_SIGN_PENDING, ProjectStatus::REGISTRATION));
+        tuple_vec.push((registry, REGISTERED, ProjectStatus::ISSUANCE));
 
         // sign here:
         tuple_vec.iter()
@@ -97,7 +97,7 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
             });
 
         let project_after_registry_sign = CarbonCredits::get_proj_by_id(1).unwrap();    
-        assert_eq!(*project_after_registry_sign.get_standard(), Standard::GoldStandard);
+        assert_eq!(*project_after_registry_sign.get_standard(), Standard::GOLD_STANDARD);
         assert_eq!(1, project_after_registry_sign.document_versions.len());
         assert_eq!(project_after_registry_sign.document_versions[0].filehash, filehash);
         assert_eq!(0, project_after_registry_sign.annual_reports.len());
@@ -108,7 +108,7 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
 fn it_fails_sign_project_not_an_owner_role_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
-        let standard = Standard::GoldStandard;
+        let standard = Standard::GOLD_STANDARD;
         let filehash = H256::from([0x66; 32]);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
@@ -127,7 +127,7 @@ fn it_fails_sign_project_not_an_owner_role_gold_standard() {
 fn it_fails_sign_project_not_an_owner_of_project_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
-        let standard = Standard::GoldStandard;
+        let standard = Standard::GOLD_STANDARD;
         let filehash = H256::from([0x66; 32]);
 
         // Create new acc with owner role
@@ -147,7 +147,7 @@ fn it_fails_sign_project_not_an_owner_of_project_gold_standard() {
 fn it_fails_sign_project_not_an_auditor_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
-        let standard = Standard::GoldStandard;
+        let standard = Standard::GOLD_STANDARD;
         let filehash = H256::from([0x66; 32]);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
@@ -170,7 +170,7 @@ fn it_fails_sign_project_not_an_auditor_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;
-        let standard = Standard::GoldStandard;
+        let standard = Standard::GOLD_STANDARD;
         let filehash = H256::from([0x66; 32]);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
@@ -195,7 +195,7 @@ fn it_fails_sign_project_not_a_registry_gold_standard() {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;
         let standard_acc = ROLES[3].0;
-        let standard = Standard::GoldStandard;
+        let standard = Standard::GOLD_STANDARD;
         let filehash = H256::from([0x66; 32]);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
@@ -222,7 +222,7 @@ fn it_fails_sign_project_already_registered_project_gold_standard() {
         let auditor = ROLES[2].0;
         let standard_acc = ROLES[3].0;
         let registry = ROLES[5].0;
-        let standard = Standard::GoldStandard;
+        let standard = Standard::GOLD_STANDARD;
         let filehash = H256::from([0x66; 32]);
         let some_new_acc = 7;
 

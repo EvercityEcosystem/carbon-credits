@@ -66,6 +66,8 @@ decl_error! {
 
 decl_module! {
     pub struct Module<T: Config> for enum Call where origin: T::Origin {
+        type Error = Error<T>;
+
         #[weight = 10_000]
         pub fn create_project(origin, standard: Standard, filehash: H256) -> DispatchResult {
             let caller = ensure_signed(origin)?;
@@ -139,13 +141,13 @@ impl<T: Config> Module<T> {
         match &mut project.get_standard() {
             // Project Owner submits PDD (changing status to Registration) => 
             // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
-            Standard::GoldStandard  => {
+            Standard::GOLD_STANDARD  => {
                 match project.state {
                     project::PROJECT_OWNER_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
                         ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
                         project.state = project::AUDITOR_SIGN_PENDING;
-                        project.status = project::ProjectStatus::Registration;
+                        project.status = project::ProjectStatus::REGISTRATION;
                         project.signatures.push(caller);
                     },
                     project::AUDITOR_SIGN_PENDING => {
@@ -161,7 +163,7 @@ impl<T: Config> Module<T> {
                     project::REGISTRY_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
                         project.state = project::REGISTERED;
-                        project.status = project::ProjectStatus::Issuance;
+                        project.status = project::ProjectStatus::ISSUANCE;
                         project.signatures.push(caller);
                     },
                     _ => ensure!(false, Error::<T>::InvalidState)
@@ -189,7 +191,7 @@ impl<T: Config> Module<T> {
         match standard {
             // Project Owner sends report for verification =>  Auditor provides and submits verification report => 
             // Standard Approves carbon credit issuance => Registry issues carbon credits
-            Standard::GoldStandard  => {
+            Standard::GOLD_STANDARD  => {
                 match report.state {
                     annual_report::REPORT_PROJECT_OWNER_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
