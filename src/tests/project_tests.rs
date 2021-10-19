@@ -8,10 +8,8 @@ use crate::standard::Standard;
 use pallet_evercity_accounts::accounts::*;
 use crate::project::*;
 
-use crate::{RawEvent};
-
-// fn last_event<AccountId>() -> RawEvent<AccountId> {
-//     return System::events()[0].event;
+// fn last_event() -> EventRecord<tests::mock::Event, sp_core::H256> {
+//     System::events()[0]//.event.clone()
 // }
 
 #[test]
@@ -34,6 +32,9 @@ fn it_works_for_create_new_project_gold_standard() {
         let filehash = H256::from([0x66; 32]);
         let create_project_result = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), filehash);
         let project = CarbonCredits::get_proj_by_id(1).unwrap();
+
+        // let event = last_event();
+        let a = System::events();
 
         assert_eq!(owner, project.owner);
         assert_eq!(standard, *project.get_standard());

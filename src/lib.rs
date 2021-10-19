@@ -21,7 +21,6 @@ use pallet_evercity_accounts as accounts;
 use project::{ProjectStruct, ProjectId};
 use standard::Standard;
 use crate::file_hash::*;
-use accounts::accounts::RoleMask;
 
 pub mod standard;
 pub mod project;
@@ -190,23 +189,26 @@ impl<T: Config> Module<T> {
                         project.state = project::AUDITOR_SIGN_PENDING;
                         project.status = project::ProjectStatus::REGISTRATION;
                         project.signatures.push(caller.clone());
-                        *event = Some(RawEvent::ProjectSignedByAduitor(caller, project.id));
+                        *event = Some(RawEvent::ProjectRegistered(caller, project.id));
                     },
                     project::AUDITOR_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
                         project.state = project::STANDARD_SIGN_PENDING;
-                        project.signatures.push(caller);
+                        project.signatures.push(caller.clone());
+                        *event = Some(RawEvent::ProjectSignedByAduitor(caller, project.id));
                     },
                     project::STANDARD_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_standard(&caller), Error::<T>::AccountNotStandard);
                         project.state = project::REGISTRY_SIGN_PENDING;
-                        project.signatures.push(caller);
+                        project.signatures.push(caller.clone());
+                        *event = Some(RawEvent::ProjectSignedByStandard(caller, project.id));
                     },
                     project::REGISTRY_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
                         project.state = project::REGISTERED;
                         project.status = project::ProjectStatus::ISSUANCE;
-                        project.signatures.push(caller);
+                        project.signatures.push(caller.clone());
+                        *event = Some(RawEvent::ProjectSignedByRegistry(caller, project.id));
                     },
                     _ => ensure!(false, Error::<T>::InvalidState)
                 }
@@ -216,20 +218,36 @@ impl<T: Config> Module<T> {
     }
 
     fn impl_sign_annual_report(caller: T::AccountId, proj_id: ProjectId) -> DispatchResult {
+        let mut event_opt: Option<Event<T>> = None;
         ProjectById::<T>::try_mutate(
             proj_id, |project_to_mutate| -> DispatchResult {
                 ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
                 ensure!(project_to_mutate.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
 
-                let standard = project_to_mutate.as_mut().unwrap().get_standard().clone();
-                let owner = project_to_mutate.as_mut().unwrap().owner.clone();
-                Self::change_annual_report_state(project_to_mutate.as_mut().unwrap().annual_reports.last_mut().unwrap(), caller, standard, owner)?;
+                // let standard = project_to_mutate.as_mut().unwrap().get_standard().clone();
+                // let owner = project_to_mutate.as_mut().unwrap().owner.clone();
+                // Self::change_annual_report_state(project_to_mutate.as_mut().unwrap().annual_reports.last_mut().unwrap(), caller, standard, owner, &mut event_opt)?;
+                Self::change_project_annual_report_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
                 Ok(())
-         })?;
+        })?;
+        if let Some(event) = event_opt {
+            Self::deposit_event(event);
+        }
         Ok(())
     }
 
-    fn change_annual_report_state(report: &mut annual_report::AnnualReportStruct<T::AccountId>, caller: T::AccountId, standard: Standard, owner: T::AccountId) -> DispatchResult {
+    fn change_project_annual_report_state(
+        // report: &mut annual_report::AnnualReportStruct<T::AccountId>, 
+        project: &mut ProjectStruct<T::AccountId>,
+        caller: T::AccountId, 
+        // standard: Standard, 
+        // owner: T::AccountId, 
+        event: &mut Option<Event<T>>
+    ) -> DispatchResult {
+        let standard = project.get_standard().clone();
+        let owner = project.owner.clone();
+        
+        let report = project.annual_reports.last_mut().unwrap();
         match standard {
             // Project Owner sends report for verification =>  Auditor provides and submits verification report => 
             // Standard Approves carbon credit issuance => Registry issues carbon credits
@@ -239,22 +257,26 @@ impl<T: Config> Module<T> {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
                         ensure!(owner == caller, Error::<T>::AccountNotOwner);
                         report.state = annual_report::REPORT_AUDITOR_SIGN_PENDING;
-                        report.signatures.push(caller);
+                        report.signatures.push(caller.clone());
+                        *event = Some(RawEvent::AnnualReportSubmited(caller, project.id));
                     },
                     annual_report::REPORT_AUDITOR_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
                         report.state = annual_report::REPORT_STANDARD_SIGN_PENDING;
-                        report.signatures.push(caller);
+                        report.signatures.push(caller.clone());
+                        *event = Some(RawEvent::AnnualReportSignedByAuditor(caller, project.id));
                     },
                     annual_report::REPORT_STANDARD_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_standard(&caller), Error::<T>::AccountNotStandard);
                         report.state = annual_report::REPORT_REGISTRY_SIGN_PENDING;
-                        report.signatures.push(caller);
+                        report.signatures.push(caller.clone());
+                        *event = Some(RawEvent::AnnualReportSignedByStandard(caller, project.id));
                     },
                     annual_report::REPORT_REGISTRY_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
                         report.state = annual_report::REPORT_ISSUED;
-                        report.signatures.push(caller);
+                        report.signatures.push(caller.clone());
+                        *event = Some(RawEvent::AnnualReportSignedByRegistry(caller, project.id));
 
                         /*
                             !!!!!!!!!!!_TODO_!!!!!!!!!!!
