@@ -17,9 +17,9 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
-		System: frame_system::{Module, Call, Config, Storage, Event<T>},
-		CarbonCredits: pallet_carbon_credits::{Module, Call, Storage, Event<T>},
-		EvercityAccounts: pallet_evercity_accounts::{Module, Call, Storage},
+		System: frame_system::{ Module, Call, Config, Storage, Event<T> },
+		CarbonCredits: pallet_carbon_credits::{ Module, Call, Storage, Event<T> },
+		EvercityAccounts: pallet_evercity_accounts::{ Module, Call, Storage },
 	}
 );
 
@@ -51,7 +51,9 @@ impl frame_system::Config for TestRuntime {
 impl pallet_carbon_credits::Config for TestRuntime {
 	type Event = Event;
 }
-impl pallet_evercity_accounts::Config for TestRuntime {}
+
+impl pallet_evercity_accounts::Config for TestRuntime {
+}
 
 // (AccountId, role)
 pub static ROLES: [(u64, RoleMask); 6] = [
@@ -65,6 +67,13 @@ pub static ROLES: [(u64, RoleMask); 6] = [
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> frame_support::sp_io::TestExternalities {
+
+	// let t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
+    // let mut ext = sp_io::TestExternalities::new(t);
+    // ext.execute_with(|| System::set_block_number(1));
+    // ext
+
+
     let mut t = frame_system::GenesisConfig::default()
         .build_storage::<TestRuntime>()
         .unwrap();
@@ -85,5 +94,24 @@ pub fn new_test_ext() -> frame_support::sp_io::TestExternalities {
     }
     .assimilate_storage(&mut t)
     .unwrap();
-    t.into()
+
+	let mut ext = sp_io::TestExternalities::new(t);
+	ext.execute_with(|| System::set_block_number(1));
+	ext
+    // t.into()
+}
+
+pub fn last_event() -> Result<Event, ()> {
+	match System::events().pop() {
+		Some(ev) => Ok(ev.event),
+		None => Err(())
+	}
+}
+
+fn events() -> Vec<Event> {
+    let evt = System::events().into_iter().map(|evt| evt.event).collect::<Vec<_>>();
+
+    System::reset_events();
+
+    evt
 }

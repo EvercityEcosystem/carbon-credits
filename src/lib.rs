@@ -137,7 +137,6 @@ impl<T: Config> Module<T> {
         let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller.clone(), new_id, standard, filehash);
         <ProjectById<T>>::insert(new_id, new_project);
         LastID::mutate(|x| *x = x.checked_add(1).unwrap());
-
         // SendEvent
         Self::deposit_event(RawEvent::ProjectCreated(caller, new_id));
         Ok(())
@@ -171,7 +170,6 @@ impl<T: Config> Module<T> {
                 project_to_mutate.as_mut().unwrap().annual_reports.push(annual_report::AnnualReportStruct::new(*filehash, carbon_credits_count));
                 Ok(())
          })?;
-
         // SendEvent
         Self::deposit_event(RawEvent::AnnualReportCreated(caller, proj_id));
         Ok(())
@@ -223,10 +221,6 @@ impl<T: Config> Module<T> {
             proj_id, |project_to_mutate| -> DispatchResult {
                 ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
                 ensure!(project_to_mutate.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
-
-                // let standard = project_to_mutate.as_mut().unwrap().get_standard().clone();
-                // let owner = project_to_mutate.as_mut().unwrap().owner.clone();
-                // Self::change_annual_report_state(project_to_mutate.as_mut().unwrap().annual_reports.last_mut().unwrap(), caller, standard, owner, &mut event_opt)?;
                 Self::change_project_annual_report_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
                 Ok(())
         })?;
@@ -236,14 +230,7 @@ impl<T: Config> Module<T> {
         Ok(())
     }
 
-    fn change_project_annual_report_state(
-        // report: &mut annual_report::AnnualReportStruct<T::AccountId>, 
-        project: &mut ProjectStruct<T::AccountId>,
-        caller: T::AccountId, 
-        // standard: Standard, 
-        // owner: T::AccountId, 
-        event: &mut Option<Event<T>>
-    ) -> DispatchResult {
+    fn change_project_annual_report_state(project: &mut ProjectStruct<T::AccountId>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
         let standard = project.get_standard().clone();
         let owner = project.owner.clone();
         

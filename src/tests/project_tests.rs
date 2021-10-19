@@ -8,10 +8,6 @@ use crate::standard::Standard;
 use pallet_evercity_accounts::accounts::*;
 use crate::project::*;
 
-// fn last_event() -> EventRecord<tests::mock::Event, sp_core::H256> {
-//     System::events()[0]//.event.clone()
-// }
-
 #[test]
 fn it_works_get_unexisting_project_gold_standard() {
     new_test_ext().execute_with(|| {
@@ -33,9 +29,10 @@ fn it_works_for_create_new_project_gold_standard() {
         let create_project_result = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), filehash);
         let project = CarbonCredits::get_proj_by_id(1).unwrap();
 
-        // let event = last_event();
-        let a = System::events();
+        let last_event = last_event().unwrap();
+        let check_event = Event::pallet_carbon_credits(crate::RawEvent::ProjectCreated(owner, 1));
 
+        assert_eq!(check_event, last_event);
         assert_eq!(owner, project.owner);
         assert_eq!(standard, *project.get_standard());
         assert_eq!(1, project.id);
@@ -52,6 +49,7 @@ fn it_fails_for_create_new_project_not_owner_role_gold_standard() {
         let create_project_result = CarbonCredits::create_project(Origin::signed(auditor), standard, filehash);
         let project_opt = CarbonCredits::get_proj_by_id(1);
 
+        assert_eq!(Err(()), last_event());
         assert_ne!(create_project_result, DispatchResult::Ok(()));
         assert!(project_opt.is_none())
     });
@@ -252,5 +250,20 @@ fn it_fails_sign_project_already_registered_project_gold_standard() {
                 let sign_result = CarbonCredits::sign_project(Origin::signed(x), 1);
                 assert_ne!(sign_result, DispatchResult::Ok(()));
             });        
+    });
+}
+
+
+#[test]
+fn it_works_sign_project_deposit_events_gold_standard() {
+    new_test_ext().execute_with(|| {
+        todo!();
+    });
+}
+
+#[test]
+fn it_works_sign_annual_report_deposit_events_gold_standard() {
+    new_test_ext().execute_with(|| {
+        todo!();
     });
 }
