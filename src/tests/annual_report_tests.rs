@@ -310,3 +310,23 @@ fn it_fails_sign_annual_report_already_issued_gold_standard() {
         assert_eq!(4, CarbonCredits::get_proj_by_id(project_id).unwrap().annual_reports.last().unwrap().signatures.len());
     });
 }
+
+#[test]
+fn it_works_for_create_new_annual_report_deposit_event_gold_standard() {
+    new_test_ext_with_event().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_hash = H256::from([0x69; 32]);
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_hash, TEST_CARBON_CREDITS_COUNT);
+        let last_event = last_event().unwrap();
+        let check_event = Event::pallet_carbon_credits(crate::RawEvent::AnnualReportCreated(owner, project_id));
+
+        assert_eq!(check_event, last_event);
+    });
+}
+
+#[test]
+fn it_works_sign_annual_report_deposit_events_gold_standard() {
+    new_test_ext().execute_with(|| {
+        todo!();
+    });
+}

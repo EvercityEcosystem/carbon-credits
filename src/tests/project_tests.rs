@@ -29,10 +29,6 @@ fn it_works_for_create_new_project_gold_standard() {
         let create_project_result = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), filehash);
         let project = CarbonCredits::get_proj_by_id(1).unwrap();
 
-        let last_event = last_event().unwrap();
-        let check_event = Event::pallet_carbon_credits(crate::RawEvent::ProjectCreated(owner, 1));
-
-        assert_eq!(check_event, last_event);
         assert_eq!(owner, project.owner);
         assert_eq!(standard, *project.get_standard());
         assert_eq!(1, project.id);
@@ -49,7 +45,6 @@ fn it_fails_for_create_new_project_not_owner_role_gold_standard() {
         let create_project_result = CarbonCredits::create_project(Origin::signed(auditor), standard, filehash);
         let project_opt = CarbonCredits::get_proj_by_id(1);
 
-        assert_eq!(Err(()), last_event());
         assert_ne!(create_project_result, DispatchResult::Ok(()));
         assert!(project_opt.is_none())
     });
@@ -253,17 +248,23 @@ fn it_fails_sign_project_already_registered_project_gold_standard() {
     });
 }
 
-
 #[test]
-fn it_works_sign_project_deposit_events_gold_standard() {
-    new_test_ext().execute_with(|| {
-        todo!();
+fn it_works_for_create_new_project_deposit_event_gold_standard() {
+    new_test_ext_with_event().execute_with(|| {
+        let owner = ROLES[1].0;
+        let standard = Standard::default();
+        let filehash = H256::from([0x66; 32]);
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), filehash);
+        let last_event = last_event().unwrap();
+        let check_event = Event::pallet_carbon_credits(crate::RawEvent::ProjectCreated(owner, 1));
+
+        assert_eq!(check_event, last_event);
     });
 }
 
 #[test]
-fn it_works_sign_annual_report_deposit_events_gold_standard() {
-    new_test_ext().execute_with(|| {
+fn it_works_sign_project_deposit_events_gold_standard() {
+    new_test_ext_with_event().execute_with(|| {
         todo!();
     });
 }

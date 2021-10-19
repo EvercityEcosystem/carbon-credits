@@ -67,13 +67,31 @@ pub static ROLES: [(u64, RoleMask); 6] = [
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> frame_support::sp_io::TestExternalities {
+    let mut t = frame_system::GenesisConfig::default()
+        .build_storage::<TestRuntime>()
+        .unwrap();
 
-	// let t = frame_system::GenesisConfig::default().build_storage::<Test>().unwrap();
-    // let mut ext = sp_io::TestExternalities::new(t);
-    // ext.execute_with(|| System::set_block_number(1));
-    // ext
+	pallet_evercity_accounts::GenesisConfig::<TestRuntime> {
+        // Accounts for tests
+        genesis_account_registry: ROLES
+            .iter()
+            .map(|(acc, role)| {
+                (
+                    *acc,
+                    AccountStruct {
+                        roles: *role
+                    },
+                )
+            })
+            .collect(),
+    }
+    .assimilate_storage(&mut t)
+    .unwrap();
+    t.into()
+}
 
-
+// Build genesis storage for event testing
+pub fn new_test_ext_with_event() -> frame_support::sp_io::TestExternalities {
     let mut t = frame_system::GenesisConfig::default()
         .build_storage::<TestRuntime>()
         .unwrap();
@@ -98,9 +116,9 @@ pub fn new_test_ext() -> frame_support::sp_io::TestExternalities {
 	let mut ext = sp_io::TestExternalities::new(t);
 	ext.execute_with(|| System::set_block_number(1));
 	ext
-    // t.into()
 }
 
+// get and cut last event
 pub fn last_event() -> Result<Event, ()> {
 	match System::events().pop() {
 		Some(ev) => Ok(ev.event),
@@ -108,10 +126,9 @@ pub fn last_event() -> Result<Event, ()> {
 	}
 }
 
+// Get events list
 fn events() -> Vec<Event> {
     let evt = System::events().into_iter().map(|evt| evt.event).collect::<Vec<_>>();
-
     System::reset_events();
-
     evt
 }
