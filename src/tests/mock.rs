@@ -18,7 +18,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{Module, Call, Config, Storage},
-		CarbonCredits: pallet_carbon_credits::{Module, Call, Storage},
+		CarbonCredits: pallet_carbon_credits::{Module, Call, Storage, Event<T>},
 		EvercityAccounts: pallet_evercity_accounts::{Module, Call, Storage},
 	}
 );

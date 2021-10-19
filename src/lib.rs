@@ -46,9 +46,23 @@ decl_event!(
     pub enum Event<T>
     where
         AccountId = <T as frame_system::Config>::AccountId,
-        // BondUnitSaleLotStructOf = BondUnitSaleLotStructOf<T>,
     {
+        // Project Events
         ProjectCreated(AccountId, ProjectId),
+        ProjectSubmited(AccountId, ProjectId),    
+        ProjectRegistered(AccountId, ProjectId),
+
+        ProjectSignedByAuditor(AccountId, ProjectId),
+        ProjectSignedByStandard(AccountId, ProjectId),
+        ProjectSignedByRegistry(AccountId, ProjectId),
+
+        // Annual Report events
+        AnnualReportCreated(AccountId, ProjectId),
+        AnnualReportSubmited(AccountId, ProjectId),
+
+        AnnualReportSignedByAuditor(AccountId, ProjectId),
+        AnnualReportSignedByStandard(AccountId, ProjectId),
+        AnnualReportSignedByRegistry(AccountId, ProjectId),
     }
 );
 
