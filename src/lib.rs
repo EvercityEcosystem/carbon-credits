@@ -4,6 +4,7 @@ use frame_support::{
     decl_error, 
     decl_module, 
     decl_storage,
+    decl_event,
     dispatch::{
         DispatchResult,
     },
@@ -17,7 +18,7 @@ use frame_support::sp_std::{
         PartialEq}, 
 };
 use pallet_evercity_accounts as accounts;
-use project::{ProjectStruct};
+use project::{ProjectStruct, ProjectId};
 use standard::Standard;
 use crate::file_hash::*;
 
@@ -40,6 +41,16 @@ decl_storage! {
         LastID: u32;
     }
 }
+
+decl_event!(
+    pub enum Event<T>
+    where
+        AccountId = <T as frame_system::Config>::AccountId,
+        // BondUnitSaleLotStructOf = BondUnitSaleLotStructOf<T>,
+    {
+        ProjectCreated(AccountId, ProjectId),
+    }
+);
 
 decl_error! {
     pub enum Error for Module<T: Config> {
@@ -120,7 +131,7 @@ impl<T: Config> Module<T> {
         Ok(())
     }
 
-    fn impl_create_annual_report(caller: T::AccountId, proj_id: u32, filehash: &H256, carbon_credits_count: u64) -> DispatchResult {
+    fn impl_create_annual_report(caller: T::AccountId, proj_id: ProjectId, filehash: &H256, carbon_credits_count: u64) -> DispatchResult {
         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
         ProjectById::<T>::try_mutate(
             proj_id, |project_to_mutate| -> DispatchResult {
@@ -173,7 +184,7 @@ impl<T: Config> Module<T> {
         }
     }
 
-    fn impl_sign_annual_report(caller: T::AccountId, proj_id: u32) -> DispatchResult {
+    fn impl_sign_annual_report(caller: T::AccountId, proj_id: ProjectId) -> DispatchResult {
         ProjectById::<T>::try_mutate(
             proj_id, |project_to_mutate| -> DispatchResult {
                 ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
@@ -228,7 +239,7 @@ impl<T: Config> Module<T> {
     }
 
     #[cfg(test)]
-    pub fn get_proj_by_id(id: u32) -> Option<ProjectStruct<T::AccountId>> {
+    pub fn get_proj_by_id(id: ProjectId) -> Option<ProjectStruct<T::AccountId>> {
         ProjectById::<T>::get(id)
     }
 }

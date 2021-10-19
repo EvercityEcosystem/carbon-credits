@@ -10,7 +10,7 @@ use crate::annual_report::*;
 use pallet_evercity_accounts::accounts::*;
 
 /// Return tuple -> (project, project_id, project_owner)
-fn get_registerd_project_and_owner_gold_standard() -> (project::ProjectStruct<u64>, u32, u64) {
+fn get_registerd_project_and_owner_gold_standard() -> (project::ProjectStruct<u64>, project::ProjectId, u64) {
     let owner = ROLES[1].0;
     let auditor = ROLES[2].0;
     let standard_acc = ROLES[3].0;

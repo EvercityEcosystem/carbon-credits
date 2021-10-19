@@ -20,10 +20,12 @@ pub const INVESTOR_SIGN_PENDING: ProjectStateMask = 8;
 pub const REGISTRY_SIGN_PENDING: ProjectStateMask = 16;
 pub const REGISTERED: ProjectStateMask = 32;
 
+pub type ProjectId = u32;
+
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
 pub struct ProjectStruct<AccountId> where AccountId: PartialEq {
     pub owner: AccountId,
-    pub id: u32,
+    pub id: ProjectId,
     pub status: ProjectStatus,
     pub state: ProjectStateMask,
     pub document_versions: Vec<ProjectDocument>,

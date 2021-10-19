@@ -15,6 +15,7 @@
     "ProjectDocument": {
         "filehash": "H256"
     },
+    "ProjectId": "u32",
     "ProjectStruct": {
         "owner": "AccountId",
         "id": "u32",
