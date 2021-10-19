@@ -21,6 +21,7 @@ use pallet_evercity_accounts as accounts;
 use project::{ProjectStruct, ProjectId};
 use standard::Standard;
 use crate::file_hash::*;
+use accounts::accounts::RoleMask;
 
 pub mod standard;
 pub mod project;
@@ -30,7 +31,9 @@ pub mod file_hash;
 #[cfg(test)]    
 pub mod tests;
 
-pub trait Config: frame_system::Config + pallet_evercity_accounts::Config {}
+pub trait Config: frame_system::Config + pallet_evercity_accounts::Config {
+    type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
+}
 
 decl_storage! {
     trait Store for Module<T: Config> as CarbonCredits {
@@ -38,7 +41,7 @@ decl_storage! {
             get(fn project_by_id):
             map hasher(blake2_128_concat) u32 => Option<ProjectStruct<T::AccountId>>;
 
-        LastID: u32;
+        LastID: ProjectId;
     }
 }
 
@@ -52,7 +55,8 @@ decl_event!(
         ProjectSubmited(AccountId, ProjectId),    
         ProjectRegistered(AccountId, ProjectId),
 
-        ProjectSignedByAuditor(AccountId, ProjectId),
+        // ProjectSigned(AccountId, ProjectId, RoleMask),
+        ProjectSignedByAduitor(AccountId, ProjectId),
         ProjectSignedByStandard(AccountId, ProjectId),
         ProjectSignedByRegistry(AccountId, ProjectId),
 
@@ -60,6 +64,7 @@ decl_event!(
         AnnualReportCreated(AccountId, ProjectId),
         AnnualReportSubmited(AccountId, ProjectId),
 
+        // AnnualReportSignedByAuditor(AccountId, ProjectId, RoleMask),
         AnnualReportSignedByAuditor(AccountId, ProjectId),
         AnnualReportSignedByStandard(AccountId, ProjectId),
         AnnualReportSignedByRegistry(AccountId, ProjectId),
@@ -92,18 +97,19 @@ decl_error! {
 decl_module! {
     pub struct Module<T: Config> for enum Call where origin: T::Origin {
         type Error = Error<T>;
+        fn deposit_event() = default;
 
         #[weight = 10_000]
         pub fn create_project(origin, standard: Standard, filehash: H256) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-            Self::create_pdd(caller, standard, &filehash)?;
+            Self::impl_create_project(caller, standard, &filehash)?;
             Ok(())
         }
 
         #[weight = 10_000]
         pub fn sign_project(origin, proj_id: u32) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-            Self::sign_pdd(caller, proj_id)?;
+            Self::impl_sign_project(caller, proj_id)?;
             Ok(())
         }
 
@@ -124,24 +130,31 @@ decl_module! {
 }
 
 impl<T: Config> Module<T> {
-    pub fn create_pdd(caller: T::AccountId, standard: Standard, filehash: &H256) -> DispatchResult {
+    pub fn impl_create_project(caller: T::AccountId, standard: Standard, filehash: &H256) -> DispatchResult {
         // check if caller has CC_PROJECT_OWNER role
         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
 
         let new_id = LastID::get() + 1;
-        let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller, new_id, standard, filehash);
+        let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller.clone(), new_id, standard, filehash);
         <ProjectById<T>>::insert(new_id, new_project);
         LastID::mutate(|x| *x = x.checked_add(1).unwrap());
+
+        // SendEvent
+        Self::deposit_event(RawEvent::ProjectCreated(caller, new_id));
         Ok(())
     }
 
-    fn sign_pdd(caller: T::AccountId, proj_id: u32) -> DispatchResult {
+    fn impl_sign_project(caller: T::AccountId, proj_id: u32) -> DispatchResult {
+        let mut event_opt: Option<Event<T>> = None;
         ProjectById::<T>::try_mutate(
             proj_id, |project_to_mutate| -> DispatchResult {
                 ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                Self::change_project_state(&mut project_to_mutate.as_mut().unwrap(), caller)?;
+                Self::change_project_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
                 Ok(())
          })?;
+        if let Some(event) = event_opt {
+            Self::deposit_event(event);
+        }
         Ok(())
     }
 
@@ -159,10 +172,13 @@ impl<T: Config> Module<T> {
                 project_to_mutate.as_mut().unwrap().annual_reports.push(annual_report::AnnualReportStruct::new(*filehash, carbon_credits_count));
                 Ok(())
          })?;
+
+        // SendEvent
+        Self::deposit_event(RawEvent::AnnualReportCreated(caller, proj_id));
         Ok(())
     }
 
-    fn change_project_state(project: &mut ProjectStruct<T::AccountId>, caller: T::AccountId) -> DispatchResult {
+    fn change_project_state(project: &mut ProjectStruct<T::AccountId>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
         match &mut project.get_standard() {
             // Project Owner submits PDD (changing status to Registration) => 
             // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
@@ -173,7 +189,8 @@ impl<T: Config> Module<T> {
                         ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
                         project.state = project::AUDITOR_SIGN_PENDING;
                         project.status = project::ProjectStatus::REGISTRATION;
-                        project.signatures.push(caller);
+                        project.signatures.push(caller.clone());
+                        *event = Some(RawEvent::ProjectSignedByAduitor(caller, project.id));
                     },
                     project::AUDITOR_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
@@ -249,7 +266,6 @@ impl<T: Config> Module<T> {
                 Ok(())
             },
         }
-        
     }
 
     #[cfg(test)]

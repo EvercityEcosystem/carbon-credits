@@ -17,7 +17,7 @@ frame_support::construct_runtime!(
 		NodeBlock = Block,
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
-		System: frame_system::{Module, Call, Config, Storage},
+		System: frame_system::{Module, Call, Config, Storage, Event<T>},
 		CarbonCredits: pallet_carbon_credits::{Module, Call, Storage, Event<T>},
 		EvercityAccounts: pallet_evercity_accounts::{Module, Call, Storage},
 	}
@@ -37,7 +37,7 @@ impl frame_system::Config for TestRuntime {
 	type AccountId = u64;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
-	type Event = ();
+	type Event = Event;
 	type BlockHashCount = ();
 	type Version = ();
 	type PalletInfo = PalletInfo;
@@ -48,7 +48,9 @@ impl frame_system::Config for TestRuntime {
 	type SS58Prefix = ();
 }
 
-impl pallet_carbon_credits::Config for TestRuntime {}
+impl pallet_carbon_credits::Config for TestRuntime {
+	type Event = Event;
+}
 impl pallet_evercity_accounts::Config for TestRuntime {}
 
 // (AccountId, role)

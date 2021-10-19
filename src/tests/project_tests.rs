@@ -8,6 +8,11 @@ use crate::standard::Standard;
 use pallet_evercity_accounts::accounts::*;
 use crate::project::*;
 
+use crate::{RawEvent};
+
+// fn last_event<AccountId>() -> RawEvent<AccountId> {
+//     return System::events()[0].event;
+// }
 
 #[test]
 fn it_works_get_unexisting_project_gold_standard() {
