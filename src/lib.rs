@@ -26,6 +26,7 @@ pub mod standard;
 pub mod project;
 pub mod annual_report;
 pub mod file_hash;
+pub mod required_signatures;
 
 #[cfg(test)]    
 pub mod tests;
