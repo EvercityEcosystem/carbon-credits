@@ -18,7 +18,8 @@ pub struct AnnualReportStruct<AccountId> {
     pub filehash: H256,
     pub state: AnnualReportStateMask,
     pub signatures: Vec<AccountId>,
-    carbon_credits_count: u64
+    carbon_credits_count: u64,
+    carbon_credits_released: bool,
 }
 
 impl<AccountId> AnnualReportStruct<AccountId> {
@@ -27,7 +28,8 @@ impl<AccountId> AnnualReportStruct<AccountId> {
             filehash,
             state: REPORT_PROJECT_OWNER_SIGN_PENDING,
             signatures: Vec::new(),
-            carbon_credits_count
+            carbon_credits_count,
+            carbon_credits_released: false,
         }
     }
 }
