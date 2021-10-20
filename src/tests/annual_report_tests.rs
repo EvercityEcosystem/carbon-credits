@@ -33,7 +33,6 @@ const TEST_CARBON_CREDITS_COUNT: u64 = 15000;
 #[test]
 fn it_works_for_create_new_annual_report_gold_standard() {
     new_test_ext().execute_with(|| {
-        std::thread::sleep(std::time::Duration::from_secs(100));
         let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
         let report_hash = H256::from([0x69; 32]);
 
