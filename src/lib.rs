@@ -33,6 +33,8 @@ pub mod carbon_credits;
 #[cfg(test)]    
 pub mod tests;
 
+type Timestamp<T> = pallet_timestamp::Module<T>;
+
 pub trait Config: frame_system::Config + pallet_evercity_accounts::Config + pallet_timestamp::Config {
     type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
 }
@@ -41,7 +43,7 @@ decl_storage! {
     trait Store for Module<T: Config> as CarbonCredits {
         ProjectById
             get(fn project_by_id):
-            map hasher(blake2_128_concat) u32 => Option<ProjectStruct<T::AccountId>>;
+            map hasher(blake2_128_concat) u32 => Option<ProjectStruct<T::AccountId, T>>;
 
         LastID: ProjectId;
     }
@@ -141,7 +143,7 @@ impl<T: Config> Module<T> {
         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
 
         let new_id = LastID::get() + 1;
-        let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId>::new(caller.clone(), new_id, standard, filehash);
+        let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T>::new(caller.clone(), new_id, standard, filehash);
         <ProjectById<T>>::insert(new_id, new_project);
         LastID::mutate(|x| *x = x.checked_add(1).unwrap());
         // SendEvent
@@ -174,7 +176,7 @@ impl<T: Config> Module<T> {
                             .all(|x| x.state == annual_report::REPORT_ISSUED),
                     Error::<T>::NotIssuedAnnualReportsExist
                 );
-                project_to_mutate.as_mut().unwrap().annual_reports.push(annual_report::AnnualReportStruct::new(*filehash, carbon_credits_count));
+                project_to_mutate.as_mut().unwrap().annual_reports.push(annual_report::AnnualReportStruct::<T::AccountId, T>::new(*filehash, carbon_credits_count, Timestamp::<T>::get()));
                 Ok(())
          })?;
         // SendEvent
@@ -182,7 +184,7 @@ impl<T: Config> Module<T> {
         Ok(())
     }
 
-    fn change_project_state(project: &mut ProjectStruct<T::AccountId>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
+    fn change_project_state(project: &mut ProjectStruct<T::AccountId, T>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
         match &mut project.get_standard() {
             // Project Owner submits PDD (changing status to Registration) => 
             // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
@@ -237,7 +239,7 @@ impl<T: Config> Module<T> {
         Ok(())
     }
 
-    fn change_project_annual_report_state(project: &mut ProjectStruct<T::AccountId>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
+    fn change_project_annual_report_state(project: &mut ProjectStruct<T::AccountId, T>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
         let standard = project.get_standard().clone();
         let owner = project.owner.clone();
         
@@ -285,7 +287,7 @@ impl<T: Config> Module<T> {
     }
 
     #[cfg(test)]
-    pub fn get_proj_by_id(id: ProjectId) -> Option<ProjectStruct<T::AccountId>> {
+    pub fn get_proj_by_id(id: ProjectId) -> Option<ProjectStruct<T::AccountId, T>> {
         ProjectById::<T>::get(id)
     }
 }
