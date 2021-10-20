@@ -2,6 +2,7 @@ use frame_support::sp_runtime::{
     testing::Header,
     traits::{BlakeTwo256, IdentityLookup},
 };
+use frame_support::parameter_types;
 use sp_core::H256;
 use crate as pallet_carbon_credits;
 use pallet_evercity_accounts::accounts::*;
@@ -20,6 +21,7 @@ frame_support::construct_runtime!(
 		System: frame_system::{ Module, Call, Config, Storage, Event<T> },
 		CarbonCredits: pallet_carbon_credits::{ Module, Call, Storage, Event<T> },
 		EvercityAccounts: pallet_evercity_accounts::{ Module, Call, Storage, Event<T> },
+		Timestamp: pallet_timestamp::{ Module, Call, Storage, Inherent},
 	}
 );
 
@@ -54,6 +56,18 @@ impl pallet_carbon_credits::Config for TestRuntime {
 
 impl pallet_evercity_accounts::Config for TestRuntime {
 	type Event = Event;
+}
+
+parameter_types! {
+    pub const MinimumPeriod: u64 = 6000 / 2;
+}
+
+impl pallet_timestamp::Config for TestRuntime {
+    /// A timestamp: milliseconds since the unix epoch.
+    type Moment = u64;
+    type OnTimestampSet = ();
+    type MinimumPeriod = MinimumPeriod;
+    type WeightInfo = ();
 }
 
 // (AccountId, role)

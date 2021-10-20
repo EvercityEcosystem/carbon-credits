@@ -33,7 +33,7 @@ pub mod carbon_credits;
 #[cfg(test)]    
 pub mod tests;
 
-pub trait Config: frame_system::Config + pallet_evercity_accounts::Config {
+pub trait Config: frame_system::Config + pallet_evercity_accounts::Config + pallet_timestamp::Config {
     type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
 }
 
