@@ -10,7 +10,7 @@ use frame_support::sp_std::{
     cmp::{
         PartialEq}, 
 };
-use crate::required_signatures::RequiredSignatures;
+use crate::required_signers::RequiredSigners;
 
 pub type ProjectStateMask = u16;
 pub const PROJECT_OWNER_SIGN_PENDING: ProjectStateMask = 1;
@@ -31,7 +31,7 @@ pub struct ProjectStruct<AccountId> where AccountId: PartialEq {
     pub document_versions: Vec<ProjectDocument>,
     pub signatures: Vec<AccountId>,
     pub annual_reports: Vec<AnnualReportStruct<AccountId>>,
-    pub requited_signatures: RequiredSignatures<AccountId>,
+    pub required_signers: RequiredSigners<AccountId>,
     standard: Standard,
 }
 
@@ -52,7 +52,7 @@ impl<AccountId> ProjectStruct<AccountId> where AccountId: PartialEq {
             document_versions,
             signatures: Vec::new(),
             annual_reports: Vec::new(),
-            requited_signatures: Vec::new(),
+            required_signers: Vec::new(),
         }
     }
 

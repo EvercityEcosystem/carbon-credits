@@ -21,12 +21,13 @@ use pallet_evercity_accounts as accounts;
 use project::{ProjectStruct, ProjectId};
 use standard::Standard;
 use crate::file_hash::*;
+use pallet_evercity_accounts::accounts::RoleMask;
 
 pub mod standard;
 pub mod project;
 pub mod annual_report;
 pub mod file_hash;
-pub mod required_signatures;
+pub mod required_signers;
 
 #[cfg(test)]    
 pub mod tests;
@@ -99,6 +100,14 @@ decl_module! {
         pub fn create_project(origin, standard: Standard, filehash: H256) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             Self::impl_create_project(caller, standard, &filehash)?;
+            Ok(())
+        }
+
+        #[weight = 10_000]
+        pub fn assign_signer(origin, signer: T::AccountId, role: RoleMask) -> DispatchResult {
+            let caller = ensure_signed(origin)?;
+            // Self::impl_sign_project(caller, proj_id)?;
+            todo!();
             Ok(())
         }
 

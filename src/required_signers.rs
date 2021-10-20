@@ -3,4 +3,4 @@ use frame_support::{
 };
 use pallet_evercity_accounts::accounts::RoleMask;
 
-pub type RequiredSignatures<AccountId> = Vec<(AccountId, RoleMask)>;
+pub type RequiredSigners<AccountId> = Vec<(AccountId, RoleMask)>;
