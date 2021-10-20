@@ -326,7 +326,27 @@ fn it_works_for_create_new_annual_report_deposit_event_gold_standard() {
 
 #[test]
 fn it_works_sign_annual_report_deposit_events_gold_standard() {
-    new_test_ext().execute_with(|| {
-        todo!();
+    new_test_ext_with_event().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let auditor = ROLES[2].0;
+        let standard_acc = ROLES[3].0;
+        let registry = ROLES[5].0;
+        let report_hash = H256::from([0x69; 32]);
+
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_hash, TEST_CARBON_CREDITS_COUNT);
+
+        let mut tuple_vec = Vec::new();
+        tuple_vec.push((owner, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSubmited(owner, 1))));
+        tuple_vec.push((auditor, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSignedByAuditor(auditor, 1))));
+        tuple_vec.push((standard_acc, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSignedByStandard(standard_acc, 1))));
+        tuple_vec.push((registry, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSignedByRegistry(registry, 1))));
+
+        tuple_vec.iter()
+            .for_each(|(acc, check_event)|{
+                let res = CarbonCredits::sign_last_annual_report(Origin::signed(*acc), project_id);
+                let last_event = last_event().unwrap();
+    
+                assert_eq!(*check_event, last_event);
+            });
     });
 }

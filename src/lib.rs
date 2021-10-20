@@ -53,8 +53,6 @@ decl_event!(
         ProjectCreated(AccountId, ProjectId),
         ProjectSubmited(AccountId, ProjectId),    
         ProjectRegistered(AccountId, ProjectId),
-
-        // ProjectSigned(AccountId, ProjectId, RoleMask),
         ProjectSignedByAduitor(AccountId, ProjectId),
         ProjectSignedByStandard(AccountId, ProjectId),
         ProjectSignedByRegistry(AccountId, ProjectId),
@@ -62,8 +60,6 @@ decl_event!(
         // Annual Report events
         AnnualReportCreated(AccountId, ProjectId),
         AnnualReportSubmited(AccountId, ProjectId),
-
-        // AnnualReportSignedByAuditor(AccountId, ProjectId, RoleMask),
         AnnualReportSignedByAuditor(AccountId, ProjectId),
         AnnualReportSignedByStandard(AccountId, ProjectId),
         AnnualReportSignedByRegistry(AccountId, ProjectId),
@@ -187,7 +183,7 @@ impl<T: Config> Module<T> {
                         project.state = project::AUDITOR_SIGN_PENDING;
                         project.status = project::ProjectStatus::REGISTRATION;
                         project.signatures.push(caller.clone());
-                        *event = Some(RawEvent::ProjectRegistered(caller, project.id));
+                        *event = Some(RawEvent::ProjectSubmited(caller, project.id));
                     },
                     project::AUDITOR_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);

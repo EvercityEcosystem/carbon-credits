@@ -265,6 +265,29 @@ fn it_works_for_create_new_project_deposit_event_gold_standard() {
 #[test]
 fn it_works_sign_project_deposit_events_gold_standard() {
     new_test_ext_with_event().execute_with(|| {
-        todo!();
+        let owner = ROLES[1].0;
+        let auditor = ROLES[2].0;
+        let standard_acc = ROLES[3].0;
+        let registry = ROLES[5].0;
+
+        let standard = Standard::GOLD_STANDARD;
+        let filehash = H256::from([0x66; 32]);
+
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+
+        let mut tuple_vec = Vec::new();
+        tuple_vec.push((owner, Event::pallet_carbon_credits(crate::RawEvent::ProjectSubmited(owner, 1))));
+        tuple_vec.push((auditor, Event::pallet_carbon_credits(crate::RawEvent::ProjectSignedByAduitor(auditor, 1))));
+        tuple_vec.push((standard_acc, Event::pallet_carbon_credits(crate::RawEvent::ProjectSignedByStandard(standard_acc, 1))));
+        tuple_vec.push((registry, Event::pallet_carbon_credits(crate::RawEvent::ProjectSignedByRegistry(registry, 1))));
+
+        // sign here:
+        tuple_vec.iter()
+        .for_each(|(acc, check_event)| {
+            let _ = CarbonCredits::sign_project(Origin::signed(*acc), 1);
+            let last_event = last_event().unwrap();
+
+            assert_eq!(*check_event, last_event);
+        });
     });
 }
