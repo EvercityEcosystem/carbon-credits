@@ -343,7 +343,7 @@ fn it_works_sign_annual_report_deposit_events_gold_standard() {
 
         tuple_vec.iter()
             .for_each(|(acc, check_event)|{
-                let res = CarbonCredits::sign_last_annual_report(Origin::signed(*acc), project_id);
+                let _ = CarbonCredits::sign_last_annual_report(Origin::signed(*acc), project_id);
                 let last_event = last_event().unwrap();
     
                 assert_eq!(*check_event, last_event);

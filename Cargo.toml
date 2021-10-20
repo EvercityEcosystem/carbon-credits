@@ -2,7 +2,7 @@
 authors = ["Dima Bushuev diman1ghtly@gmail.com"]
 name = "pallet-evercity-carbon-credits"
 description = 'Pallet for carbon credits'
-version = "0.1.5"
+version = "0.1.6"
 edition = "2018"
 homepage = 'https://evercity.io'
 license = 'Apache-2.0'
@@ -33,7 +33,7 @@ frame-system = { default-features = false, version = '3.0.0' }
 pallet-timestamp = { default-features = false, version = '3.0.0' }
 sp-api = { default-features = false, version = '3.0.0' }
 
-pallet-evercity-accounts = { default-features = false, version = '0.1.6', git = 'https://github.com/EvercityEcosystem/evercity-accounts' }
+pallet-evercity-accounts = { default-features = false, version = '0.1.7', git = 'https://github.com/EvercityEcosystem/evercity-accounts' }
 
 [dev-dependencies]
 sp-core = {  version = '3.0.0' }

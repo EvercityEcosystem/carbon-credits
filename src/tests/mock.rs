@@ -19,7 +19,7 @@ frame_support::construct_runtime!(
 	{
 		System: frame_system::{ Module, Call, Config, Storage, Event<T> },
 		CarbonCredits: pallet_carbon_credits::{ Module, Call, Storage, Event<T> },
-		EvercityAccounts: pallet_evercity_accounts::{ Module, Call, Storage },
+		EvercityAccounts: pallet_evercity_accounts::{ Module, Call, Storage, Event<T> },
 	}
 );
 
@@ -53,6 +53,7 @@ impl pallet_carbon_credits::Config for TestRuntime {
 }
 
 impl pallet_evercity_accounts::Config for TestRuntime {
+	type Event = Event;
 }
 
 // (AccountId, role)
