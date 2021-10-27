@@ -6,14 +6,15 @@ use frame_support::{
     decl_storage,
     decl_event,
     dispatch::{
-        DispatchResult,DispatchResultWithPostInfo
+        DispatchResult,
+        // DispatchResultWithPostInfo,
     },
-    traits::*,
+    traits::UnfilteredDispatchable,
 };
 use frame_system::{
     ensure_signed,
 };
-use sp_runtime::traits::*;
+use sp_runtime::traits::StaticLookup;
 use frame_support::sp_std::{
     cmp::{
         Eq, 
@@ -133,6 +134,7 @@ decl_error! {
         NotIssuedAnnualReportsExist,
 
         ErrorCreatingAsset,
+        ErrorMintingAsset,
         CCAlreadyCreated,
     }
 }
@@ -257,11 +259,10 @@ impl<T: Config> Module<T> {
                 Ok(())
          })?;
 
-        // let balance = <T::Balance as AtLeast32BitUnsigned>::try_from(cc_amount.unwrap());
-        // let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.into());
-        // let mint_call = pallet_assets::Call::<T>::mint(id, new_carbon_credits_holder_source, cc_amount.unwrap());
-        // let result = mint_call.dispatch_bypass_filter(origin);
-
+        let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.into());
+        let mint_call = pallet_assets::Call::<T>::mint(id, new_carbon_credits_holder_source, cc_amount.unwrap());
+        let result = mint_call.dispatch_bypass_filter(origin);
+        ensure!(!result.is_err(), Error::<T>::ErrorMintingAsset);
         Ok(())
     }
 
