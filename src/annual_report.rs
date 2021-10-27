@@ -15,6 +15,8 @@ pub const REPORT_ISSUED: AnnualReportStateMask = 32;
 
 pub type AnnualReportStruct<AccountId, T> = AnnualReportStructT<AccountId, <T as pallet_timestamp::Config>::Moment>;
 
+// pub type AnnualReportStructaa<AccountId, T, Balance> = AnnualReportStructT<AccountId, <T as pallet_timestamp::Config>::Moment, Balance>;
+
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
 pub struct AnnualReportStructT<AccountId, Moment> {
     pub filehash: H256,
@@ -36,5 +38,17 @@ impl<AccountId, Moment> AnnualReportStructT<AccountId, Moment> {
             carbon_credits_released: false,
             create_time,
         }
+    }
+
+    pub fn is_carbon_credits_released(&self) -> bool {
+        self.carbon_credits_released
+    }
+
+    pub fn set_carbon_credits_released(&mut self) {
+        self.carbon_credits_released = true;
+    }
+
+    pub fn carbon_credits_count(&self) -> u64 {
+        self.carbon_credits_count
     }
 }
