@@ -23,19 +23,19 @@ pub const REGISTERED: ProjectStateMask = 32;
 pub type ProjectId = u32;
 
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
-pub struct ProjectStruct<AccountId, Moment> where AccountId: PartialEq, Moment: pallet_timestamp::Config {
+pub struct ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq, Moment: pallet_timestamp::Config, Balance: Clone {
     pub owner: AccountId,
     pub id: ProjectId,
     pub status: ProjectStatus,
     pub state: ProjectStateMask,
     pub document_versions: Vec<ProjectDocument>,
     pub signatures: Vec<AccountId>,
-    pub annual_reports: Vec<AnnualReportStruct<AccountId, Moment>>,
+    pub annual_reports: Vec<AnnualReportStruct<AccountId, Moment, Balance>>,
     pub required_signers: RequiredSigners<AccountId>,
     standard: Standard,
 }
 
-impl<AccountId, Moment> ProjectStruct<AccountId, Moment> where AccountId: PartialEq, Moment: pallet_timestamp::Config {
+impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq, Moment: pallet_timestamp::Config, Balance: Clone {
     /// constructor for project
     pub fn new(owner: AccountId, id: u32, standard: Standard, filehash: &H256) -> Self {
 

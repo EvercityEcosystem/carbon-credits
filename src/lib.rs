@@ -38,6 +38,7 @@ pub mod carbon_credits;
 // pub mod tests;
 
 type Timestamp<T> = pallet_timestamp::Module<T>;
+pub(crate) type AssetsBalanceOf<T> = <T as pallet_assets::Config>::Balance;
 
 // #[cfg(not(test))]  
 pub trait Config: frame_system::Config + pallet_evercity_accounts::Config + pallet_timestamp::Config + pallet_assets::Config {
@@ -82,7 +83,7 @@ decl_storage! {
     trait Store for Module<T: Config> as CarbonCredits {
         ProjectById
             get(fn project_by_id):
-            map hasher(blake2_128_concat) u32 => Option<ProjectStruct<T::AccountId, T>>;
+            map hasher(blake2_128_concat) u32 => Option<ProjectStruct<T::AccountId, T, T::Balance>>;
 
         LastID: ProjectId;
     }
@@ -164,7 +165,7 @@ decl_module! {
         }
 
         #[weight = 10_000]
-        pub fn create_annual_report(origin, project_id: ProjectId, filehash: H256, carbon_credits_count: u64) -> DispatchResult {
+        pub fn create_annual_report(origin, project_id: ProjectId, filehash: H256, carbon_credits_count: T::Balance) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             Self::impl_create_annual_report(caller, project_id, &filehash, carbon_credits_count)?;
             Ok(())
@@ -215,7 +216,7 @@ impl<T: Config> Module<T> {
                     Error::<T>::NoAnnualReports
                 );
 
-                // ensure that carbo credits not released, then
+                // ensure that carbon credits not released, then
                 let last_annual_report = &mut project_to_mutate.as_mut().unwrap().annual_reports[reports_len - 1];
                 ensure!(!last_annual_report.is_carbon_credits_released(), Error::<T>::CCAlreadyCreated);
                 last_annual_report.set_carbon_credits_released();
@@ -234,7 +235,7 @@ impl<T: Config> Module<T> {
     pub fn impl_mint_carbon_credits(origin: <T as frame_system::Config>::Origin, id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId) -> DispatchResult {
         let project_owner = ensure_signed(origin.clone())?;
 
-        let mut cc_amount: Option<u64> = None;
+        let mut cc_amount: Option<T::Balance> = None;
         ProjectById::<T>::try_mutate(
             project_id, |project_to_mutate| -> DispatchResult {
                 ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
@@ -256,10 +257,10 @@ impl<T: Config> Module<T> {
                 Ok(())
          })?;
 
-        // let balance = <T::Balance>::from(cc_amount);
-        let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.into());
+        // let balance = <T::Balance as AtLeast32BitUnsigned>::try_from(cc_amount.unwrap());
+        // let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.into());
         // let mint_call = pallet_assets::Call::<T>::mint(id, new_carbon_credits_holder_source, cc_amount.unwrap());
-        let result = mint_call.dispatch_bypass_filter(origin);
+        // let result = mint_call.dispatch_bypass_filter(origin);
 
         Ok(())
     }
@@ -269,7 +270,7 @@ impl<T: Config> Module<T> {
         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
 
         let new_id = LastID::get() + 1;
-        let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T>::new(caller.clone(), new_id, standard, filehash);
+        let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T, T::Balance>::new(caller.clone(), new_id, standard, filehash);
         <ProjectById<T>>::insert(new_id, new_project);
         LastID::mutate(|x| *x = x.checked_add(1).unwrap());
         // SendEvent
@@ -291,7 +292,7 @@ impl<T: Config> Module<T> {
         Ok(())
     }
 
-    fn impl_create_annual_report(caller: T::AccountId, proj_id: ProjectId, filehash: &H256, carbon_credits_count: u64) -> DispatchResult {
+    fn impl_create_annual_report(caller: T::AccountId, proj_id: ProjectId, filehash: &H256, carbon_credits_count: T::Balance) -> DispatchResult {
         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
         ProjectById::<T>::try_mutate(
             proj_id, |project_to_mutate| -> DispatchResult {
@@ -302,7 +303,8 @@ impl<T: Config> Module<T> {
                             .all(|x| x.state == annual_report::REPORT_ISSUED),
                     Error::<T>::NotIssuedAnnualReportsExist
                 );
-                project_to_mutate.as_mut().unwrap().annual_reports.push(annual_report::AnnualReportStruct::<T::AccountId, T>::new(*filehash, carbon_credits_count, Timestamp::<T>::get()));
+                project_to_mutate.as_mut().unwrap().annual_reports
+                            .push(annual_report::AnnualReportStruct::<T::AccountId, T, T::Balance>::new(*filehash, carbon_credits_count, Timestamp::<T>::get()));
                 Ok(())
          })?;
         // SendEvent
@@ -310,7 +312,7 @@ impl<T: Config> Module<T> {
         Ok(())
     }
 
-    fn change_project_state(project: &mut ProjectStruct<T::AccountId, T>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
+    fn change_project_state(project: &mut ProjectStruct<T::AccountId, T, T::Balance>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
         match &mut project.get_standard() {
             // Project Owner submits PDD (changing status to Registration) => 
             // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
@@ -365,7 +367,7 @@ impl<T: Config> Module<T> {
         Ok(())
     }
 
-    fn change_project_annual_report_state(project: &mut ProjectStruct<T::AccountId, T>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
+    fn change_project_annual_report_state(project: &mut ProjectStruct<T::AccountId, T, T::Balance>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
         let standard = project.get_standard().clone();
         let owner = project.owner.clone();
         
@@ -414,7 +416,7 @@ impl<T: Config> Module<T> {
     }
 
     #[cfg(test)]
-    pub fn get_proj_by_id(id: ProjectId) -> Option<ProjectStruct<T::AccountId, T>> {
+    pub fn get_proj_by_id(id: ProjectId) -> Option<ProjectStruct<T::AccountId, T, T::Balance>> {
         ProjectById::<T>::get(id)
     }
 }
