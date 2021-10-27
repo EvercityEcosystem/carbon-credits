@@ -70,6 +70,49 @@ impl pallet_timestamp::Config for TestRuntime {
     type WeightInfo = ();
 }
 
+
+// use sp_core::u32_trait::{_1, _2};
+
+// pub type Balance = u128;
+
+// pub const U_MITO: Balance = 1_000_000;
+// pub const MITO: Balance = 1_000_000 * U_MITO;
+// pub const fn deposit(items: u32, bytes: u32) -> Balance {
+// 	items as Balance * 15 * MITO / 100 + (bytes as Balance) * 6 * MITO / 100
+// }
+
+// parameter_types! {
+//     pub const AssetDeposit: Balance = 1_000 * MITO; // 1000 MITO deposit to create asset
+//     pub const ApprovalDeposit: Balance = 1 * U_MITO;
+//     pub const StringLimit: u32 = 50;
+//     /// Key = 32 bytes, Value = 36 bytes (32+1+1+1+1)
+//     /// https://github.com/paritytech/substrate/blob/069917b/frame/assets/src/lib.rs#L257L271
+//     pub const MetadataDepositBase: Balance = deposit(1, 68);
+//     pub const MetadataDepositPerByte: Balance = deposit(0, 1);
+// }
+
+// // pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
+
+// impl pallet_assets::Config for Runtime {
+//     type Event = Event;
+//     type Balance = Balance;
+//     type AssetId = u32;
+//     type Currency = Balances;
+//     // type ForceOrigin = MoreThanHalfTechnicals;//frame_system::EnsureRoot<AccountId>
+//     type ForceOrigin = frame_system::EnsureSigned<AccountId>;
+//     // type ForceOrigin = frame_system::EnsureRoot<AccountId>;
+//     // type ForceOrigin = pallet_dogs::EnsureAllowedAcc<AccountId>;
+//     type AssetDeposit = AssetDeposit;
+//     type MetadataDepositBase = MetadataDepositBase;
+//     type MetadataDepositPerByte = MetadataDepositPerByte;
+//     type ApprovalDeposit = ApprovalDeposit;
+//     type StringLimit = StringLimit;
+//     type Freezer = ();
+//     type Extra = ();
+//     type WeightInfo = ();
+// }
+
+
 // (AccountId, role)
 pub static ROLES: [(u64, RoleMask); 6] = [
     (1_u64, MASTER_ROLE_MASK),

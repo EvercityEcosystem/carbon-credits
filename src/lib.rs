@@ -6,17 +6,21 @@ use frame_support::{
     decl_storage,
     decl_event,
     dispatch::{
-        DispatchResult,
+        DispatchResult,DispatchResultWithPostInfo
     },
+    traits::*,
 };
 use frame_system::{
     ensure_signed,
 };
+use sp_runtime::traits::*;
 use frame_support::sp_std::{
     cmp::{
         Eq, 
         PartialEq}, 
 };
+pub use pallet_assets::weights::WeightInfo;
+
 use pallet_evercity_accounts as accounts;
 use project::{ProjectStruct, ProjectId};
 use standard::Standard;
@@ -30,14 +34,49 @@ pub mod file_hash;
 pub mod required_signers;
 pub mod carbon_credits;
 
-#[cfg(test)]    
-pub mod tests;
+// #[cfg(test)]    
+// pub mod tests;
 
 type Timestamp<T> = pallet_timestamp::Module<T>;
 
-pub trait Config: frame_system::Config + pallet_evercity_accounts::Config + pallet_timestamp::Config {
+// #[cfg(not(test))]  
+pub trait Config: frame_system::Config + pallet_evercity_accounts::Config + pallet_timestamp::Config + pallet_assets::Config {
     type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
+
+    // /// The units in which we record balances.
+    // type Balance: Member + frame_support::dispatch::Parameter + AtLeast32BitUnsigned + Default + Copy;
+
+    // /// The arithmetic type of asset identifier.
+    // type AssetId: Member + frame_support::dispatch::Parameter + Default + Copy + frame_support::dispatch::HasCompact;
+
+    // /// The currency mechanism.
+    // type Currency: ReservableCurrency<Self::AccountId>;
+
+    // /// The origin which may forcibly create or destroy an asset.
+    // type ForceOrigin: EnsureOrigin<Self::Origin>;
+
+    // /// The basic amount of funds that must be reserved when creating a new asset class.
+    // // type AssetDepositBase: Get<BalanceOf<Self>>;
+    // // type AssetDepositBase: Get<<Self::Currency<<Self>::AccountId>>::Balance>;
+
+    // /// The additional funds that must be reserved for every zombie account that an asset class
+    // /// supports.
+    // // type AssetDepositPerZombie: Get<BalanceOf<Self>>;
+
+    // // /// The maximum length of a name or symbol stored on-chain.
+    // // type StringLimit: Get<u32>;
+
+    // // /// The basic amount of funds that must be reserved when adding metadata to your asset.
+    // // type MetadataDepositBase: Get<BalanceOf<Self>>;
+
+    // // /// The additional funds that must be reserved for the number of bytes you store in your
+    // // /// metadata.
+    // // type MetadataDepositPerByte: Get<BalanceOf<Self>>;
+
+    // /// Weight information for extrinsics in this pallet.
+    // type WeightInfo: WeightInfo;
 }
+
 
 decl_storage! {
     trait Store for Module<T: Config> as CarbonCredits {
@@ -91,6 +130,8 @@ decl_error! {
         ProjectNotRegistered,
         NoAnnualReports,
         NotIssuedAnnualReportsExist,
+
+        ErrorCreatingAsset,
     }
 }
 
@@ -134,10 +175,39 @@ decl_module! {
             Self::impl_sign_annual_report(caller, project_id)?;
             Ok(())
         }
+
+        #[weight = 10_000]
+        pub fn create_some(
+            origin, 
+            id: <T as pallet_assets::Config>::AssetId, 
+            owner: T::AccountId,
+            min_balance: <T as pallet_assets::Config>::Balance
+        ) -> DispatchResult {
+            ensure_signed(origin.clone())?;
+            Self::impl_create_carbon_credits(origin, id, owner, min_balance)?;
+            Ok(())
+        }
     }
 }
 
 impl<T: Config> Module<T> {
+
+    pub fn impl_create_carbon_credits(
+        origin: <T as frame_system::Config>::Origin, 
+        id: <T as pallet_assets::Config>::AssetId,
+        owner: T::AccountId,
+        min_balance: <T as pallet_assets::Config>::Balance
+    ) -> DispatchResult {
+
+        let owner_source = <T::Lookup as StaticLookup>::unlookup(owner.into());
+        let call = pallet_assets::Call::<T>::create(id, owner_source, 0u32, min_balance);
+        let result = call.dispatch_bypass_filter(origin);
+        ensure!(!result.is_err(), Error::<T>::ErrorCreatingAsset);
+
+        Ok(())
+    }
+
+
     pub fn impl_create_project(caller: T::AccountId, standard: Standard, filehash: &H256) -> DispatchResult {
         // check if caller has CC_PROJECT_OWNER role
         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
@@ -274,6 +344,7 @@ impl<T: Config> Module<T> {
                         report.signatures.push(caller.clone());
                         *event = Some(RawEvent::AnnualReportSignedByRegistry(caller, project.id));
 
+                        
                         /*
                             !!!!!!!!!!!_TODO_!!!!!!!!!!!
                             HERE ISSUE CARBON CREDITS
