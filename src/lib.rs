@@ -95,7 +95,7 @@ decl_event!(
     where
         AccountId = <T as frame_system::Config>::AccountId,
     {
-        // Project Events
+        // Project Events:
         ProjectCreated(AccountId, ProjectId),
         ProjectSubmited(AccountId, ProjectId),    
         ProjectRegistered(AccountId, ProjectId),
@@ -103,12 +103,14 @@ decl_event!(
         ProjectSignedByStandard(AccountId, ProjectId),
         ProjectSignedByRegistry(AccountId, ProjectId),
 
-        // Annual Report events
+        // Annual Report Events:
         AnnualReportCreated(AccountId, ProjectId),
         AnnualReportSubmited(AccountId, ProjectId),
         AnnualReportSignedByAuditor(AccountId, ProjectId),
         AnnualReportSignedByStandard(AccountId, ProjectId),
         AnnualReportSignedByRegistry(AccountId, ProjectId),
+
+        // Carbon Credits Events:
     }
 );
 
@@ -206,24 +208,10 @@ impl<T: Config> Module<T> {
         let project_owner = ensure_signed(origin.clone())?;
         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
 
-        ProjectById::<T>::try_mutate(
-            project_id, |project_to_mutate| -> DispatchResult {
-                ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                ensure!(project_to_mutate.as_ref().unwrap().owner == project_owner, Error::<T>::AccountNotOwner);
-                ensure!(project_to_mutate.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
-
-                // Check that there is at least one annual report
-                let reports_len = project_to_mutate.as_ref().unwrap().annual_reports.len();
-                ensure!(reports_len > 0,
-                    Error::<T>::NoAnnualReports
-                );
-
-                // ensure that carbon credits not released, then
-                let last_annual_report = &mut project_to_mutate.as_mut().unwrap().annual_reports[reports_len - 1];
-                ensure!(!last_annual_report.is_carbon_credits_released(), Error::<T>::CCAlreadyCreated);
-                last_annual_report.set_carbon_credits_released();
-                Ok(())
-         })?;
+        let project = ProjectById::<T>::get(project_id);
+        ensure!(project.is_some(), Error::<T>::ProjectNotExist);
+        ensure!(project.as_ref().unwrap().owner == project_owner, Error::<T>::AccountNotOwner);
+        ensure!(project.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
 
         // Create Asset:
         let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.into());
