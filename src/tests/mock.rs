@@ -19,11 +19,15 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system::{ Module, Call, Config, Storage, Event<T> },
+        Balances: pallet_balances::{Module, Call, Storage, Config<T>, Event<T>},
 		CarbonCredits: pallet_carbon_credits::{ Module, Call, Storage, Event<T> },
 		EvercityAccounts: pallet_evercity_accounts::{ Module, Call, Storage, Event<T> },
 		Timestamp: pallet_timestamp::{ Module, Call, Storage, Inherent},
+        Assets: pallet_assets::{ Module, Call, Storage, Event<T> },
 	}
 );
+
+type AccountId = u64;
 
 impl frame_system::Config for TestRuntime {
 	type BaseCallFilter = ();
@@ -36,14 +40,14 @@ impl frame_system::Config for TestRuntime {
 	type BlockNumber = u64;
 	type Hash = H256;
 	type Hashing = BlakeTwo256;
-	type AccountId = u64;
+	type AccountId = AccountId;
 	type Lookup = IdentityLookup<Self::AccountId>;
 	type Header = Header;
 	type Event = Event;
 	type BlockHashCount = ();
 	type Version = ();
 	type PalletInfo = PalletInfo;
-	type AccountData = ();
+	type AccountData = pallet_balances::AccountData<u64>;
 	type OnNewAccount = ();
 	type OnKilledAccount = ();
 	type SystemWeightInfo = ();
@@ -70,47 +74,54 @@ impl pallet_timestamp::Config for TestRuntime {
     type WeightInfo = ();
 }
 
+// ballances
+parameter_types! {
+    pub const ExistentialDeposit: u64 = 0;
+    pub const MaxLocks: u32 = 50;
+}
 
-// use sp_core::u32_trait::{_1, _2};
+impl pallet_balances::Config for TestRuntime {
+    type Balance = u64;
+    type Event = Event;
+    type DustRemoval = ();
+    type ExistentialDeposit = ExistentialDeposit;
+    type AccountStore = System;
+    type WeightInfo = ();
+    type MaxLocks = MaxLocks;
+}
 
-// pub type Balance = u128;
+// Asset Pallet Configs
+pub type Balance = u64;
+pub const U_BALANCE: Balance = 1_000_000;
+pub const BALANCE: Balance = 1_000_000 * U_BALANCE;
+pub const fn deposit(items: u32, bytes: u32) -> Balance {
+	items as Balance * 15 * BALANCE / 100 + (bytes as Balance) * 6 * BALANCE / 100
+}
 
-// pub const U_MITO: Balance = 1_000_000;
-// pub const MITO: Balance = 1_000_000 * U_MITO;
-// pub const fn deposit(items: u32, bytes: u32) -> Balance {
-// 	items as Balance * 15 * MITO / 100 + (bytes as Balance) * 6 * MITO / 100
-// }
+parameter_types! {
+    pub const AssetDeposit: Balance = 1_000 * BALANCE; // 1000 MITO deposit to create asset
+    pub const ApprovalDeposit: Balance = 1 * U_BALANCE;
+    pub const StringLimit: u32 = 50;
+    /// https://github.com/paritytech/substrate/blob/069917b/frame/assets/src/lib.rs#L257L271
+    pub const MetadataDepositBase: Balance = deposit(1, 68);
+    pub const MetadataDepositPerByte: Balance = deposit(0, 1);
+}
 
-// parameter_types! {
-//     pub const AssetDeposit: Balance = 1_000 * MITO; // 1000 MITO deposit to create asset
-//     pub const ApprovalDeposit: Balance = 1 * U_MITO;
-//     pub const StringLimit: u32 = 50;
-//     /// Key = 32 bytes, Value = 36 bytes (32+1+1+1+1)
-//     /// https://github.com/paritytech/substrate/blob/069917b/frame/assets/src/lib.rs#L257L271
-//     pub const MetadataDepositBase: Balance = deposit(1, 68);
-//     pub const MetadataDepositPerByte: Balance = deposit(0, 1);
-// }
+// pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 
-// // pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
-
-// impl pallet_assets::Config for Runtime {
-//     type Event = Event;
-//     type Balance = Balance;
-//     type AssetId = u32;
-//     type Currency = Balances;
-//     // type ForceOrigin = MoreThanHalfTechnicals;//frame_system::EnsureRoot<AccountId>
-//     type ForceOrigin = frame_system::EnsureSigned<AccountId>;
-//     // type ForceOrigin = frame_system::EnsureRoot<AccountId>;
-//     // type ForceOrigin = pallet_dogs::EnsureAllowedAcc<AccountId>;
-//     type AssetDeposit = AssetDeposit;
-//     type MetadataDepositBase = MetadataDepositBase;
-//     type MetadataDepositPerByte = MetadataDepositPerByte;
-//     type ApprovalDeposit = ApprovalDeposit;
-//     type StringLimit = StringLimit;
-//     type Freezer = ();
-//     type Extra = ();
-//     type WeightInfo = ();
-// }
+impl pallet_assets::Config for TestRuntime {
+    type Event = Event;
+    type Balance = Balance;
+    type AssetId = u32;
+    type Currency = Balances;
+    type ForceOrigin = frame_system::EnsureSigned<AccountId>;
+    type AssetDepositBase = AssetDeposit;
+    type MetadataDepositBase = MetadataDepositBase;
+    type MetadataDepositPerByte = MetadataDepositPerByte;
+    type AssetDepositPerZombie = AssetDeposit;
+    type StringLimit = StringLimit;
+    type WeightInfo = ();
+}
 
 
 // (AccountId, role)

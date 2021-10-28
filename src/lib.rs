@@ -35,8 +35,8 @@ pub mod file_hash;
 pub mod required_signers;
 pub mod carbon_credits;
 
-// #[cfg(test)]    
-// pub mod tests;
+#[cfg(test)]    
+pub mod tests;
 
 type Timestamp<T> = pallet_timestamp::Module<T>;
 pub(crate) type AssetsBalanceOf<T> = <T as pallet_assets::Config>::Balance;
