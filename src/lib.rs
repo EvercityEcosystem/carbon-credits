@@ -44,39 +44,6 @@ pub(crate) type AssetsBalanceOf<T> = <T as pallet_assets::Config>::Balance;
 // #[cfg(not(test))]  
 pub trait Config: frame_system::Config + pallet_evercity_accounts::Config + pallet_timestamp::Config + pallet_assets::Config {
     type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
-
-    // /// The units in which we record balances.
-    // type Balance: Member + frame_support::dispatch::Parameter + AtLeast32BitUnsigned + Default + Copy;
-
-    // /// The arithmetic type of asset identifier.
-    // type AssetId: Member + frame_support::dispatch::Parameter + Default + Copy + frame_support::dispatch::HasCompact;
-
-    // /// The currency mechanism.
-    // type Currency: ReservableCurrency<Self::AccountId>;
-
-    // /// The origin which may forcibly create or destroy an asset.
-    // type ForceOrigin: EnsureOrigin<Self::Origin>;
-
-    // /// The basic amount of funds that must be reserved when creating a new asset class.
-    // // type AssetDepositBase: Get<BalanceOf<Self>>;
-    // // type AssetDepositBase: Get<<Self::Currency<<Self>::AccountId>>::Balance>;
-
-    // /// The additional funds that must be reserved for every zombie account that an asset class
-    // /// supports.
-    // // type AssetDepositPerZombie: Get<BalanceOf<Self>>;
-
-    // // /// The maximum length of a name or symbol stored on-chain.
-    // // type StringLimit: Get<u32>;
-
-    // // /// The basic amount of funds that must be reserved when adding metadata to your asset.
-    // // type MetadataDepositBase: Get<BalanceOf<Self>>;
-
-    // // /// The additional funds that must be reserved for the number of bytes you store in your
-    // // /// metadata.
-    // // type MetadataDepositPerByte: Get<BalanceOf<Self>>;
-
-    // /// Weight information for extrinsics in this pallet.
-    // type WeightInfo: WeightInfo;
 }
 
 
