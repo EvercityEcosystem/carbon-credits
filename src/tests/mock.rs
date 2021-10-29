@@ -140,6 +140,13 @@ pub fn new_test_ext() -> frame_support::sp_io::TestExternalities {
         .build_storage::<TestRuntime>()
         .unwrap();
 
+    pallet_balances::GenesisConfig::<TestRuntime> {
+        // Provide some initial balances
+        balances: ROLES.iter().map(|x| (x.0, 100000)).collect(),
+    }
+    .assimilate_storage(&mut t)
+    .unwrap();
+
 	pallet_evercity_accounts::GenesisConfig::<TestRuntime> {
         // Accounts for tests
         genesis_account_registry: ROLES
@@ -164,6 +171,13 @@ pub fn new_test_ext_with_event() -> frame_support::sp_io::TestExternalities {
     let mut t = frame_system::GenesisConfig::default()
         .build_storage::<TestRuntime>()
         .unwrap();
+
+    pallet_balances::GenesisConfig::<TestRuntime> {
+        // Provide some initial balances
+        balances: ROLES.iter().map(|x| (x.0, 100000)).collect(),
+    }
+    .assimilate_storage(&mut t)
+    .unwrap();
 
 	pallet_evercity_accounts::GenesisConfig::<TestRuntime> {
         // Accounts for tests
