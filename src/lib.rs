@@ -39,9 +39,7 @@ pub mod carbon_credits;
 pub mod tests;
 
 type Timestamp<T> = pallet_timestamp::Module<T>;
-pub(crate) type AssetsBalanceOf<T> = <T as pallet_assets::Config>::Balance;
-
-// #[cfg(not(test))]  
+ 
 pub trait Config: frame_system::Config + pallet_evercity_accounts::Config + pallet_timestamp::Config + pallet_assets::Config {
     type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
 }
@@ -116,14 +114,21 @@ decl_module! {
         #[weight = 10_000]
         pub fn create_project(origin, standard: Standard, filehash: H256) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-            Self::impl_create_project(caller, standard, &filehash)?;
+            ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+
+            let new_id = LastID::get() + 1;
+            let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T, T::Balance>::new(caller.clone(), new_id, standard, &filehash);
+            <ProjectById<T>>::insert(new_id, new_project);
+            LastID::mutate(|x| *x = x.checked_add(1).unwrap());
+
+            // SendEvent
+            Self::deposit_event(RawEvent::ProjectCreated(caller, new_id));
             Ok(())
         }
 
         #[weight = 10_000]
         pub fn assign_signer(origin, signer: T::AccountId, role: RoleMask) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-            // Self::impl_sign_project(caller, proj_id)?;
             todo!();
             Ok(())
         }
@@ -131,143 +136,119 @@ decl_module! {
         #[weight = 10_000]
         pub fn sign_project(origin, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-            Self::impl_sign_project(caller, project_id)?;
+            let mut event_opt: Option<Event<T>> = None;
+            ProjectById::<T>::try_mutate(
+                project_id, |project_to_mutate| -> DispatchResult {
+                    ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
+                    Self::change_project_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
+                    Ok(())
+             })?;
+            if let Some(event) = event_opt {
+                Self::deposit_event(event);
+            }
             Ok(())
         }
 
         #[weight = 10_000]
         pub fn create_annual_report(origin, project_id: ProjectId, filehash: H256, carbon_credits_count: T::Balance) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-            Self::impl_create_annual_report(caller, project_id, &filehash, carbon_credits_count)?;
+            ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+            ProjectById::<T>::try_mutate(
+                project_id, |project_to_mutate| -> DispatchResult {
+                    ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
+                    ensure!(project_to_mutate.as_ref().unwrap().owner == caller, Error::<T>::AccountNotOwner);
+                    ensure!(project_to_mutate.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
+                    ensure!(project_to_mutate.as_ref().unwrap().annual_reports.iter()
+                                .all(|x| x.state == annual_report::REPORT_ISSUED),
+                        Error::<T>::NotIssuedAnnualReportsExist
+                    );
+                    project_to_mutate.as_mut().unwrap().annual_reports
+                                .push(annual_report::AnnualReportStruct::<T::AccountId, T, T::Balance>::new(filehash, carbon_credits_count, Timestamp::<T>::get()));
+                    Ok(())
+             })?;
+            // SendEvent
+            Self::deposit_event(RawEvent::AnnualReportCreated(caller, project_id));
             Ok(())
         }
 
         #[weight = 10_000]
-        pub fn sign_last_annual_report(origin, project_id: u32) -> DispatchResult {
+        pub fn sign_last_annual_report(origin, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin)?;
-            Self::impl_sign_annual_report(caller, project_id)?;
+            let mut event_opt: Option<Event<T>> = None;
+            ProjectById::<T>::try_mutate(
+                project_id, |project_to_mutate| -> DispatchResult {
+                    ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
+                    ensure!(project_to_mutate.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
+                    Self::change_project_annual_report_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
+                    Ok(())
+            })?;
+            if let Some(event) = event_opt {
+                Self::deposit_event(event);
+            }
             Ok(())
         }
 
         #[weight = 10_000]
-        pub fn create_some(
+        pub fn create_carbon_credits(
             origin, 
             id: <T as pallet_assets::Config>::AssetId, 
             new_carbon_credits_holder: T::AccountId,
             min_balance: <T as pallet_assets::Config>::Balance,
             project_id: ProjectId,
         ) -> DispatchResult {
-            Self::impl_create_carbon_credits(origin, id, new_carbon_credits_holder, min_balance, project_id)?;
+            let project_owner = ensure_signed(origin.clone())?;
+            ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
+    
+            let project = ProjectById::<T>::get(project_id);
+            ensure!(project.is_some(), Error::<T>::ProjectNotExist);
+            ensure!(project.as_ref().unwrap().owner == project_owner, Error::<T>::AccountNotOwner);
+            ensure!(project.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
+    
+            // Create Asset:
+            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.into());
+            let create_call = pallet_assets::Call::<T>::create(id, new_carbon_credits_holder_source, 0, min_balance);
+            let result = create_call.dispatch_bypass_filter(origin);
+            ensure!(!result.is_err(), Error::<T>::ErrorCreatingAsset);
+            Ok(())
+        }
+
+
+        #[weight = 10_000]
+        pub fn mint_carbon_credits(origin, id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId) -> DispatchResult {
+            let project_owner = ensure_signed(origin.clone())?;
+
+            let mut cc_amount: Option<T::Balance> = None;
+            ProjectById::<T>::try_mutate(
+                project_id, |project_to_mutate| -> DispatchResult {
+                    ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
+                    ensure!(project_to_mutate.as_ref().unwrap().owner == project_owner, Error::<T>::AccountNotOwner);
+                    ensure!(project_to_mutate.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
+    
+                    // Check that there is at least one annual report
+                    let reports_len = project_to_mutate.as_ref().unwrap().annual_reports.len();
+                    ensure!(reports_len > 0,
+                        Error::<T>::NoAnnualReports
+                    );
+    
+                    // ensure that carbo credits not released, then
+                    let last_annual_report = &mut project_to_mutate.as_mut().unwrap().annual_reports[reports_len - 1];
+                    ensure!(!last_annual_report.is_carbon_credits_released(), Error::<T>::CCAlreadyCreated);
+                    last_annual_report.set_carbon_credits_released();
+    
+                    cc_amount = Some(last_annual_report.carbon_credits_count());
+                    Ok(())
+             })?;
+    
+            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.into());
+            let mint_call = pallet_assets::Call::<T>::mint(id, new_carbon_credits_holder_source, cc_amount.unwrap());
+            let result = mint_call.dispatch_bypass_filter(origin);
+            ensure!(!result.is_err(), Error::<T>::ErrorMintingAsset);
             Ok(())
         }
     }
 }
 
 impl<T: Config> Module<T> {
-
-    pub fn impl_create_carbon_credits(
-        origin: <T as frame_system::Config>::Origin, 
-        id: <T as pallet_assets::Config>::AssetId,
-        new_carbon_credits_holder: T::AccountId,
-        min_balance: <T as pallet_assets::Config>::Balance,
-        project_id: ProjectId,
-    ) -> DispatchResult {
-        let project_owner = ensure_signed(origin.clone())?;
-        ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
-
-        let project = ProjectById::<T>::get(project_id);
-        ensure!(project.is_some(), Error::<T>::ProjectNotExist);
-        ensure!(project.as_ref().unwrap().owner == project_owner, Error::<T>::AccountNotOwner);
-        ensure!(project.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
-
-        // Create Asset:
-        let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.into());
-        let create_call = pallet_assets::Call::<T>::create(id, new_carbon_credits_holder_source, 0, min_balance);
-        let result = create_call.dispatch_bypass_filter(origin);
-        ensure!(!result.is_err(), Error::<T>::ErrorCreatingAsset);
-        Ok(())
-    }
-
-
-    pub fn impl_mint_carbon_credits(origin: <T as frame_system::Config>::Origin, id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId) -> DispatchResult {
-        let project_owner = ensure_signed(origin.clone())?;
-
-        let mut cc_amount: Option<T::Balance> = None;
-        ProjectById::<T>::try_mutate(
-            project_id, |project_to_mutate| -> DispatchResult {
-                ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                ensure!(project_to_mutate.as_ref().unwrap().owner == project_owner, Error::<T>::AccountNotOwner);
-                ensure!(project_to_mutate.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
-
-                // Check that there is at least one annual report
-                let reports_len = project_to_mutate.as_ref().unwrap().annual_reports.len();
-                ensure!(reports_len > 0,
-                    Error::<T>::NoAnnualReports
-                );
-
-                // ensure that carbo credits not released, then
-                let last_annual_report = &mut project_to_mutate.as_mut().unwrap().annual_reports[reports_len - 1];
-                ensure!(!last_annual_report.is_carbon_credits_released(), Error::<T>::CCAlreadyCreated);
-                last_annual_report.set_carbon_credits_released();
-
-                cc_amount = Some(last_annual_report.carbon_credits_count());
-                Ok(())
-         })?;
-
-        let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.into());
-        let mint_call = pallet_assets::Call::<T>::mint(id, new_carbon_credits_holder_source, cc_amount.unwrap());
-        let result = mint_call.dispatch_bypass_filter(origin);
-        ensure!(!result.is_err(), Error::<T>::ErrorMintingAsset);
-        Ok(())
-    }
-
-    pub fn impl_create_project(caller: T::AccountId, standard: Standard, filehash: &H256) -> DispatchResult {
-        // check if caller has CC_PROJECT_OWNER role
-        ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
-
-        let new_id = LastID::get() + 1;
-        let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T, T::Balance>::new(caller.clone(), new_id, standard, filehash);
-        <ProjectById<T>>::insert(new_id, new_project);
-        LastID::mutate(|x| *x = x.checked_add(1).unwrap());
-        // SendEvent
-        Self::deposit_event(RawEvent::ProjectCreated(caller, new_id));
-        Ok(())
-    }
-
-    fn impl_sign_project(caller: T::AccountId, proj_id: u32) -> DispatchResult {
-        let mut event_opt: Option<Event<T>> = None;
-        ProjectById::<T>::try_mutate(
-            proj_id, |project_to_mutate| -> DispatchResult {
-                ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                Self::change_project_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
-                Ok(())
-         })?;
-        if let Some(event) = event_opt {
-            Self::deposit_event(event);
-        }
-        Ok(())
-    }
-
-    fn impl_create_annual_report(caller: T::AccountId, proj_id: ProjectId, filehash: &H256, carbon_credits_count: T::Balance) -> DispatchResult {
-        ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
-        ProjectById::<T>::try_mutate(
-            proj_id, |project_to_mutate| -> DispatchResult {
-                ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                ensure!(project_to_mutate.as_ref().unwrap().owner == caller, Error::<T>::AccountNotOwner);
-                ensure!(project_to_mutate.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
-                ensure!(project_to_mutate.as_ref().unwrap().annual_reports.iter()
-                            .all(|x| x.state == annual_report::REPORT_ISSUED),
-                    Error::<T>::NotIssuedAnnualReportsExist
-                );
-                project_to_mutate.as_mut().unwrap().annual_reports
-                            .push(annual_report::AnnualReportStruct::<T::AccountId, T, T::Balance>::new(*filehash, carbon_credits_count, Timestamp::<T>::get()));
-                Ok(())
-         })?;
-        // SendEvent
-        Self::deposit_event(RawEvent::AnnualReportCreated(caller, proj_id));
-        Ok(())
-    }
-
     fn change_project_state(project: &mut ProjectStruct<T::AccountId, T, T::Balance>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
         match &mut project.get_standard() {
             // Project Owner submits PDD (changing status to Registration) => 
@@ -306,21 +287,6 @@ impl<T: Config> Module<T> {
                 Ok(())
             }
         }
-    }
-
-    fn impl_sign_annual_report(caller: T::AccountId, proj_id: ProjectId) -> DispatchResult {
-        let mut event_opt: Option<Event<T>> = None;
-        ProjectById::<T>::try_mutate(
-            proj_id, |project_to_mutate| -> DispatchResult {
-                ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                ensure!(project_to_mutate.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
-                Self::change_project_annual_report_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
-                Ok(())
-        })?;
-        if let Some(event) = event_opt {
-            Self::deposit_event(event);
-        }
-        Ok(())
     }
 
     fn change_project_annual_report_state(project: &mut ProjectStruct<T::AccountId, T, T::Balance>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
