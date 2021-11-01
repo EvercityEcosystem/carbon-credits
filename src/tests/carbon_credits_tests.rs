@@ -14,9 +14,7 @@ use crate::tests::helpers::*;
 #[test]
 fn it_works_for_create_new_annual_report_gold_standard() {
     new_test_ext().execute_with(|| {
-        let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
-        let report_hash = H256::from([0x69; 32]);
-
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
         full_sign_annual_report_gold_standard();
         let create_cc_result = CarbonCredits::create_carbon_credits(Origin::signed(owner), 1, owner, 1, project_id);
         assert_ok!(create_cc_result, ());

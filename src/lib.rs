@@ -33,7 +33,7 @@ pub mod project;
 pub mod annual_report;
 pub mod file_hash;
 pub mod required_signers;
-pub mod carbon_credits;
+// pub mod carbon_credits;
 
 #[cfg(test)]    
 pub mod tests;
@@ -249,7 +249,8 @@ decl_module! {
 
         #[weight = 10_000]
         pub fn transfer_carbon_credits(
-            origin, asset_id: <T as pallet_assets::Config>::AssetId, 
+            origin, 
+            asset_id: <T as pallet_assets::Config>::AssetId, 
             new_carbon_credits_holder: T::AccountId, 
             amount: T::Balance
         ) -> DispatchResult {
@@ -356,4 +357,9 @@ impl<T: Config> Module<T> {
     pub fn get_proj_by_id(id: ProjectId) -> Option<ProjectStruct<T::AccountId, T, T::Balance>> {
         ProjectById::<T>::get(id)
     }
+
+    // #[cfg(test)]
+    // pub fn get_asset_by_id(asset_id: <T as pallet_assets::Config>::AssetId)  {
+    //     let a = pallet_assets::Asset::<T>::get(asset_id);
+    // }
 }
