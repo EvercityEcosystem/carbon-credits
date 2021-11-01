@@ -103,6 +103,7 @@ decl_error! {
         ErrorCreatingAsset,
         ErrorMintingAsset,
         CCAlreadyCreated,
+        TransferFailed,
     }
 }
 
@@ -243,6 +244,20 @@ decl_module! {
             let mint_call = pallet_assets::Call::<T>::mint(id, new_carbon_credits_holder_source, cc_amount.unwrap());
             let result = mint_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::ErrorMintingAsset);
+            Ok(())
+        }
+
+        #[weight = 10_000]
+        pub fn transfer_carbon_credits(
+            origin, asset_id: <T as pallet_assets::Config>::AssetId, 
+            new_carbon_credits_holder: T::AccountId, 
+            amount: T::Balance
+        ) -> DispatchResult {
+            ensure_signed(origin.clone())?;
+            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.into());
+            let transfer_call = pallet_assets::Call::<T>::transfer(asset_id, new_carbon_credits_holder_source, amount);
+            let result = transfer_call.dispatch_bypass_filter(origin);
+            ensure!(!result.is_err(), Error::<T>::TransferFailed);
             Ok(())
         }
     }

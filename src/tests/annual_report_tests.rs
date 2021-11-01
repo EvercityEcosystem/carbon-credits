@@ -8,27 +8,7 @@ use crate::standard::Standard;
 use crate::project;
 use crate::annual_report::*;
 use pallet_evercity_accounts::accounts::*;
-
-/// Return tuple -> (project, project_id, project_owner)
-fn get_registerd_project_and_owner_gold_standard() -> (project::ProjectStruct<u64, TestRuntime, Balance>, project::ProjectId, u64) {
-    let owner = ROLES[1].0;
-    let auditor = ROLES[2].0;
-    let standard_acc = ROLES[3].0;
-    let registry = ROLES[5].0;
-    let standard = Standard::GOLD_STANDARD;
-    let filehash = H256::from([0x66; 32]);
-
-    let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
-    let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
-    let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
-    let _ = CarbonCredits::sign_project(Origin::signed(standard_acc), 1);
-    let _ = CarbonCredits::sign_project(Origin::signed(registry), 1);
-    let project = CarbonCredits::get_proj_by_id(1).unwrap();
-
-    (project, 1, owner)
-}
-
-const TEST_CARBON_CREDITS_COUNT: u64 = 15000;
+use crate::tests::helpers::*;
 
 #[test]
 fn it_works_for_create_new_annual_report_gold_standard() {

@@ -92,22 +92,15 @@ impl pallet_balances::Config for TestRuntime {
 
 // Asset Pallet Configs
 pub type Balance = u64;
-pub const U_BALANCE: Balance = 1_000_000;
-pub const BALANCE: Balance = 1_000_000 * U_BALANCE;
-pub const fn deposit(items: u32, bytes: u32) -> Balance {
-	items as Balance * 15 * BALANCE / 100 + (bytes as Balance) * 6 * BALANCE / 100
-}
 
 parameter_types! {
-    pub const AssetDeposit: Balance = 1_000 * BALANCE; // 1000 MITO deposit to create asset
-    pub const ApprovalDeposit: Balance = 1 * U_BALANCE;
+    pub const AssetDeposit: Balance = 1; 
+    pub const ApprovalDeposit: Balance = 1;
     pub const StringLimit: u32 = 50;
     /// https://github.com/paritytech/substrate/blob/069917b/frame/assets/src/lib.rs#L257L271
-    pub const MetadataDepositBase: Balance = deposit(1, 68);
-    pub const MetadataDepositPerByte: Balance = deposit(0, 1);
+    pub const MetadataDepositBase: Balance = 1;
+    pub const MetadataDepositPerByte: Balance = 1;
 }
-
-// pub type AccountId = <<Signature as Verify>::Signer as IdentifyAccount>::AccountId;
 
 impl pallet_assets::Config for TestRuntime {
     type Event = Event;
@@ -142,7 +135,7 @@ pub fn new_test_ext() -> frame_support::sp_io::TestExternalities {
 
     pallet_balances::GenesisConfig::<TestRuntime> {
         // Provide some initial balances
-        balances: ROLES.iter().map(|x| (x.0, 100000)).collect(),
+        balances: ROLES.iter().map(|x| (x.0, 10000000)).collect(),
     }
     .assimilate_storage(&mut t)
     .unwrap();
@@ -174,7 +167,7 @@ pub fn new_test_ext_with_event() -> frame_support::sp_io::TestExternalities {
 
     pallet_balances::GenesisConfig::<TestRuntime> {
         // Provide some initial balances
-        balances: ROLES.iter().map(|x| (x.0, 100000)).collect(),
+        balances: ROLES.iter().map(|x| (x.0, 10000000)).collect(),
     }
     .assimilate_storage(&mut t)
     .unwrap();
