@@ -1,8 +1,8 @@
 [package]
 authors = ["Dima Bushuev diman1ghtly@gmail.com"]
 name = "pallet-evercity-carbon-credits"
-description = 'Pallet for carbon credits'
-version = "0.1.7"
+description = 'Pallet for evercity carbon credits'
+version = "0.1.8"
 edition = "2018"
 homepage = 'https://evercity.io'
 license = 'Apache-2.0'

@@ -13,7 +13,7 @@ pub const REPORT_INVESTOR_SIGN_PENDING: AnnualReportStateMask = 8;
 pub const REPORT_REGISTRY_SIGN_PENDING: AnnualReportStateMask = 16;
 pub const REPORT_ISSUED: AnnualReportStateMask = 32;
 
-pub type AnnualReportStruct<AccountId, T, B> = AnnualReportStructT<AccountId, <T as pallet_timestamp::Config>::Moment, B>;
+pub type AnnualReportStruct<AccountId, T, Balance> = AnnualReportStructT<AccountId, <T as pallet_timestamp::Config>::Moment, Balance>;
 
 pub type CarbonCreditsBalance = u32;
 

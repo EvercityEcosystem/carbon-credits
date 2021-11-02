@@ -18,12 +18,12 @@
     "ProjectId": "u32",
     "ProjectStruct": {
         "owner": "AccountId",
-        "id": "u32",
+        "id": "ProjectId",
         "status": "ProjectStatus",
         "state": "ProjectStateMask",
         "document_versions": "Vec<ProjectDocument>",
-        "signatures": "Vec<AccountId>",
-        "annual_reports": "Vec<AnnualReportStruct<AccountId>>",
+        "signatures": "Vec<AccountId, Moment, Balance>",
+        "annual_reports": "Vec<AnnualReportStruct<AccountId, Moment, Balance>>",
         "standard": "Standard"
     },
     "AnnualReportStateMask": "u16",
@@ -31,6 +31,6 @@
       "filehash": "H256",
       "state": "AnnualReportStateMask",
       "signatures": "Vec<AccountId>",
-      "carbon_credits_count": "u64"
+      "carbon_credits_count": "Balance"
     }
 }

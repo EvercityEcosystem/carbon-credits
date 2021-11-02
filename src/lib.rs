@@ -33,7 +33,7 @@ pub mod project;
 pub mod annual_report;
 pub mod file_hash;
 pub mod required_signers;
-// pub mod carbon_credits;
+pub mod carbon_credits;
 
 #[cfg(test)]    
 pub mod tests;
