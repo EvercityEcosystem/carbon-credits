@@ -7,6 +7,7 @@ use frame_support::{
     decl_event,
     dispatch::{
         DispatchResult,
+        Vec,
         // DispatchResultWithPostInfo,
     },
     traits::UnfilteredDispatchable,
