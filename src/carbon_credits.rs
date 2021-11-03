@@ -1,5 +1,10 @@
-use crate::standard::Standard;
+// use crate::standard::Standard;
 use crate::project::ProjectId;
+use frame_support::{
+    codec::{Decode, Encode},
+    sp_runtime::RuntimeDebug,
+    dispatch::Vec,
+};
 
 // pub struct CarbonCreditBatch<Moment> where Moment: pallet_timestamp::Config {
 //     pub standard: Standard,
@@ -13,7 +18,9 @@ use crate::project::ProjectId;
 //     pub carbon_credit_batches: Vec<CarbonCreditBatch<Moment>>,
 // }
 
-pub struct CarbonCreditsRegistry<Moment, AssetId> where Moment: pallet_timestamp::Config {
-    pub asset_id: AssetId,
-    pub timestamp: Moment, 
+#[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
+pub struct CarbonCreditsRegistry<AssetId> {
+    asset_id: AssetId,
+    project_id: ProjectId,
+    annual_report_index: u64,
 }

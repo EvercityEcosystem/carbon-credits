@@ -28,6 +28,7 @@ use project::{ProjectStruct, ProjectId};
 use standard::Standard;
 use crate::file_hash::*;
 use pallet_evercity_accounts::accounts::RoleMask;
+use carbon_credits::CarbonCreditsRegistry;
 
 pub mod standard;
 pub mod project;
@@ -45,6 +46,7 @@ pub trait Config: frame_system::Config + pallet_evercity_accounts::Config + pall
     type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
 }
 
+type AssetId<T> = <T as pallet_assets::Config>::AssetId;
 
 decl_storage! {
     trait Store for Module<T: Config> as CarbonCredits {
@@ -53,6 +55,10 @@ decl_storage! {
             map hasher(blake2_128_concat) u32 => Option<ProjectStruct<T::AccountId, T, T::Balance>>;
 
         LastID: ProjectId;
+
+        CarbonCreditRegistry
+            get(fn registry_by_asseid):
+            map hasher(blake2_128_concat) AssetId<T> => Option<CarbonCreditsRegistry<AssetId<T>>>;
     }
 }
 
