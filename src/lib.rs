@@ -28,7 +28,7 @@ use project::{ProjectStruct, ProjectId};
 use standard::Standard;
 use crate::file_hash::*;
 use pallet_evercity_accounts::accounts::RoleMask;
-use carbon_credits::CarbonCreditsRegistry;
+use carbon_credits::CarbonCreditsPassport;
 
 pub mod standard;
 pub mod project;
@@ -58,7 +58,7 @@ decl_storage! {
 
         CarbonCreditRegistry
             get(fn registry_by_asseid):
-            map hasher(blake2_128_concat) AssetId<T> => Option<CarbonCreditsRegistry<AssetId<T>>>;
+            map hasher(blake2_128_concat) AssetId<T> => Option<CarbonCreditsPassport<AssetId<T>>>;
     }
 }
 

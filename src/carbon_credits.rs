@@ -6,21 +6,19 @@ use frame_support::{
     dispatch::Vec,
 };
 
-// pub struct CarbonCreditBatch<Moment> where Moment: pallet_timestamp::Config {
-//     pub standard: Standard,
-//     pub project_id: ProjectId, 
-//     pub timestamp: Moment,
-//     pub count: u64,
-// }
-
-// pub struct CarbonCreditWarehouse<AccountId, Moment> where Moment: pallet_timestamp::Config {
-//     pub owner: AccountId,
-//     pub carbon_credit_batches: Vec<CarbonCreditBatch<Moment>>,
-// }
-
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
-pub struct CarbonCreditsRegistry<AssetId> {
+pub struct CarbonCreditsPassport<AssetId> {
     asset_id: AssetId,
     project_id: ProjectId,
     annual_report_index: u64,
+}
+
+impl<AssetId> CarbonCreditsPassport<AssetId> {
+    pub fn new(asset_id: AssetId, project_id: ProjectId, annual_report_index: u64) -> Self {
+        CarbonCreditsPassport{
+            asset_id,
+            project_id,
+            annual_report_index,
+        }
+    }
 }
