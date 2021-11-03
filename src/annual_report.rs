@@ -26,6 +26,7 @@ pub struct AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone 
     create_time: Moment,
     carbon_credits_count: Balance,
     carbon_credits_released: bool,
+    carbon_credits_meta: CarbonCreditsMeta,
 }
 
 impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone {
@@ -37,6 +38,7 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
             carbon_credits_count,
             carbon_credits_released: false,
             create_time,
+            carbon_credits_meta: CarbonCreditsMeta::new(),
         }
     }
 
@@ -50,5 +52,36 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
 
     pub fn carbon_credits_count(&self) -> Balance {
         self.carbon_credits_count.clone()
+    }
+
+    pub fn set_metadata(&mut self, name: Vec<u8>, symbol: Vec<u8>, decimals: u8){
+        self.carbon_credits_meta.set_metadata(name, symbol, decimals);
+    }
+}
+
+#[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
+pub struct CarbonCreditsMeta {
+    name: Vec<u8>,
+    symbol: Vec<u8>,
+    decimals: u8,
+}
+
+impl CarbonCreditsMeta {
+    pub fn new() -> Self{
+        CarbonCreditsMeta {
+            name: Vec::new(), 
+            symbol: Vec::new(),
+            decimals: 0
+        }
+    }
+
+    pub fn is_metadata_valid(&self) -> bool {
+        self.name.len() != 0 && self.symbol.len() != 0 
+    }
+
+    pub fn set_metadata(&mut self, name: Vec<u8>, symbol: Vec<u8>, decimals: u8){
+        self.name = name;
+        self.symbol = symbol;
+        self.decimals = decimals;
     }
 }

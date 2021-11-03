@@ -104,6 +104,9 @@ decl_error! {
         ErrorMintingAsset,
         CCAlreadyCreated,
         TransferFailed,
+        BurnFailed,
+        BadMetadataParameters,
+        SetMetadataFailed,
     }
 }
 
@@ -213,9 +216,24 @@ decl_module! {
             Ok(())
         }
 
+        #[weight = 10_000]
+        pub fn set_carbon_credits_metadata(
+            origin, 
+            asset_id: <T as pallet_assets::Config>::AssetId, 
+            name: Vec<u8>,
+            symbol: Vec<u8>,
+            decimals: u8,
+        ) -> DispatchResult {
+            ensure_signed(origin.clone())?;
+            ensure!(name.len() != 0 && symbol.len() != 0, Error::<T>::BadMetadataParameters);
+            let transfer_call = pallet_assets::Call::<T>::set_metadata(asset_id, name, symbol, decimals);
+            let result = transfer_call.dispatch_bypass_filter(origin);
+            ensure!(!result.is_err(), Error::<T>::SetMetadataFailed);
+            Ok(())
+        }
 
         #[weight = 10_000]
-        pub fn mint_carbon_credits(origin, id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId) -> DispatchResult {
+        pub fn mint_carbon_credits(origin, asset_id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId) -> DispatchResult {
             let project_owner = ensure_signed(origin.clone())?;
 
             let mut cc_amount: Option<T::Balance> = None;
@@ -241,7 +259,7 @@ decl_module! {
              })?;
     
             let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.into());
-            let mint_call = pallet_assets::Call::<T>::mint(id, new_carbon_credits_holder_source, cc_amount.unwrap());
+            let mint_call = pallet_assets::Call::<T>::mint(asset_id, new_carbon_credits_holder_source, cc_amount.unwrap());
             let result = mint_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::ErrorMintingAsset);
             Ok(())
@@ -258,6 +276,20 @@ decl_module! {
             let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.into());
             let transfer_call = pallet_assets::Call::<T>::transfer(asset_id, new_carbon_credits_holder_source, amount);
             let result = transfer_call.dispatch_bypass_filter(origin);
+            ensure!(!result.is_err(), Error::<T>::TransferFailed);
+            Ok(())
+        }
+
+        #[weight = 10_000]
+        pub fn burn_carbon_credits(
+            origin, 
+            asset_id: <T as pallet_assets::Config>::AssetId, 
+            amount: T::Balance
+        ) -> DispatchResult {
+            let credits_holder = ensure_signed(origin.clone())?;
+            let carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(credits_holder.into());
+            let burn_call = pallet_assets::Call::<T>::burn(asset_id, carbon_credits_holder_source, amount);
+            let result = burn_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::TransferFailed);
             Ok(())
         }
