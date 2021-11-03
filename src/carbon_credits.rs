@@ -5,16 +5,17 @@ use frame_support::{
     sp_runtime::RuntimeDebug,
     dispatch::Vec,
 };
+use std::ops::{Add, Sub};
 
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
-pub struct CarbonCreditsPassport<AssetId, Balance> {
+pub struct CarbonCreditsPassport<AssetId, Balance> where Balance: Clone + Default + Add<Output = Balance> + Sub {
     asset_id: AssetId,
     project_id: ProjectId,
     annual_report_index: u64,
     burned_amount: Balance
 }
 
-impl<AssetId, Balance> CarbonCreditsPassport<AssetId, Balance> where Balance: Clone + Default {
+impl<AssetId, Balance> CarbonCreditsPassport<AssetId, Balance> where Balance: Clone + Default + Add<Balance, Output = Balance> + Sub {
     pub fn new(asset_id: AssetId, project_id: ProjectId, annual_report_index: u64) -> Self {
         CarbonCreditsPassport{
             asset_id,
@@ -23,4 +24,8 @@ impl<AssetId, Balance> CarbonCreditsPassport<AssetId, Balance> where Balance: Cl
             burned_amount: Balance::default(),
         }
     }
+
+    pub fn increment_burn_amount(&mut self, amount: Balance) {
+        self.burned_amount = self.burned_amount.clone().add(amount);
+    } 
 }

@@ -114,6 +114,9 @@ decl_error! {
         BurnFailed,
         BadMetadataParameters,
         SetMetadataFailed,
+
+        // Passport Errors
+        PassportNotExits
     }
 }
 
@@ -221,7 +224,7 @@ decl_module! {
             let result = create_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::ErrorCreatingAsset);
 
-            todo!("ADD CARBON CREDIT PASSPORT LOGIC!!!");
+            <CarbonCreditRegistry<T>>::insert(id, CarbonCreditsPassport::new(id, project_id, project.as_ref().unwrap().annual_reports.len() as u64));
 
             Ok(())
         }
@@ -302,7 +305,12 @@ decl_module! {
             let result = burn_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::TransferFailed);
 
-            todo!("ADD CARBON CREDIT PASSPORT LOGIC!!!");
+            CarbonCreditRegistry::<T>::try_mutate(
+                asset_id, |carbon_credit_passport| -> DispatchResult {
+                    ensure!(carbon_credit_passport.is_some(), Error::<T>::PassportNotExits);
+                    carbon_credit_passport.as_mut().unwrap().increment_burn_amount(amount);
+                    Ok(())
+            })?;
 
             Ok(())
         }
