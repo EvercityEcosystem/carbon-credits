@@ -58,7 +58,7 @@ decl_storage! {
 
         CarbonCreditRegistry
             get(fn registry_by_asseid):
-            map hasher(blake2_128_concat) AssetId<T> => Option<CarbonCreditsPassport<AssetId<T>>>;
+            map hasher(blake2_128_concat) AssetId<T> => Option<CarbonCreditsPassport<AssetId<T>, T::Balance>>;
     }
 }
 
@@ -220,6 +220,9 @@ decl_module! {
             let create_call = pallet_assets::Call::<T>::create(id, new_carbon_credits_holder_source, 0, min_balance);
             let result = create_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::ErrorCreatingAsset);
+
+            todo!("ADD CARBON CREDIT PASSPORT LOGIC!!!");
+
             Ok(())
         }
 
@@ -298,6 +301,9 @@ decl_module! {
             let burn_call = pallet_assets::Call::<T>::burn(asset_id, carbon_credits_holder_source, amount);
             let result = burn_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::TransferFailed);
+
+            todo!("ADD CARBON CREDIT PASSPORT LOGIC!!!");
+
             Ok(())
         }
     }
