@@ -58,7 +58,7 @@ decl_storage! {
 
         CarbonCreditRegistry
             get(fn registry_by_asseid):
-            map hasher(blake2_128_concat) AssetId<T> => Option<CarbonCreditsPassport<AssetId<T>, T::Balance>>;
+            map hasher(blake2_128_concat) AssetId<T> => Option<CarbonCreditsPassport<AssetId<T>>>;
     }
 }
 
@@ -304,14 +304,6 @@ decl_module! {
             let burn_call = pallet_assets::Call::<T>::burn(asset_id, carbon_credits_holder_source, amount);
             let result = burn_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::TransferFailed);
-
-            CarbonCreditRegistry::<T>::try_mutate(
-                asset_id, |carbon_credit_passport| -> DispatchResult {
-                    ensure!(carbon_credit_passport.is_some(), Error::<T>::PassportNotExits);
-                    carbon_credit_passport.as_mut().unwrap().increment_burn_amount(amount);
-                    Ok(())
-            })?;
-
             Ok(())
         }
     }
@@ -413,6 +405,8 @@ impl<T: Config> Module<T> {
 
     // #[cfg(test)]
     // pub fn get_asset_by_id(asset_id: <T as pallet_assets::Config>::AssetId)  {
-    //     let a = pallet_assets::Asset::<T>::get(asset_id);
+
+    //     let asset_details_opt = pallet_assets::Asset::<T>::get(asset_id);
+
     // }
 }

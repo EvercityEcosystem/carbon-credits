@@ -32,5 +32,10 @@
       "state": "AnnualReportStateMask",
       "signatures": "Vec<AccountId>",
       "carbon_credits_count": "Balance"
+    },
+    "CarbonCreditsPassport": {
+      "asset_id": "AssetId",
+      "project_id": "ProjectId",
+      "annual_report_index": "u64"
     }
 }
