@@ -233,6 +233,7 @@ decl_module! {
             let result = create_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::ErrorCreatingAsset);
 
+            // Create passport
             <CarbonCreditPassportRegistry<T>>::insert(asset_id, CarbonCreditsPassport::new(asset_id, project_id, project.as_ref().unwrap().annual_reports.len()));
 
             Self::deposit_event(RawEvent::CarbonCreditsAssetCreated(project_owner, project_id, asset_id));
@@ -248,6 +249,10 @@ decl_module! {
             decimals: u8,
         ) -> DispatchResult {
             let owner = ensure_signed(origin.clone())?;
+            // check passport creds
+            let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
+            ensure!(passport.is_some(), Error::<T>::PassportNotExist);
+
             ensure!(name.len() != 0 && symbol.len() != 0, Error::<T>::BadMetadataParameters);
             let transfer_call = pallet_assets::Call::<T>::set_metadata(asset_id, name, symbol, decimals);
             let result = transfer_call.dispatch_bypass_filter(origin);
@@ -306,6 +311,10 @@ decl_module! {
             amount: T::Balance
         ) -> DispatchResult {
             let owner = ensure_signed(origin.clone())?;
+            // check passport creds
+            let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
+            ensure!(passport.is_some(), Error::<T>::PassportNotExist);
+
             let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.clone().into());
             let transfer_call = pallet_assets::Call::<T>::transfer(asset_id, new_carbon_credits_holder_source, amount);
             let result = transfer_call.dispatch_bypass_filter(origin);
@@ -322,6 +331,10 @@ decl_module! {
             amount: T::Balance
         ) -> DispatchResult {
             let credits_holder = ensure_signed(origin.clone())?;
+            // check passport creds
+            let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
+            ensure!(passport.is_some(), Error::<T>::PassportNotExist);
+
             let carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(credits_holder.clone().into());
             let burn_call = pallet_assets::Call::<T>::burn(asset_id, carbon_credits_holder_source, amount);
             let result = burn_call.dispatch_bypass_filter(origin);
