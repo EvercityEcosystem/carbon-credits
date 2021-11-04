@@ -56,7 +56,7 @@ decl_storage! {
 
         LastID: ProjectId;
 
-        CarbonCreditRegistry
+        CarbonCreditPassportRegistry
             get(fn registry_by_asseid):
             map hasher(blake2_128_concat) AssetId<T> => Option<CarbonCreditsPassport<AssetId<T>>>;
     }
@@ -66,6 +66,7 @@ decl_event!(
     pub enum Event<T>
     where
         AccountId = <T as frame_system::Config>::AccountId,
+        AssetId = <T as pallet_assets::Config>::AssetId
     {
         // Project Events:
         ProjectCreated(AccountId, ProjectId),
@@ -83,8 +84,14 @@ decl_event!(
         AnnualReportSignedByRegistry(AccountId, ProjectId),
 
         // Carbon Credits Events:
+        CarbonCreditsAssetCreated(AccountId, ProjectId, AssetId),
+        CarbonCreditsMetadataChanged(AccountId, AssetId),
+        CarbonCreditsMinted(AccountId, ProjectId, AssetId),
+        CarbonCreditsTransfered(AccountId, AccountId, AssetId),
+        CarbonCreditsAssetBurned(AccountId, AssetId),
     }
 );
+
 
 decl_error! {
     pub enum Error for Module<T: Config> {
@@ -116,7 +123,9 @@ decl_error! {
         SetMetadataFailed,
 
         // Passport Errors
-        PassportNotExits
+        PassportNotExist,
+        BadPassportProject,
+        BadPassportAnnualReport,
     }
 }
 
@@ -205,7 +214,7 @@ decl_module! {
         #[weight = 10_000]
         pub fn create_carbon_credits(
             origin, 
-            id: <T as pallet_assets::Config>::AssetId, 
+            asset_id: <T as pallet_assets::Config>::AssetId, 
             new_carbon_credits_holder: T::AccountId,
             min_balance: <T as pallet_assets::Config>::Balance,
             project_id: ProjectId,
@@ -220,12 +229,13 @@ decl_module! {
     
             // Create Asset:
             let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.into());
-            let create_call = pallet_assets::Call::<T>::create(id, new_carbon_credits_holder_source, 0, min_balance);
+            let create_call = pallet_assets::Call::<T>::create(asset_id, new_carbon_credits_holder_source, 0, min_balance);
             let result = create_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::ErrorCreatingAsset);
 
-            <CarbonCreditRegistry<T>>::insert(id, CarbonCreditsPassport::new(id, project_id, project.as_ref().unwrap().annual_reports.len() as u64));
+            <CarbonCreditPassportRegistry<T>>::insert(asset_id, CarbonCreditsPassport::new(asset_id, project_id, project.as_ref().unwrap().annual_reports.len()));
 
+            Self::deposit_event(RawEvent::CarbonCreditsAssetCreated(project_owner, project_id, asset_id));
             Ok(())
         }
 
@@ -237,11 +247,13 @@ decl_module! {
             symbol: Vec<u8>,
             decimals: u8,
         ) -> DispatchResult {
-            ensure_signed(origin.clone())?;
+            let owner = ensure_signed(origin.clone())?;
             ensure!(name.len() != 0 && symbol.len() != 0, Error::<T>::BadMetadataParameters);
             let transfer_call = pallet_assets::Call::<T>::set_metadata(asset_id, name, symbol, decimals);
             let result = transfer_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::SetMetadataFailed);
+
+            Self::deposit_event(RawEvent::CarbonCreditsMetadataChanged(owner, asset_id));
             Ok(())
         }
 
@@ -261,8 +273,14 @@ decl_module! {
                     ensure!(reports_len > 0,
                         Error::<T>::NoAnnualReports
                     );
+
+                    // check passport creds
+                    let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
+                    ensure!(passport.is_some(), Error::<T>::PassportNotExist);
+                    ensure!(passport.as_ref().unwrap().get_project_id() == project_id, Error::<T>::BadPassportProject);
+                    ensure!(passport.as_ref().unwrap().get_last_report_index() == reports_len, Error::<T>::BadPassportAnnualReport);
     
-                    // ensure that carbo credits not released, then
+                    // ensure that carbon credits not released, then
                     let last_annual_report = &mut project_to_mutate.as_mut().unwrap().annual_reports[reports_len - 1];
                     ensure!(!last_annual_report.is_carbon_credits_released(), Error::<T>::CCAlreadyCreated);
                     last_annual_report.set_carbon_credits_released();
@@ -271,10 +289,12 @@ decl_module! {
                     Ok(())
              })?;
     
-            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.into());
+            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.clone().into());
             let mint_call = pallet_assets::Call::<T>::mint(asset_id, new_carbon_credits_holder_source, cc_amount.unwrap());
             let result = mint_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::ErrorMintingAsset);
+
+            Self::deposit_event(RawEvent::CarbonCreditsMinted(project_owner, project_id, asset_id));
             Ok(())
         }
 
@@ -285,11 +305,13 @@ decl_module! {
             new_carbon_credits_holder: T::AccountId, 
             amount: T::Balance
         ) -> DispatchResult {
-            ensure_signed(origin.clone())?;
-            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.into());
+            let owner = ensure_signed(origin.clone())?;
+            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.clone().into());
             let transfer_call = pallet_assets::Call::<T>::transfer(asset_id, new_carbon_credits_holder_source, amount);
             let result = transfer_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::TransferFailed);
+
+            Self::deposit_event(RawEvent::CarbonCreditsTransfered(owner, new_carbon_credits_holder, asset_id));
             Ok(())
         }
 
@@ -300,10 +322,12 @@ decl_module! {
             amount: T::Balance
         ) -> DispatchResult {
             let credits_holder = ensure_signed(origin.clone())?;
-            let carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(credits_holder.into());
+            let carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(credits_holder.clone().into());
             let burn_call = pallet_assets::Call::<T>::burn(asset_id, carbon_credits_holder_source, amount);
             let result = burn_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::TransferFailed);
+
+            Self::deposit_event(RawEvent::CarbonCreditsAssetBurned(credits_holder, asset_id));
             Ok(())
         }
     }
@@ -384,12 +408,6 @@ impl<T: Config> Module<T> {
                         report.state = annual_report::REPORT_ISSUED;
                         report.signatures.push(caller.clone());
                         *event = Some(RawEvent::AnnualReportSignedByRegistry(caller, project.id));
-
-                        
-                        /*
-                            !!!!!!!!!!!_TODO_!!!!!!!!!!!
-                            HERE ISSUE CARBON CREDITS
-                        */
                     },
                     _ => ensure!(false, Error::<T>::InvalidState)
                 }

@@ -14,11 +14,21 @@ pub struct CarbonCreditsPassport<AssetId>{
 }
 
 impl<AssetId> CarbonCreditsPassport<AssetId> {
-    pub fn new(asset_id: AssetId, project_id: ProjectId, annual_report_index: u64) -> Self {
+    pub fn new(asset_id: AssetId, project_id: ProjectId, annual_report_index: usize) -> Self {
+        let annual_report_index_inner = annual_report_index as u64;
+
         CarbonCreditsPassport{
             asset_id,
             project_id,
-            annual_report_index,
+            annual_report_index: annual_report_index_inner,
         }
+    }
+
+    pub fn get_project_id(&self) -> ProjectId { 
+        self.project_id
+    }
+
+    pub fn get_last_report_index(&self) -> usize { 
+        self.annual_report_index as usize
     }
 }
