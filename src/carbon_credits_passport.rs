@@ -1,9 +1,7 @@
-// use crate::standard::Standard;
 use crate::project::ProjectId;
 use frame_support::{
     codec::{Decode, Encode},
     sp_runtime::RuntimeDebug,
-    dispatch::Vec,
 };
 
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
@@ -26,6 +24,14 @@ impl<AssetId> CarbonCreditsPassport<AssetId> {
 
     pub fn get_project_id(&self) -> ProjectId { 
         self.project_id
+    }
+
+    pub fn get_asset_id_ref(&self) -> &AssetId { 
+        &self.asset_id
+    }
+
+    pub fn get_annual_report_index(&self) -> u64 {
+        self.annual_report_index
     }
 
     pub fn get_last_report_index(&self) -> usize { 

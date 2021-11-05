@@ -28,14 +28,14 @@ use project::{ProjectStruct, ProjectId};
 use standard::Standard;
 use crate::file_hash::*;
 use pallet_evercity_accounts::accounts::RoleMask;
-use carbon_credits::CarbonCreditsPassport;
+use carbon_credits_passport::CarbonCreditsPassport;
 
 pub mod standard;
 pub mod project;
 pub mod annual_report;
 pub mod file_hash;
 pub mod required_signers;
-pub mod carbon_credits;
+pub mod carbon_credits_passport;
 
 #[cfg(test)]    
 pub mod tests;
@@ -265,6 +265,7 @@ decl_module! {
         #[weight = 10_000]
         pub fn mint_carbon_credits(origin, asset_id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId) -> DispatchResult {
             let project_owner = ensure_signed(origin.clone())?;
+            ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
 
             let mut cc_amount: Option<T::Balance> = None;
             ProjectById::<T>::try_mutate(
@@ -434,10 +435,8 @@ impl<T: Config> Module<T> {
         ProjectById::<T>::get(id)
     }
 
-    // #[cfg(test)]
-    // pub fn get_asset_by_id(asset_id: <T as pallet_assets::Config>::AssetId)  {
-
-    //     let asset_details_opt = pallet_assets::Asset::<T>::get(asset_id);
-
-    // }
+    #[cfg(test)]
+    pub fn get_passport_by_assetid(asset_id: AssetId<T>) -> Option<CarbonCreditsPassport<AssetId<T>>> {
+        CarbonCreditPassportRegistry::<T>::get(asset_id)
+    }
 }
