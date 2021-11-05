@@ -203,6 +203,7 @@ pub fn last_event() -> Result<Event, ()> {
 }
 
 // Get events list
+#[allow(dead_code)]
 fn events() -> Vec<Event> {
     let evt = System::events().into_iter().map(|evt| evt.event).collect::<Vec<_>>();
     System::reset_events();

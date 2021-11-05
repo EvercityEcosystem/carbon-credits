@@ -5,7 +5,6 @@ use frame_support::{assert_ok, dispatch::{
 }};
 use crate::H256;
 use crate::standard::Standard;
-use crate::project;
 use crate::annual_report::*;
 use pallet_evercity_accounts::accounts::*;
 use crate::tests::helpers::*;

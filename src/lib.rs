@@ -27,7 +27,7 @@ use pallet_evercity_accounts as accounts;
 use project::{ProjectStruct, ProjectId};
 use standard::Standard;
 use crate::file_hash::*;
-use pallet_evercity_accounts::accounts::RoleMask;
+// use pallet_evercity_accounts::accounts::RoleMask;
 use carbon_credits_passport::CarbonCreditsPassport;
 
 pub mod standard;
@@ -121,6 +121,7 @@ decl_error! {
         BurnFailed,
         BadMetadataParameters,
         SetMetadataFailed,
+        AnnualReportNotReady,
 
         // Passport Errors
         PassportNotExist,
@@ -149,12 +150,12 @@ decl_module! {
             Ok(())
         }
 
-        #[weight = 10_000]
-        pub fn assign_signer(origin, signer: T::AccountId, role: RoleMask) -> DispatchResult {
-            let caller = ensure_signed(origin)?;
-            todo!();
-            Ok(())
-        }
+        // #[weight = 10_000]
+        // pub fn assign_signer(origin, signer: T::AccountId, role: RoleMask) -> DispatchResult {
+        //     let caller = ensure_signed(origin)?;
+        //     todo!();
+        //     Ok(())
+        // }
 
         #[weight = 10_000]
         pub fn sign_project(origin, project_id: ProjectId) -> DispatchResult {
@@ -226,6 +227,9 @@ decl_module! {
             ensure!(project.is_some(), Error::<T>::ProjectNotExist);
             ensure!(project.as_ref().unwrap().owner == project_owner, Error::<T>::AccountNotOwner);
             ensure!(project.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
+            // Annual Report Check:
+            ensure!(project.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
+            ensure!(project.as_ref().unwrap().annual_reports.last().unwrap().is_full_signed(), Error::<T>::AnnualReportNotReady);
     
             // Create Asset:
             let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.into());
@@ -421,6 +425,7 @@ impl<T: Config> Module<T> {
                         ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
                         report.state = annual_report::REPORT_ISSUED;
                         report.signatures.push(caller.clone());
+                        report.set_full_signed();
                         *event = Some(RawEvent::AnnualReportSignedByRegistry(caller, project.id));
                     },
                     _ => ensure!(false, Error::<T>::InvalidState)

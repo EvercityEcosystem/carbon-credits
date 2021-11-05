@@ -24,6 +24,7 @@ pub struct AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone 
     pub signatures: Vec<AccountId>,
     #[codec(compact)]
     create_time: Moment,
+    full_signed: bool,
     carbon_credits_count: Balance,
     carbon_credits_released: bool,
     carbon_credits_meta: CarbonCreditsMeta,
@@ -35,9 +36,10 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
             filehash,
             state: REPORT_PROJECT_OWNER_SIGN_PENDING,
             signatures: Vec::new(),
+            create_time,
+            full_signed: false,
             carbon_credits_count,
             carbon_credits_released: false,
-            create_time,
             carbon_credits_meta: CarbonCreditsMeta::new(),
         }
     }
@@ -56,6 +58,14 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
 
     pub fn set_metadata(&mut self, name: Vec<u8>, symbol: Vec<u8>, decimals: u8){
         self.carbon_credits_meta.set_metadata(name, symbol, decimals);
+    }
+
+    pub fn is_full_signed(&self) -> bool {
+        self.full_signed
+    }
+
+    pub fn set_full_signed(&mut self) {
+        self.full_signed = true;
     }
 }
 
