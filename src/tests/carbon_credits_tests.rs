@@ -72,11 +72,7 @@ fn it_fails_for_create_new_cc_not_registered_project() {
         let create_cc_result = CarbonCredits::create_carbon_credits(Origin::signed(owner), asset_id, owner, 1, project_id);
 
         let passport = CarbonCredits::get_passport_by_assetid(asset_id);
-        // let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
         assert!(passport.is_none());
-        // assert_eq!(passport.get_project_id(), project_id);
-        // assert_eq!(*passport.get_asset_id_ref(), asset_id);
-        // assert_eq!(passport.get_annual_report_index(), project.annual_reports.len() as u64);
         assert_ne!(create_cc_result, Ok(()));
     });
 }
@@ -125,6 +121,22 @@ fn it_fails_for_set_empty_cc_metadata() {
 }
 
 #[test]
+fn it_fails_for_set_cc_metadata_not_existing_asset() {
+    new_test_ext().execute_with(|| {
+        let (_, _, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let set_metadata_result = CarbonCredits::set_carbon_credits_metadata(
+            Origin::signed(owner), 
+            asset_id, 
+            "CarbonToken".to_owned().as_bytes().to_vec(), 
+            "CT".to_owned().as_bytes().to_vec(), 
+            1
+        );
+        assert_ne!(set_metadata_result, Ok(()));
+    });
+}
+
+#[test]
 fn it_works_for_mint_cc() {
     new_test_ext().execute_with(|| {
         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
@@ -135,6 +147,19 @@ fn it_works_for_mint_cc() {
         let last_annual_report = project.annual_reports.last().unwrap();
         assert!(last_annual_report.is_carbon_credits_released());
         assert_ok!(mint_result, ());
+    });
+}
+
+#[test]
+fn it_fails_for_mint_cc_not_existing_asset() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let mint_result = CarbonCredits::mint_carbon_credits(Origin::signed(owner), asset_id, project_id);
+        let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
+        let last_annual_report = project.annual_reports.last().unwrap();
+        assert!(!last_annual_report.is_carbon_credits_released());
+        assert_ne!(mint_result, Ok(()));
     });
 }
 
