@@ -385,7 +385,7 @@ impl<T: Config> Module<T> {
                         project.signatures.push(caller.clone());
                         *event = Some(RawEvent::ProjectSignedByRegistry(caller, project.id));
                     },
-                    _ => ensure!(false, Error::<T>::InvalidState)
+                    _ => Err(Error::<T>::InvalidState)?
                 }
                 Ok(())
             }
@@ -428,7 +428,7 @@ impl<T: Config> Module<T> {
                         report.set_full_signed();
                         *event = Some(RawEvent::AnnualReportSignedByRegistry(caller, project.id));
                     },
-                    _ => ensure!(false, Error::<T>::InvalidState)
+                    _ => Err(Error::<T>::InvalidState)?
                 }
                 Ok(())
             },
