@@ -343,7 +343,7 @@ decl_module! {
             let carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(credits_holder.clone().into());
             let burn_call = pallet_assets::Call::<T>::burn(asset_id, carbon_credits_holder_source, amount);
             let result = burn_call.dispatch_bypass_filter(origin);
-            ensure!(!result.is_err(), Error::<T>::TransferFailed);
+            ensure!(!result.is_err(), Error::<T>::BurnFailed);
 
             Self::deposit_event(RawEvent::CarbonCreditsAssetBurned(credits_holder, asset_id));
             Ok(())

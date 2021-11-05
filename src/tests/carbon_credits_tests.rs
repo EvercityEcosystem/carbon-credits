@@ -12,7 +12,7 @@ use frame_support::{assert_ok,
 use pallet_evercity_accounts::accounts::*;
 use crate::tests::helpers::*;
 
-
+// CC create token test:
 #[test]
 fn it_works_for_create_new_cc_gold_standard() {
     new_test_ext().execute_with(|| {
@@ -77,6 +77,7 @@ fn it_fails_for_create_new_cc_not_registered_project() {
     });
 }
 
+// CC Metadata test:
 #[test]
 fn it_works_for_set_cc_metadata() {
     new_test_ext().execute_with(|| {
@@ -136,6 +137,7 @@ fn it_fails_for_set_cc_metadata_not_existing_asset() {
     });
 }
 
+// CC MINT TESTS:
 #[test]
 fn it_works_for_mint_cc() {
     new_test_ext().execute_with(|| {
@@ -194,5 +196,64 @@ fn it_fails_for_mint_cc_not_project_owner() {
 
         assert!(!last_annual_report.is_carbon_credits_released());
         assert_ne!(mint_result, Ok(()));
+    });
+}
+
+// cc transfer tests
+#[test]
+fn it_works_for_ransfer_cc() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let _ = CarbonCredits::create_carbon_credits(Origin::signed(owner), asset_id, owner, 1, project_id);
+        let _ = CarbonCredits::mint_carbon_credits(Origin::signed(owner), asset_id, project_id);
+        let investor = ROLES[4].0;
+        let transfer_result = CarbonCredits::transfer_carbon_credits(Origin::signed(owner), asset_id, investor, 30);
+        assert_ok!(transfer_result, ());
+    });
+}
+
+// CC burn tests:
+#[test]
+fn it_works_for_burn_cc() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let _ = CarbonCredits::create_carbon_credits(Origin::signed(owner), asset_id, owner, 1, project_id);
+        let _ = CarbonCredits::mint_carbon_credits(Origin::signed(owner), asset_id, project_id);
+        let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(owner), asset_id, 20);
+
+        assert_ok!(burn_result, ());
+    });
+}
+
+#[test]
+fn it_works_for_burn_cc_after_transfer() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let _ = CarbonCredits::create_carbon_credits(Origin::signed(owner), asset_id, owner, 1, project_id);
+        let _ = CarbonCredits::mint_carbon_credits(Origin::signed(owner), asset_id, project_id);
+
+        let investor = ROLES[4].0;
+        let _ = CarbonCredits::transfer_carbon_credits(Origin::signed(owner), asset_id, investor, 300);
+        let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(investor), asset_id, 20);
+
+        assert_ok!(burn_result, ());
+    });
+}
+
+#[test]
+fn it_fails_for_burn_cc_not_owner() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let _ = CarbonCredits::create_carbon_credits(Origin::signed(owner), asset_id, owner, 1, project_id);
+        let _ = CarbonCredits::mint_carbon_credits(Origin::signed(owner), asset_id, project_id);
+
+        // Doesnt have assets
+        let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(ROLES[4].0), asset_id, 20);
+
+        assert_ne!(burn_result, Ok(()));
     });
 }
