@@ -19,7 +19,7 @@ pub type AnnualReportStruct<AccountId, T, Balance> = AnnualReportStructT<Account
 pub type CarbonCreditsBalance = u32;
 
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
-pub struct AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone {
+pub struct AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone, AccountId: PartialEq {
     pub filehash: H256,
     pub state: AnnualReportStateMask,
     #[codec(compact)]
@@ -31,7 +31,7 @@ pub struct AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone 
     required_signers: Vec<RequiredSigner<AccountId>>,
 }
 
-impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone {
+impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone, AccountId: PartialEq {
     pub fn new(filehash: H256, carbon_credits_count: Balance, create_time: Moment) -> Self {
         AnnualReportStructT{
             filehash,
@@ -71,6 +71,10 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
 
     pub fn assign_required_signer(&mut self, signer: RequiredSigner<AccountId>) {
         self.required_signers.push(signer);
+    }
+
+    pub fn is_required_signer(&self, signer: RequiredSigner<AccountId>) -> bool {
+        self.required_signers.iter().any(|(acc, role)| *acc == signer.0 && *role == signer.1)
     }
 }
 

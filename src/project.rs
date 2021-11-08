@@ -29,7 +29,7 @@ pub struct ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq,
     pub status: ProjectStatus,
     pub state: ProjectStateMask,
     pub document_versions: Vec<ProjectDocument>,
-    pub signatures: Vec<AccountId>,
+    // pub signatures: Vec<AccountId>,
     pub annual_reports: Vec<AnnualReportStruct<AccountId, Moment, Balance>>,
     required_signers: Vec<RequiredSigner<AccountId>>,
     standard: Standard,
@@ -50,7 +50,7 @@ impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where
             status: ProjectStatus::default(), 
             state: PROJECT_OWNER_SIGN_PENDING,
             document_versions,
-            signatures: Vec::new(),
+            // signatures: Vec::new(),
             annual_reports: Vec::new(),
             required_signers: Vec::new(),
         }
@@ -63,6 +63,10 @@ impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where
 
     pub fn assign_required_signer(&mut self, signer: RequiredSigner<AccountId>) {
         self.required_signers.push(signer);
+    }
+
+    pub fn is_required_signer(&self, signer: RequiredSigner<AccountId>) -> bool {
+        self.required_signers.iter().any(|(acc, role)| *acc == signer.0 && *role == signer.1)
     }
 }
 

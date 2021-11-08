@@ -135,6 +135,10 @@ decl_error! {
         PassportNotExist,
         BadPassportProject,
         BadPassportAnnualReport,
+
+        // Sign errors
+        IncorrectProjectSigner,
+        IncorrectAnnualReportSigner,
     }
 }
 
@@ -402,28 +406,36 @@ impl<T: Config> Module<T> {
                     project::PROJECT_OWNER_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
                         ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
+                        ensure!(Self::is_correct_project_signer(&project, caller.clone(), accounts::accounts::CC_PROJECT_OWNER_ROLE_MASK), 
+                            Error::<T>::IncorrectProjectSigner);
                         project.state = project::AUDITOR_SIGN_PENDING;
                         project.status = project::ProjectStatus::REGISTRATION;
-                        project.signatures.push(caller.clone());
+                        // project.signatures.push(caller.clone());
                         *event = Some(RawEvent::ProjectSubmited(caller, project.id));
                     },
                     project::AUDITOR_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
+                        ensure!(Self::is_correct_project_signer(&project, caller.clone(), accounts::accounts::CC_AUDITOR_ROLE_MASK), 
+                            Error::<T>::IncorrectProjectSigner);
                         project.state = project::STANDARD_SIGN_PENDING;
-                        project.signatures.push(caller.clone());
+                        // project.signatures.push(caller.clone());
                         *event = Some(RawEvent::ProjectSignedByAduitor(caller, project.id));
                     },
                     project::STANDARD_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_standard(&caller), Error::<T>::AccountNotStandard);
+                        ensure!(Self::is_correct_project_signer(&project, caller.clone(), accounts::accounts::CC_STANDARD_ROLE_MASK), 
+                            Error::<T>::IncorrectProjectSigner);
                         project.state = project::REGISTRY_SIGN_PENDING;
-                        project.signatures.push(caller.clone());
+                        // project.signatures.push(caller.clone());
                         *event = Some(RawEvent::ProjectSignedByStandard(caller, project.id));
                     },
                     project::REGISTRY_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
+                        ensure!(Self::is_correct_project_signer(&project, caller.clone(), accounts::accounts::CC_REGISTRY_ROLE_MASK), 
+                            Error::<T>::IncorrectProjectSigner);
                         project.state = project::REGISTERED;
                         project.status = project::ProjectStatus::ISSUANCE;
-                        project.signatures.push(caller.clone());
+                        // project.signatures.push(caller.clone());
                         *event = Some(RawEvent::ProjectSignedByRegistry(caller, project.id));
                     },
                     _ => Err(Error::<T>::InvalidState)?
@@ -446,24 +458,33 @@ impl<T: Config> Module<T> {
                     annual_report::REPORT_PROJECT_OWNER_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
                         ensure!(owner == caller, Error::<T>::AccountNotOwner);
+                        ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_PROJECT_OWNER_ROLE_MASK),
+                            Error::<T>::IncorrectProjectSigner);
                         report.state = annual_report::REPORT_AUDITOR_SIGN_PENDING;
+
                         // report.signatures.push(caller.clone());
                         *event = Some(RawEvent::AnnualReportSubmited(caller, project.id));
                     },
                     annual_report::REPORT_AUDITOR_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
+                        ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_AUDITOR_ROLE_MASK),
+                            Error::<T>::IncorrectProjectSigner);
                         report.state = annual_report::REPORT_STANDARD_SIGN_PENDING;
                         // report.signatures.push(caller.clone());
                         *event = Some(RawEvent::AnnualReportSignedByAuditor(caller, project.id));
                     },
                     annual_report::REPORT_STANDARD_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_standard(&caller), Error::<T>::AccountNotStandard);
+                        ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_STANDARD_ROLE_MASK),
+                            Error::<T>::IncorrectProjectSigner);
                         report.state = annual_report::REPORT_REGISTRY_SIGN_PENDING;
                         // report.signatures.push(caller.clone());
                         *event = Some(RawEvent::AnnualReportSignedByStandard(caller, project.id));
                     },
                     annual_report::REPORT_REGISTRY_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
+                        ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_REGISTRY_ROLE_MASK),
+                            Error::<T>::IncorrectProjectSigner);
                         report.state = annual_report::REPORT_ISSUED;
                         // report.signatures.push(caller.clone());
                         report.set_full_signed();
@@ -474,6 +495,16 @@ impl<T: Config> Module<T> {
                 Ok(())
             },
         }
+    }
+
+    fn is_correct_project_signer(project: &ProjectStruct<T::AccountId, T, T::Balance>, account: T::AccountId, role: RoleMask) -> bool {
+        pallet_evercity_accounts::Module::<T>::account_is_selected_role(&account, role) &&
+        project.is_required_signer((account, role))
+    }
+
+    fn is_correct_annual_report_signer(annual_report: &annual_report::AnnualReportStruct<T::AccountId, T, T::Balance>, account: T::AccountId, role: RoleMask) -> bool {
+        pallet_evercity_accounts::Module::<T>::account_is_selected_role(&account, role) &&
+        annual_report.is_required_signer((account, role))
     }
 
     #[cfg(test)]
