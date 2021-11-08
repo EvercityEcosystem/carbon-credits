@@ -27,7 +27,7 @@ use pallet_evercity_accounts as accounts;
 use project::{ProjectStruct, ProjectId};
 use standard::Standard;
 use crate::file_hash::*;
-// use pallet_evercity_accounts::accounts::RoleMask;
+use pallet_evercity_accounts::accounts::RoleMask;
 use carbon_credits_passport::CarbonCreditsPassport;
 
 pub mod standard;
@@ -42,7 +42,12 @@ pub mod tests;
 
 type Timestamp<T> = pallet_timestamp::Module<T>;
  
-pub trait Config: frame_system::Config + pallet_evercity_accounts::Config + pallet_timestamp::Config + pallet_assets::Config {
+pub trait Config: 
+    frame_system::Config + 
+    pallet_evercity_accounts::Config + 
+    pallet_timestamp::Config + 
+    pallet_assets::Config + 
+    pallet_evercity_filesign::Config {
     type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
 }
 
@@ -75,6 +80,7 @@ decl_event!(
         ProjectSignedByAduitor(AccountId, ProjectId),
         ProjectSignedByStandard(AccountId, ProjectId),
         ProjectSignedByRegistry(AccountId, ProjectId),
+        ProjectSignerAdded(AccountId, AccountId, RoleMask, ProjectId),
 
         // Annual Report Events:
         AnnualReportCreated(AccountId, ProjectId),
@@ -82,6 +88,7 @@ decl_event!(
         AnnualReportSignedByAuditor(AccountId, ProjectId),
         AnnualReportSignedByStandard(AccountId, ProjectId),
         AnnualReportSignedByRegistry(AccountId, ProjectId),
+        AnnualReportSignerAdded(AccountId, AccountId, RoleMask, ProjectId),
 
         // Carbon Credits Events:
         CarbonCreditsAssetCreated(AccountId, ProjectId, AssetId),
@@ -105,6 +112,7 @@ decl_error! {
         AccountToAddAlreadyExists,
         AccountRoleParamIncorrect,
         AccountNotExist,
+        AccountIncorrectRole,
 
         InvalidAction,
         InvalidState,
@@ -150,12 +158,24 @@ decl_module! {
             Ok(())
         }
 
-        // #[weight = 10_000]
-        // pub fn assign_signer(origin, signer: T::AccountId, role: RoleMask) -> DispatchResult {
-        //     let caller = ensure_signed(origin)?;
-        //     todo!();
-        //     Ok(())
-        // }
+        #[weight = 10_000]
+        pub fn assign_project_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
+            let caller = ensure_signed(origin)?;
+            ensure!(pallet_evercity_accounts::Module::<T>::account_is_selected_role(&signer, role), Error::<T>::AccountIncorrectRole);
+            ProjectById::<T>::try_mutate(
+                project_id, |project_to_mutate| -> DispatchResult {
+                    match project_to_mutate  {
+                        None => return Err(Error::<T>::ProjectNotExist)?,
+                        Some(proj) => {
+                            ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
+                            proj.assign_required_signer((signer.clone(), role));
+                        }
+                    }
+                    Ok(())
+             })?;
+             Self::deposit_event(RawEvent::ProjectSignerAdded(caller, signer, role, project_id));
+            Ok(())
+        }
 
         #[weight = 10_000]
         pub fn sign_project(origin, project_id: ProjectId) -> DispatchResult {
@@ -192,6 +212,27 @@ decl_module! {
              })?;
             // SendEvent
             Self::deposit_event(RawEvent::AnnualReportCreated(caller, project_id));
+            Ok(())
+        }
+
+        #[weight = 10_000]
+        pub fn assign_last_annual_report_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
+            let caller = ensure_signed(origin)?;
+            ensure!(pallet_evercity_accounts::Module::<T>::account_is_selected_role(&signer, role), Error::<T>::AccountIncorrectRole);
+            ProjectById::<T>::try_mutate(
+                project_id, |project_to_mutate| -> DispatchResult {
+                    match project_to_mutate  {
+                        None => return Err(Error::<T>::ProjectNotExist)?,
+                        Some(proj) => {
+                            ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
+                            let len = proj.annual_reports.len();
+                            ensure!(len > 0, Error::<T>::NoAnnualReports);
+                            proj.annual_reports[len - 1].assign_required_signer((signer.clone(), role));
+                        }
+                    }
+                    Ok(())
+             })?;
+             Self::deposit_event(RawEvent::AnnualReportSignerAdded(caller, signer, role, project_id));
             Ok(())
         }
 
@@ -406,25 +447,25 @@ impl<T: Config> Module<T> {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
                         ensure!(owner == caller, Error::<T>::AccountNotOwner);
                         report.state = annual_report::REPORT_AUDITOR_SIGN_PENDING;
-                        report.signatures.push(caller.clone());
+                        // report.signatures.push(caller.clone());
                         *event = Some(RawEvent::AnnualReportSubmited(caller, project.id));
                     },
                     annual_report::REPORT_AUDITOR_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
                         report.state = annual_report::REPORT_STANDARD_SIGN_PENDING;
-                        report.signatures.push(caller.clone());
+                        // report.signatures.push(caller.clone());
                         *event = Some(RawEvent::AnnualReportSignedByAuditor(caller, project.id));
                     },
                     annual_report::REPORT_STANDARD_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_standard(&caller), Error::<T>::AccountNotStandard);
                         report.state = annual_report::REPORT_REGISTRY_SIGN_PENDING;
-                        report.signatures.push(caller.clone());
+                        // report.signatures.push(caller.clone());
                         *event = Some(RawEvent::AnnualReportSignedByStandard(caller, project.id));
                     },
                     annual_report::REPORT_REGISTRY_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
                         report.state = annual_report::REPORT_ISSUED;
-                        report.signatures.push(caller.clone());
+                        // report.signatures.push(caller.clone());
                         report.set_full_signed();
                         *event = Some(RawEvent::AnnualReportSignedByRegistry(caller, project.id));
                     },

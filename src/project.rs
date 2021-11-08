@@ -10,7 +10,7 @@ use frame_support::sp_std::{
     cmp::{
         PartialEq}, 
 };
-use crate::required_signers::RequiredSigners;
+use crate::required_signers::RequiredSigner;
 
 pub type ProjectStateMask = u16;
 pub const PROJECT_OWNER_SIGN_PENDING: ProjectStateMask = 1;
@@ -31,7 +31,7 @@ pub struct ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq,
     pub document_versions: Vec<ProjectDocument>,
     pub signatures: Vec<AccountId>,
     pub annual_reports: Vec<AnnualReportStruct<AccountId, Moment, Balance>>,
-    pub required_signers: RequiredSigners<AccountId>,
+    required_signers: Vec<RequiredSigner<AccountId>>,
     standard: Standard,
 }
 
@@ -59,6 +59,10 @@ impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where
     // Standart must be guaranted immutable for lifetime of the progect on register and issuance step 
     pub fn get_standard(&self) -> &Standard {
         &self.standard
+    }
+
+    pub fn assign_required_signer(&mut self, signer: RequiredSigner<AccountId>) {
+        self.required_signers.push(signer);
     }
 }
 

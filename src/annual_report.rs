@@ -4,6 +4,7 @@ use frame_support::{
     dispatch::Vec,
 };
 use crate::file_hash::*;
+use crate::required_signers::RequiredSigner;
 
 pub type AnnualReportStateMask = u16;
 pub const REPORT_PROJECT_OWNER_SIGN_PENDING: AnnualReportStateMask = 1;
@@ -21,13 +22,13 @@ pub type CarbonCreditsBalance = u32;
 pub struct AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone {
     pub filehash: H256,
     pub state: AnnualReportStateMask,
-    pub signatures: Vec<AccountId>,
     #[codec(compact)]
     create_time: Moment,
     full_signed: bool,
     carbon_credits_count: Balance,
     carbon_credits_released: bool,
     carbon_credits_meta: CarbonCreditsMeta,
+    required_signers: Vec<RequiredSigner<AccountId>>,
 }
 
 impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone {
@@ -35,7 +36,7 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
         AnnualReportStructT{
             filehash,
             state: REPORT_PROJECT_OWNER_SIGN_PENDING,
-            signatures: Vec::new(),
+            required_signers: Vec::new(),
             create_time,
             full_signed: false,
             carbon_credits_count,
@@ -66,6 +67,10 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
 
     pub fn set_full_signed(&mut self) {
         self.full_signed = true;
+    }
+
+    pub fn assign_required_signer(&mut self, signer: RequiredSigner<AccountId>) {
+        self.required_signers.push(signer);
     }
 }
 
