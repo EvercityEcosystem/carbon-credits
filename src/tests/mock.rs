@@ -24,6 +24,7 @@ frame_support::construct_runtime!(
 		EvercityAccounts: pallet_evercity_accounts::{ Module, Call, Storage, Event<T> },
 		Timestamp: pallet_timestamp::{ Module, Call, Storage, Inherent},
         Assets: pallet_assets::{ Module, Call, Storage, Event<T> },
+        EvercityFilesign: pallet_evercity_filesign::{ Module, Call, Storage, Event<T> },
 	}
 );
 
@@ -114,6 +115,10 @@ impl pallet_assets::Config for TestRuntime {
     type AssetDepositPerZombie = AssetDeposit;
     type StringLimit = StringLimit;
     type WeightInfo = ();
+}
+
+impl pallet_evercity_filesign::Config for TestRuntime {
+    type Event = Event;
 }
 
 
