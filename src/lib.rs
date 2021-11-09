@@ -8,7 +8,6 @@ use frame_support::{
     dispatch::{
         DispatchResult,
         Vec,
-        // DispatchResultWithPostInfo,
     },
     traits::UnfilteredDispatchable,
 };
@@ -22,15 +21,10 @@ use frame_support::sp_std::{
         PartialEq}, 
 };
 pub use pallet_assets::weights::WeightInfo;
-
 use pallet_evercity_accounts as accounts;
 use project::{ProjectStruct, ProjectId};
 use standard::Standard;
-// use crate::file_hash::*;
-use pallet_evercity_filesign::{
-    file::H256,
-    FileId
-};
+use pallet_evercity_filesign::{FileId};
 use pallet_evercity_accounts::accounts::RoleMask;
 use carbon_credits_passport::CarbonCreditsPassport;
 
