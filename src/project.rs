@@ -5,13 +5,13 @@ use frame_support::{
 };
 use crate::standard::Standard;
 use crate::annual_report::*;
-use crate::file_hash::*;
+use pallet_evercity_filesign::FileId;
 use frame_support::sp_std::{
     cmp::{
         PartialEq}, 
 };
 use crate::required_signers::RequiredSigner;
-use crate::accounts::accounts;
+// use crate::accounts::accounts;
 
 pub type ProjectStateMask = u16;
 pub const PROJECT_OWNER_SIGN_PENDING: ProjectStateMask = 1;
@@ -29,7 +29,8 @@ pub struct ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq 
     pub id: ProjectId,
     pub status: ProjectStatus,
     pub state: ProjectStateMask,
-    pub document_versions: Vec<ProjectDocument>,
+    pub file_id: FileId,
+    // pub document_versions: Vec<ProjectDocument>,
     // pub signatures: Vec<AccountId>,
     pub annual_reports: Vec<AnnualReportStruct<AccountId, Moment, Balance>>,
     required_signers: Vec<RequiredSigner<AccountId>>,
@@ -38,25 +39,17 @@ pub struct ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq 
 
 impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq + Clone, Moment: pallet_timestamp::Config, Balance: Clone {
     /// constructor for project
-    pub fn new(owner: AccountId, id: u32, standard: Standard, filehash: &H256) -> Self {
-
-        // Add first version of document
-        let mut document_versions = Vec::with_capacity(1);
-        document_versions.push(ProjectDocument::new(filehash));
-
-        // Add owner as required signer
-        let mut required_signers = Vec::with_capacity(1);
-        // required_signers.push((owner.clone(), accounts::CC_PROJECT_OWNER_ROLE_MASK));
-
+    pub fn new(owner: AccountId, id: u32, standard: Standard, file_id: FileId) -> Self {
         ProjectStruct{
+            file_id, 
             owner,
             id,
             standard,
             status: ProjectStatus::default(), 
             state: PROJECT_OWNER_SIGN_PENDING,
-            document_versions,
+            // document_versions,
             annual_reports: Vec::new(),
-            required_signers,
+            required_signers: Vec::new(),
         }
     }
 
@@ -71,17 +64,6 @@ impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where
 
     pub fn is_required_signer(&self, signer: RequiredSigner<AccountId>) -> bool {
         self.required_signers.iter().any(|(acc, role)| *acc == signer.0 && *role == signer.1)
-    }
-}
-
-#[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
-pub struct ProjectDocument {
-    pub filehash: H256,
-}
-
-impl ProjectDocument {
-    fn new(filehash: &H256) -> Self {
-        Self {filehash: *filehash}
     }
 }
 

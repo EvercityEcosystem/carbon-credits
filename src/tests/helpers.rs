@@ -3,11 +3,6 @@ use crate::H256;
 use crate::standard::Standard;
 use crate::project::{ProjectId, ProjectStruct};
 use crate::annual_report::*;
-// use frame_support::{
-//     dispatch::{
-//         // DispatchResult,
-//     },
-// };
 
 pub const TEST_CARBON_CREDITS_COUNT: u64 = 15000;
 
@@ -39,8 +34,6 @@ pub(crate) fn full_sign_annual_report_gold_standard() -> (ProjectStruct<u64, Tes
     let auditor = ROLES[2].0;
     let standard_acc = ROLES[3].0;
     let registry = ROLES[5].0;
-    // let standard = Standard::GOLD_STANDARD;
-    // let filehash = H256::from([0x66; 32]);
     let report_hash = H256::from([0x69; 32]);
 
 

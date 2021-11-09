@@ -3,8 +3,8 @@ use frame_support::{
     sp_runtime::RuntimeDebug,
     dispatch::Vec,
 };
-use crate::file_hash::*;
 use crate::required_signers::RequiredSigner;
+use pallet_evercity_filesign::FileId;
 
 pub type AnnualReportStateMask = u16;
 pub const REPORT_PROJECT_OWNER_SIGN_PENDING: AnnualReportStateMask = 1;
@@ -20,7 +20,7 @@ pub type CarbonCreditsBalance = u32;
 
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
 pub struct AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone, AccountId: PartialEq {
-    pub filehash: H256,
+    pub file_id: FileId,
     pub state: AnnualReportStateMask,
     #[codec(compact)]
     create_time: Moment,
@@ -32,9 +32,9 @@ pub struct AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone,
 }
 
 impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone, AccountId: PartialEq {
-    pub fn new(filehash: H256, carbon_credits_count: Balance, create_time: Moment) -> Self {
+    pub fn new(file_id: FileId, carbon_credits_count: Balance, create_time: Moment) -> Self {
         AnnualReportStructT{
-            filehash,
+            file_id,
             state: REPORT_PROJECT_OWNER_SIGN_PENDING,
             required_signers: Vec::new(),
             create_time,

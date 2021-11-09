@@ -26,7 +26,11 @@ pub use pallet_assets::weights::WeightInfo;
 use pallet_evercity_accounts as accounts;
 use project::{ProjectStruct, ProjectId};
 use standard::Standard;
-use crate::file_hash::*;
+// use crate::file_hash::*;
+use pallet_evercity_filesign::{
+    file::H256,
+    FileId
+};
 use pallet_evercity_accounts::accounts::RoleMask;
 use carbon_credits_passport::CarbonCreditsPassport;
 
@@ -148,12 +152,13 @@ decl_module! {
         fn deposit_event() = default;
 
         #[weight = 10_000]
-        pub fn create_project(origin, standard: Standard, filehash: H256) -> DispatchResult {
+        pub fn create_project(origin, standard: Standard, file_id: FileId) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+            ensure!(pallet_evercity_filesign::Module::<T>::address_is_owner_for_file(file_id, &caller), Error::<T>::AccountNotOwner);
 
             let new_id = LastID::get() + 1;
-            let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T, T::Balance>::new(caller.clone(), new_id, standard, &filehash);
+            let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T, T::Balance>::new(caller.clone(), new_id, standard, file_id);
             <ProjectById<T>>::insert(new_id, new_project);
             LastID::mutate(|x| *x = x.checked_add(1).unwrap());
 
@@ -164,7 +169,7 @@ decl_module! {
 
         #[weight = 10_000]
         pub fn assign_project_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
-            let caller = ensure_signed(origin)?;
+            let caller = ensure_signed(origin.clone())?;
             ensure!(pallet_evercity_accounts::Module::<T>::account_is_selected_role(&signer, role), Error::<T>::AccountIncorrectRole);
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
@@ -173,8 +178,11 @@ decl_module! {
                         Some(proj) => {
                             ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
                             proj.assign_required_signer((signer.clone(), role));
+
+                            pallet_evercity_filesign::Module::<T>::assign_signer(origin, proj.file_id, signer.clone())?;
                         }
                     }
+
                     Ok(())
              })?;
             Self::deposit_event(RawEvent::ProjectSignerAdded(caller, signer, role, project_id));
@@ -183,11 +191,12 @@ decl_module! {
 
         #[weight = 10_000]
         pub fn sign_project(origin, project_id: ProjectId) -> DispatchResult {
-            let caller = ensure_signed(origin)?;
+            let caller = ensure_signed(origin.clone())?;
             let mut event_opt: Option<Event<T>> = None;
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
                     ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
+                    pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, project_to_mutate.as_ref().unwrap().file_id)?;
                     Self::change_project_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
                     Ok(())
              })?;
@@ -198,9 +207,10 @@ decl_module! {
         }
 
         #[weight = 10_000]
-        pub fn create_annual_report(origin, project_id: ProjectId, filehash: H256, carbon_credits_count: T::Balance) -> DispatchResult {
+        pub fn create_annual_report(origin, project_id: ProjectId, file_id: FileId, carbon_credits_count: T::Balance) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+            ensure!(pallet_evercity_filesign::Module::<T>::address_is_owner_for_file(file_id, &caller), Error::<T>::AccountNotOwner);
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
                     ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
@@ -211,7 +221,7 @@ decl_module! {
                         Error::<T>::NotIssuedAnnualReportsExist
                     );
                     project_to_mutate.as_mut().unwrap().annual_reports
-                                .push(annual_report::AnnualReportStruct::<T::AccountId, T, T::Balance>::new(filehash, carbon_credits_count, Timestamp::<T>::get()));
+                                .push(annual_report::AnnualReportStruct::<T::AccountId, T, T::Balance>::new(file_id, carbon_credits_count, Timestamp::<T>::get()));
                     Ok(())
              })?;
             // SendEvent
@@ -221,7 +231,7 @@ decl_module! {
 
         #[weight = 10_000]
         pub fn assign_last_annual_report_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
-            let caller = ensure_signed(origin)?;
+            let caller = ensure_signed(origin.clone())?;
             ensure!(pallet_evercity_accounts::Module::<T>::account_is_selected_role(&signer, role), Error::<T>::AccountIncorrectRole);
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
@@ -232,22 +242,24 @@ decl_module! {
                             let len = proj.annual_reports.len();
                             ensure!(len > 0, Error::<T>::NoAnnualReports);
                             proj.annual_reports[len - 1].assign_required_signer((signer.clone(), role));
+                            pallet_evercity_filesign::Module::<T>::assign_signer(origin.clone(), proj.annual_reports[len - 1].file_id, signer.clone())?;
                         }
                     }
                     Ok(())
              })?;
-             Self::deposit_event(RawEvent::AnnualReportSignerAdded(caller, signer, role, project_id));
+            Self::deposit_event(RawEvent::AnnualReportSignerAdded(caller, signer, role, project_id));
             Ok(())
         }
 
         #[weight = 10_000]
         pub fn sign_last_annual_report(origin, project_id: ProjectId) -> DispatchResult {
-            let caller = ensure_signed(origin)?;
+            let caller = ensure_signed(origin.clone())?;
             let mut event_opt: Option<Event<T>> = None;
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
                     ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
                     ensure!(project_to_mutate.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
+                    pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, project_to_mutate.as_ref().unwrap().file_id)?;
                     Self::change_project_annual_report_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
                     Ok(())
             })?;
