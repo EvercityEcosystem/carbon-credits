@@ -177,7 +177,7 @@ decl_module! {
                     }
                     Ok(())
              })?;
-             Self::deposit_event(RawEvent::ProjectSignerAdded(caller, signer, role, project_id));
+            Self::deposit_event(RawEvent::ProjectSignerAdded(caller, signer, role, project_id));
             Ok(())
         }
 

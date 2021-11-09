@@ -131,6 +131,7 @@ fn it_works_for_full_cycle_sign_annual_report_gold_standard() {
         let report_hash = H256::from([0x69; 32]);
 
         let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_hash, TEST_CARBON_CREDITS_COUNT);
+        crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
 
         let mut tuple_vec = Vec::new();
         tuple_vec.push((owner, REPORT_AUDITOR_SIGN_PENDING));
@@ -313,6 +314,7 @@ fn it_works_sign_annual_report_deposit_events_gold_standard() {
         let report_hash = H256::from([0x69; 32]);
 
         let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_hash, TEST_CARBON_CREDITS_COUNT);
+        crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
 
         let mut tuple_vec = Vec::new();
         tuple_vec.push((owner, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSubmited(owner, 1))));

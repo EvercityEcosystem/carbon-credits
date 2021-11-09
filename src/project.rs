@@ -11,6 +11,7 @@ use frame_support::sp_std::{
         PartialEq}, 
 };
 use crate::required_signers::RequiredSigner;
+use crate::accounts::accounts;
 
 pub type ProjectStateMask = u16;
 pub const PROJECT_OWNER_SIGN_PENDING: ProjectStateMask = 1;
@@ -23,7 +24,7 @@ pub const REGISTERED: ProjectStateMask = 32;
 pub type ProjectId = u32;
 
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
-pub struct ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq, Moment: pallet_timestamp::Config, Balance: Clone {
+pub struct ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq + Clone, Moment: pallet_timestamp::Config, Balance: Clone {
     pub owner: AccountId,
     pub id: ProjectId,
     pub status: ProjectStatus,
@@ -35,13 +36,17 @@ pub struct ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq,
     standard: Standard,
 }
 
-impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq, Moment: pallet_timestamp::Config, Balance: Clone {
+impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq + Clone, Moment: pallet_timestamp::Config, Balance: Clone {
     /// constructor for project
     pub fn new(owner: AccountId, id: u32, standard: Standard, filehash: &H256) -> Self {
 
         // Add first version of document
         let mut document_versions = Vec::with_capacity(1);
         document_versions.push(ProjectDocument::new(filehash));
+
+        // Add owner as required signer
+        let mut required_signers = Vec::with_capacity(1);
+        // required_signers.push((owner.clone(), accounts::CC_PROJECT_OWNER_ROLE_MASK));
 
         ProjectStruct{
             owner,
@@ -50,9 +55,8 @@ impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where
             status: ProjectStatus::default(), 
             state: PROJECT_OWNER_SIGN_PENDING,
             document_versions,
-            // signatures: Vec::new(),
             annual_reports: Vec::new(),
-            required_signers: Vec::new(),
+            required_signers,
         }
     }
 

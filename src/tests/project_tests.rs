@@ -65,6 +65,7 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
         let filehash = H256::from([0x66; 32]);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+        crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
 
         let mut tuple_vec = Vec::new();
         tuple_vec.push((owner, AUDITOR_SIGN_PENDING, ProjectStatus::REGISTRATION));
@@ -111,6 +112,7 @@ fn it_fails_sign_project_not_an_owner_role_gold_standard() {
         let filehash = H256::from([0x66; 32]);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+        crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
 
         ROLES.iter()
             .filter(|x| x.1 != CC_PROJECT_OWNER_ROLE_MASK)
@@ -150,6 +152,7 @@ fn it_fails_sign_project_not_an_auditor_gold_standard() {
         let filehash = H256::from([0x66; 32]);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+        crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
         let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
 
         ROLES.iter()
@@ -173,6 +176,7 @@ fn it_fails_sign_project_not_an_auditor_gold_standard() {
         let filehash = H256::from([0x66; 32]);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+        crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
         let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
         let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
 
@@ -198,6 +202,7 @@ fn it_fails_sign_project_not_a_registry_gold_standard() {
         let filehash = H256::from([0x66; 32]);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+        crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
         let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
         let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
         let _ = CarbonCredits::sign_project(Origin::signed(standard_acc), 1);
@@ -229,6 +234,7 @@ fn it_fails_sign_project_already_registered_project_gold_standard() {
         let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(0), some_new_acc, all_roles);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+        crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
         let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
         let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
         let _ = CarbonCredits::sign_project(Origin::signed(standard_acc), 1);
@@ -256,6 +262,8 @@ fn it_works_for_create_new_project_deposit_event_gold_standard() {
         let filehash = H256::from([0x66; 32]);
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), filehash);
         let last_event = last_event().unwrap();
+        crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
+
         let check_event = Event::pallet_carbon_credits(crate::RawEvent::ProjectCreated(owner, 1));
 
         assert_eq!(check_event, last_event);
@@ -274,6 +282,7 @@ fn it_works_sign_project_deposit_events_gold_standard() {
         let filehash = H256::from([0x66; 32]);
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, filehash);
+        crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
 
         let mut tuple_vec = Vec::new();
         tuple_vec.push((owner, Event::pallet_carbon_credits(crate::RawEvent::ProjectSubmited(owner, 1))));
