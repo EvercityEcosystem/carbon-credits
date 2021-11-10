@@ -15,13 +15,11 @@ type RuntimeError = Error<TestRuntime>;
 fn it_works_for_create_new_annual_report_gold_standard() {
     new_test_ext().execute_with(|| {
         let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
-        // let report_hash = H256::from([0x69; 32]);
 
         let create_report_result = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT);
         let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
 
         assert_eq!(project.annual_reports.len() + 1, project_with_report.annual_reports.len());
-        // assert_eq!(report_hash, project_with_report.annual_reports.last().unwrap().filehash);
         assert_eq!(REPORT_PROJECT_OWNER_SIGN_PENDING, project_with_report.annual_reports.last().unwrap().state);
         assert_ok!(create_report_result, ());
     });
@@ -31,7 +29,6 @@ fn it_works_for_create_new_annual_report_gold_standard() {
 fn it_works_for_create_new_annual_report_multiple_annual_reports_gold_standard() {
     new_test_ext().execute_with(|| {
         let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
-        // let report_hash = H256::from([0x69; 32]);
 
         let report_id = create_annual_report_file(owner);
         let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
@@ -40,6 +37,41 @@ fn it_works_for_create_new_annual_report_multiple_annual_reports_gold_standard()
 
         assert_ne!(create_second_report_result, DispatchResult::Ok(()));
         assert_eq!(project.annual_reports.len() + 1, project_with_report.annual_reports.len());
+    });
+}
+
+#[test]
+fn it_fails_for_create_new_annual_report_no_file() {
+    new_test_ext().execute_with(|| {
+        let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let unexisting_file_id = 666;
+
+        let create_report_result = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, unexisting_file_id, TEST_CARBON_CREDITS_COUNT);
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
+        assert_noop!(
+            create_report_result,
+            RuntimeError::AccountNotOwner
+        );
+    });
+}
+
+#[test]
+fn it_fails_for_create_new_annual_report_not_file_owner() {
+    new_test_ext().execute_with(|| {
+        let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let auditor = ROLES[2].0;
+        let unexisting_file_id = create_annual_report_file(auditor);
+
+        let create_report_result = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, unexisting_file_id, TEST_CARBON_CREDITS_COUNT);
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
+        assert_noop!(
+            create_report_result,
+            RuntimeError::AccountNotOwner
+        );
     });
 }
 
