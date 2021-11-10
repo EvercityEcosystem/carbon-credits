@@ -214,7 +214,9 @@ fn it_fails_sign_annual_report_not_an_auditor_gold_standard() {
         let report_id = create_annual_report_file(owner);
 
         let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
         let _ = CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id);
+
 
         ROLES.iter()
             .filter(|x| x.1 != CC_AUDITOR_ROLE_MASK)
@@ -224,7 +226,13 @@ fn it_fails_sign_annual_report_not_an_auditor_gold_standard() {
                 assert_ne!(auditor_sign_result, DispatchResult::Ok(()));
             });
 
-        // assert_eq!(1, CarbonCredits::get_proj_by_id(project_id).unwrap().annual_reports.last().unwrap().signatures.len());
+        let signatures_len = EvercityFilesign::get_file_by_id(report_id)
+                .unwrap()
+                .versions.last()
+                .unwrap()
+                .signatures.len();
+
+        assert_eq!(1, signatures_len);
     });
 }
 
@@ -236,6 +244,7 @@ fn it_fails_sign_annual_report_not_a_standard_role_gold_standard() {
         let auditor = ROLES[2].0;
 
         let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
         let _ = CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id);
         let _ = CarbonCredits::sign_last_annual_report(Origin::signed(auditor), project_id);
 
@@ -247,7 +256,13 @@ fn it_fails_sign_annual_report_not_a_standard_role_gold_standard() {
                 assert_ne!(standard_sign_result, DispatchResult::Ok(()));
             });
 
-        // assert_eq!(2, CarbonCredits::get_proj_by_id(project_id).unwrap().annual_reports.last().unwrap().signatures.len());
+        let signatures_len = EvercityFilesign::get_file_by_id(report_id)
+                .unwrap()
+                .versions.last()
+                .unwrap()
+                .signatures.len();
+
+        assert_eq!(2, signatures_len);
     });
 }
 
@@ -260,6 +275,7 @@ fn it_fails_sign_annual_report_not_an_registry_role_gold_standard() {
         let standard_acc = ROLES[3].0;
 
         let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
         let _ = CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id);
         let _ = CarbonCredits::sign_last_annual_report(Origin::signed(auditor), project_id);
         let _ = CarbonCredits::sign_last_annual_report(Origin::signed(standard_acc), project_id);
@@ -272,7 +288,13 @@ fn it_fails_sign_annual_report_not_an_registry_role_gold_standard() {
                 assert_ne!(sign_result, DispatchResult::Ok(()));
             });
 
-        // assert_eq!(3, CarbonCredits::get_proj_by_id(project_id).unwrap().annual_reports.last().unwrap().signatures.len());
+        let signatures_len = EvercityFilesign::get_file_by_id(report_id)
+                .unwrap()
+                .versions.last()
+                .unwrap()
+                .signatures.len();
+
+        assert_eq!(3, signatures_len);
     });
 }
 
