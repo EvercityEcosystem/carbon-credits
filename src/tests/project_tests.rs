@@ -138,8 +138,6 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
 
         let project_after_registry_sign = CarbonCredits::get_proj_by_id(1).unwrap();    
         assert_eq!(*project_after_registry_sign.get_standard(), Standard::GOLD_STANDARD);
-        // assert_eq!(1, project_after_registry_sign.document_versions.len());
-        // assert_eq!(project_after_registry_sign.document_versions[0].filehash, filehash);
         assert_eq!(0, project_after_registry_sign.annual_reports.len());
     });
 }
@@ -187,8 +185,9 @@ fn it_fails_sign_project_not_an_auditor_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::GOLD_STANDARD;
+        let proj_file_id = create_project_documentation_file(owner);
 
-        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, proj_file_id);
         crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
         let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
 
@@ -200,7 +199,13 @@ fn it_fails_sign_project_not_an_auditor_gold_standard() {
                 assert_ne!(auditor_sign_result, DispatchResult::Ok(()));
             });
 
-        // assert_eq!(1, CarbonCredits::get_proj_by_id(1).unwrap().signatures.len());
+        let signatures_len = EvercityFilesign::get_file_by_id(proj_file_id)
+                                                .unwrap()
+                                                .versions.last()
+                                                .unwrap()
+                                                .signatures.len();
+
+        assert_eq!(1, signatures_len);
     });
 }
 
@@ -210,8 +215,9 @@ fn it_fails_sign_project_not_an_auditor_gold_standard() {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;
         let standard = Standard::GOLD_STANDARD;
+        let proj_file_id = create_project_documentation_file(owner);
 
-        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, proj_file_id);
         crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
         let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
         let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
@@ -224,7 +230,14 @@ fn it_fails_sign_project_not_an_auditor_gold_standard() {
                 assert_ne!(standard_sign_result, DispatchResult::Ok(()));
             });
 
-        // assert_eq!(2, CarbonCredits::get_proj_by_id(1).unwrap().signatures.len());
+        let signatures_len = EvercityFilesign::get_file_by_id(proj_file_id)
+                                        .unwrap()
+                                        .versions.last()
+                                        .unwrap()
+                                        .signatures.len();
+
+
+        assert_eq!(2, signatures_len);
     });
 }
 
@@ -235,8 +248,9 @@ fn it_fails_sign_project_not_a_registry_gold_standard() {
         let auditor = ROLES[2].0;
         let standard_acc = ROLES[3].0;
         let standard = Standard::GOLD_STANDARD;
+        let proj_file_id = create_project_documentation_file(owner);
 
-        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, proj_file_id);
         crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
         let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
         let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
@@ -250,7 +264,14 @@ fn it_fails_sign_project_not_a_registry_gold_standard() {
                 assert_ne!(registry_sign_result, DispatchResult::Ok(()));
             });
         
-        // assert_eq!(3, CarbonCredits::get_proj_by_id(1).unwrap().signatures.len());
+        let signatures_len = EvercityFilesign::get_file_by_id(proj_file_id)
+                                        .unwrap()
+                                        .versions.last()
+                                        .unwrap()
+                                        .signatures.len();
+
+
+        assert_eq!(3, signatures_len);
     });
 }
 

@@ -190,8 +190,11 @@ decl_module! {
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
                     ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                    pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, project_to_mutate.as_ref().unwrap().file_id)?;
+                    let project_documentation_file_id = project_to_mutate.as_ref().unwrap().file_id;
+                    ensure!(pallet_evercity_filesign::Module::<T>::address_is_signer_for_file(project_documentation_file_id, &caller), 
+                        Error::<T>::IncorrectAnnualReportSigner);
                     Self::change_project_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
+                    pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, project_documentation_file_id)?;
                     Ok(())
              })?;
             if let Some(event) = event_opt {
@@ -253,12 +256,15 @@ decl_module! {
                 project_id, |project_to_mutate| -> DispatchResult {
                     ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
                     ensure!(project_to_mutate.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
-
                     let annual_report_file_id =  project_to_mutate.as_ref().unwrap().annual_reports.last().unwrap().file_id;
+                    ensure!(pallet_evercity_filesign::Module::<T>::address_is_signer_for_file(annual_report_file_id, &caller), 
+                        Error::<T>::IncorrectAnnualReportSigner);
+
+                    Self::change_project_annual_report_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
+
                     pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, 
                         annual_report_file_id)?;
 
-                    Self::change_project_annual_report_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
                     Ok(())
             })?;
             if let Some(event) = event_opt {
@@ -420,7 +426,6 @@ impl<T: Config> Module<T> {
                             Error::<T>::IncorrectProjectSigner);
                         project.state = project::AUDITOR_SIGN_PENDING;
                         project.status = project::ProjectStatus::REGISTRATION;
-                        // project.signatures.push(caller.clone());
                         *event = Some(RawEvent::ProjectSubmited(caller, project.id));
                     },
                     project::AUDITOR_SIGN_PENDING => {
@@ -428,7 +433,6 @@ impl<T: Config> Module<T> {
                         ensure!(Self::is_correct_project_signer(&project, caller.clone(), accounts::accounts::CC_AUDITOR_ROLE_MASK), 
                             Error::<T>::IncorrectProjectSigner);
                         project.state = project::STANDARD_SIGN_PENDING;
-                        // project.signatures.push(caller.clone());
                         *event = Some(RawEvent::ProjectSignedByAduitor(caller, project.id));
                     },
                     project::STANDARD_SIGN_PENDING => {
@@ -436,7 +440,6 @@ impl<T: Config> Module<T> {
                         ensure!(Self::is_correct_project_signer(&project, caller.clone(), accounts::accounts::CC_STANDARD_ROLE_MASK), 
                             Error::<T>::IncorrectProjectSigner);
                         project.state = project::REGISTRY_SIGN_PENDING;
-                        // project.signatures.push(caller.clone());
                         *event = Some(RawEvent::ProjectSignedByStandard(caller, project.id));
                     },
                     project::REGISTRY_SIGN_PENDING => {
@@ -445,7 +448,6 @@ impl<T: Config> Module<T> {
                             Error::<T>::IncorrectProjectSigner);
                         project.state = project::REGISTERED;
                         project.status = project::ProjectStatus::ISSUANCE;
-                        // project.signatures.push(caller.clone());
                         *event = Some(RawEvent::ProjectSignedByRegistry(caller, project.id));
                     },
                     _ => Err(Error::<T>::InvalidState)?
@@ -471,8 +473,6 @@ impl<T: Config> Module<T> {
                         ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_PROJECT_OWNER_ROLE_MASK),
                             Error::<T>::IncorrectProjectSigner);
                         report.state = annual_report::REPORT_AUDITOR_SIGN_PENDING;
-
-                        // report.signatures.push(caller.clone());
                         *event = Some(RawEvent::AnnualReportSubmited(caller, project.id));
                     },
                     annual_report::REPORT_AUDITOR_SIGN_PENDING => {
@@ -480,7 +480,6 @@ impl<T: Config> Module<T> {
                         ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_AUDITOR_ROLE_MASK),
                             Error::<T>::IncorrectProjectSigner);
                         report.state = annual_report::REPORT_STANDARD_SIGN_PENDING;
-                        // report.signatures.push(caller.clone());
                         *event = Some(RawEvent::AnnualReportSignedByAuditor(caller, project.id));
                     },
                     annual_report::REPORT_STANDARD_SIGN_PENDING => {
@@ -488,7 +487,6 @@ impl<T: Config> Module<T> {
                         ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_STANDARD_ROLE_MASK),
                             Error::<T>::IncorrectProjectSigner);
                         report.state = annual_report::REPORT_REGISTRY_SIGN_PENDING;
-                        // report.signatures.push(caller.clone());
                         *event = Some(RawEvent::AnnualReportSignedByStandard(caller, project.id));
                     },
                     annual_report::REPORT_REGISTRY_SIGN_PENDING => {
@@ -496,7 +494,6 @@ impl<T: Config> Module<T> {
                         ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_REGISTRY_ROLE_MASK),
                             Error::<T>::IncorrectProjectSigner);
                         report.state = annual_report::REPORT_ISSUED;
-                        // report.signatures.push(caller.clone());
                         report.set_full_signed();
                         *event = Some(RawEvent::AnnualReportSignedByRegistry(caller, project.id));
                     },

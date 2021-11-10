@@ -25,7 +25,6 @@ pub(crate) fn get_registerd_project_and_owner_gold_standard() -> (ProjectStruct<
     let standard_acc = ROLES[3].0;
     let registry = ROLES[5].0;
     let standard = Standard::GOLD_STANDARD;
-    // let filehash = H256::from([0x66; 32]);
 
     let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
     assign_project_mock_users_required_signers_gold_standard(1);
@@ -45,7 +44,6 @@ pub(crate) fn full_sign_annual_report_gold_standard() -> (ProjectStruct<u64, Tes
     let auditor = ROLES[2].0;
     let standard_acc = ROLES[3].0;
     let registry = ROLES[5].0;
-    let report_hash = H256::from([0x69; 32]);
 
     let _ = CarbonCredits::create_annual_report(Origin::signed(owner), proj_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT);
     assign_annual_report_mock_users_required_signers_gold_standard(proj_id);
