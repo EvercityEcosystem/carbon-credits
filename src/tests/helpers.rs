@@ -8,13 +8,13 @@ pub const TEST_CARBON_CREDITS_COUNT: u64 = 15000;
 
 pub fn create_project_documentation_file(account: u64) -> FileId {
     let filehash = H256::from([0x66; 32]);
-    EvercityFilesign::create_new_file(Origin::signed(account), "my_project_documentation".to_owned().as_bytes().to_vec(), filehash);
+    let _ = EvercityFilesign::create_new_file(Origin::signed(account), "my_project_documentation".to_owned().as_bytes().to_vec(), filehash);
     1
 }
 
 pub fn create_annual_report_file(account: u64) -> FileId {
     let filehash = H256::from([0x88; 32]);
-    EvercityFilesign::create_new_file(Origin::signed(account), "my_annual_report".to_owned().as_bytes().to_vec(), filehash);
+    let _ = EvercityFilesign::create_new_file(Origin::signed(account), "my_annual_report".to_owned().as_bytes().to_vec(), filehash);
     2
 }
 

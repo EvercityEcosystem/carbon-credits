@@ -1,5 +1,5 @@
 use crate::tests::mock::*;
-use frame_support::{assert_ok, dispatch::{
+use frame_support::{assert_ok, assert_noop, dispatch::{
     DispatchResult,
     Vec,
 }};
@@ -7,6 +7,9 @@ use crate::standard::Standard;
 use pallet_evercity_accounts::accounts::*;
 use crate::project::*;
 use crate::tests::helpers::*;
+use crate::Error;
+
+type RuntimeError = Error<TestRuntime>;
 
 #[test]
 fn it_works_get_unexisting_project_gold_standard() {
@@ -43,7 +46,44 @@ fn it_fails_for_create_new_project_not_owner_role_gold_standard() {
         let project_opt = CarbonCredits::get_proj_by_id(1);
 
         assert_ne!(create_project_result, DispatchResult::Ok(()));
-        assert!(project_opt.is_none())
+        assert!(project_opt.is_none());
+    });
+}
+
+#[test]
+fn it_fails_for_create_new_project_no_file_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let auditor = ROLES[3].0;
+        let standard = Standard::default();
+        let other_owner_file_id = create_project_documentation_file(auditor);
+        let create_project_result = CarbonCredits::create_project(Origin::signed(owner), standard, other_owner_file_id);
+        let project_opt = CarbonCredits::get_proj_by_id(1);
+
+        assert_ne!(create_project_result, DispatchResult::Ok(()));
+        assert!(project_opt.is_none());
+        assert_noop!(
+            create_project_result,
+            RuntimeError::AccountNotOwner
+        );
+    });
+}
+
+#[test]
+fn it_fails_for_create_new_project_other_owner_file_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let standard = Standard::default();
+        let not_existing_file_id = 666;
+        let create_project_result = CarbonCredits::create_project(Origin::signed(owner), standard, not_existing_file_id);
+        let project_opt = CarbonCredits::get_proj_by_id(1);
+
+        assert_ne!(create_project_result, DispatchResult::Ok(()));
+        assert!(project_opt.is_none());
+        assert_noop!(
+            create_project_result,
+            RuntimeError::AccountNotOwner
+        );
     });
 }
 
