@@ -253,7 +253,11 @@ decl_module! {
                 project_id, |project_to_mutate| -> DispatchResult {
                     ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
                     ensure!(project_to_mutate.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
-                    pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, project_to_mutate.as_ref().unwrap().file_id)?;
+
+                    let annual_report_file_id =  project_to_mutate.as_ref().unwrap().annual_reports.last().unwrap().file_id;
+                    pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, 
+                        annual_report_file_id)?;
+
                     Self::change_project_annual_report_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
                     Ok(())
             })?;

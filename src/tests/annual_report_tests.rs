@@ -163,6 +163,7 @@ fn it_works_for_full_cycle_sign_annual_report_gold_standard() {
                 let result = account_state_result_tuple.2;
                 let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
 
+                assert!(EvercityFilesign::address_has_signed_the_file(report_id, &acc));
                 assert_ok!(result, ());
                 assert_eq!(state, project.annual_reports.last().unwrap().state);
             })

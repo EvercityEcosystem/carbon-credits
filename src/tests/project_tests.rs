@@ -45,8 +45,11 @@ fn it_fails_for_create_new_project_not_owner_role_gold_standard() {
         let create_project_result = CarbonCredits::create_project(Origin::signed(auditor), standard, create_project_documentation_file(auditor));
         let project_opt = CarbonCredits::get_proj_by_id(1);
 
-        assert_ne!(create_project_result, DispatchResult::Ok(()));
         assert!(project_opt.is_none());
+        assert_noop!(
+            create_project_result,
+            RuntimeError::AccountNotOwner
+        );
     });
 }
 
@@ -100,7 +103,8 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
 
         let standard = Standard::GOLD_STANDARD;
 
-        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
+        let project_doc_id = create_project_documentation_file(owner);
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, project_doc_id);
         crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
 
         let mut tuple_vec = Vec::new();
@@ -128,7 +132,7 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
 
                 assert_ok!(result, ());
                 assert_eq!(state, project.state);
-                // assert_eq!(acc, *project.signatures.last().unwrap());
+                assert!(EvercityFilesign::address_has_signed_the_file(project_doc_id, &acc));
                 assert_eq!(status, project.status);
             });
 
