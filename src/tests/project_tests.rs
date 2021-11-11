@@ -150,14 +150,113 @@ fn it_fails_sign_project_not_an_owner_role_gold_standard() {
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
         crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
+        assign_project_mock_users_required_signers_gold_standard(1);
+
+        // Assign as stub:
+        let _ = CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[0].0, MASTER_ROLE_MASK, 1);
+        let _ = CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[4].0, CC_INVESTOR_ROLE_MASK, 1);
+
 
         ROLES.iter()
             .filter(|x| x.1 != CC_PROJECT_OWNER_ROLE_MASK)
             .map(|x| x.0)
             .for_each(|x| {
                 let owner_sign_result = CarbonCredits::sign_project(Origin::signed(x), 1);
-                assert_ne!(owner_sign_result, DispatchResult::Ok(()));
+                assert_noop!(
+                    owner_sign_result,
+                    RuntimeError::AccountNotOwner
+                );
             });
+    });
+}
+
+#[test]
+fn it_fails_sign_project_not_owner_signer_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let standard = Standard::GOLD_STANDARD;
+
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
+        let owner_sign_result = CarbonCredits::sign_project(Origin::signed(owner), 1);
+
+        assert_noop!(
+            owner_sign_result,
+            RuntimeError::IncorrectAnnualReportSigner
+        );
+    });
+}
+
+#[test]
+fn it_fails_sign_project_not_auditor_signer_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let auditor = ROLES[2].0;
+        // let standard_acc = ROLES[3].0;
+        // let registry = ROLES[5].0;
+        let standard = Standard::GOLD_STANDARD;
+
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
+
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, 1);
+        let _owner_sign_result = CarbonCredits::sign_project(Origin::signed(owner), 1);
+        let auditor_sign_result = CarbonCredits::sign_project(Origin::signed(auditor), 1);
+
+        assert_noop!(
+            auditor_sign_result,
+            RuntimeError::IncorrectAnnualReportSigner
+        );
+    });
+}
+
+#[test]
+fn it_fails_sign_project_not_standard_signer_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let auditor = ROLES[2].0;
+        let standard_acc = ROLES[3].0;
+        // let registry = ROLES[5].0;
+        let standard = Standard::GOLD_STANDARD;
+
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
+
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, 1);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), auditor, ROLES[2].1, 1);
+
+        let _owner_sign_result = CarbonCredits::sign_project(Origin::signed(owner), 1);
+        let _auditor_sign_result = CarbonCredits::sign_project(Origin::signed(auditor), 1);
+        let standard_sign_result = CarbonCredits::sign_project(Origin::signed(standard_acc), 1);
+
+        assert_noop!(
+            standard_sign_result,
+            RuntimeError::IncorrectAnnualReportSigner
+        );
+    });
+}
+
+#[test]
+fn it_fails_sign_project_not_registry_signer_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let auditor = ROLES[2].0;
+        let standard_acc = ROLES[3].0;
+        let registry = ROLES[5].0;
+        let standard = Standard::GOLD_STANDARD;
+
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
+
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, 1);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), auditor, ROLES[2].1, 1);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), standard_acc, ROLES[3].1, 1);
+
+        let _owner_sign_result = CarbonCredits::sign_project(Origin::signed(owner), 1);
+        let _auditor_sign_result = CarbonCredits::sign_project(Origin::signed(auditor), 1);
+        let _standard_sign_result = CarbonCredits::sign_project(Origin::signed(standard_acc), 1);
+        let registry_sign_result = CarbonCredits::sign_project(Origin::signed(registry), 1);
+
+        assert_noop!(
+            registry_sign_result,
+            RuntimeError::IncorrectAnnualReportSigner
+        );
     });
 }
 
@@ -171,12 +270,16 @@ fn it_fails_sign_project_not_an_owner_of_project_gold_standard() {
         let new_owner_id = 555;
         let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
         let is_owner = EvercityAccounts::account_is_cc_project_owner(&new_owner_id);
-
+        
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
+        let _result = CarbonCredits::assign_project_signer(Origin::signed(owner), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK, 1);
         let owner_sign_result = CarbonCredits::sign_project(Origin::signed(new_owner_id), 1);
 
         assert!(is_owner);
-        assert_ne!(owner_sign_result, DispatchResult::Ok(()));
+        assert_noop!(
+            owner_sign_result,
+            RuntimeError::AccountNotOwner
+        );
     });
 }
 
