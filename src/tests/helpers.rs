@@ -6,13 +6,13 @@ use crate::annual_report::*;
 
 pub const TEST_CARBON_CREDITS_COUNT: u64 = 15000;
 
-pub fn create_project_documentation_file(account: u64) -> FileId {
+pub(crate) fn create_project_documentation_file(account: u64) -> FileId {
     let filehash = H256::from([0x66; 32]);
     let _ = EvercityFilesign::create_new_file(Origin::signed(account), "my_project_documentation".to_owned().as_bytes().to_vec(), filehash);
     1
 }
 
-pub fn create_annual_report_file(account: u64) -> FileId {
+pub(crate) fn create_annual_report_file(account: u64) -> FileId {
     let filehash = H256::from([0x88; 32]);
     let _ = EvercityFilesign::create_new_file(Origin::signed(account), "my_annual_report".to_owned().as_bytes().to_vec(), filehash);
     2
@@ -20,6 +20,10 @@ pub fn create_annual_report_file(account: u64) -> FileId {
 
 /// Return tuple -> (project, project_id, project_owner)
 pub(crate) fn get_registerd_project_and_owner_gold_standard() -> (ProjectStruct<u64, TestRuntime, Balance>, ProjectId, u64) {
+    get_project_and_owner_and_custom_signers(assign_project_mock_users_required_signers_gold_standard)
+}
+
+pub(crate) fn get_project_and_owner_and_custom_signers<F>(sign_func: F) -> (ProjectStruct<u64, TestRuntime, Balance>, ProjectId, u64) where F: Fn(ProjectId) -> () {
     let owner = ROLES[1].0;
     let auditor = ROLES[2].0;
     let standard_acc = ROLES[3].0;
@@ -27,7 +31,7 @@ pub(crate) fn get_registerd_project_and_owner_gold_standard() -> (ProjectStruct<
     let standard = Standard::GOLD_STANDARD;
 
     let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
-    assign_project_mock_users_required_signers_gold_standard(1);
+    sign_func(1);
 
     let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
     let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
@@ -38,15 +42,19 @@ pub(crate) fn get_registerd_project_and_owner_gold_standard() -> (ProjectStruct<
     (project, 1, owner)
 }
 
-
+/// Return tuple -> (project, project_id, project_owner)
 pub(crate) fn full_sign_annual_report_gold_standard() -> (ProjectStruct<u64, TestRuntime, Balance>, ProjectId, u64) {
+    get_annual_report_and_owner_custom_signers(assign_annual_report_mock_users_required_signers_gold_standard)
+}
+
+pub(crate) fn get_annual_report_and_owner_custom_signers<F>(sign_func: F) -> (ProjectStruct<u64, TestRuntime, Balance>, ProjectId, u64) where F: Fn(ProjectId) -> () {
     let (project, proj_id, owner) = get_registerd_project_and_owner_gold_standard();
     let auditor = ROLES[2].0;
     let standard_acc = ROLES[3].0;
     let registry = ROLES[5].0;
 
     let _ = CarbonCredits::create_annual_report(Origin::signed(owner), proj_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT);
-    assign_annual_report_mock_users_required_signers_gold_standard(proj_id);
+    sign_func(proj_id);
 
     let mut tuple_vec = Vec::new();
     tuple_vec.push((owner, REPORT_AUDITOR_SIGN_PENDING));

@@ -235,9 +235,96 @@ fn it_fails_sign_annual_report_not_an_owner_role_gold_standard() {
             let owner_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(x), 1);
             assert_ne!(owner_sign_result, DispatchResult::Ok(()));
         });
-
     });
 }
+
+#[test]
+fn it_fails_sign_annual_report_owner_not_in_signers_gold_standard() {
+    // OWNER NOT IN SIGNERS
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_id = create_annual_report_file(owner);
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let owner_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(owner), 1);
+        assert_noop!(
+            owner_sign_result,
+            RuntimeError::IncorrectAnnualReportSigner
+        );
+    });
+}
+
+#[test]
+fn it_fails_sign_annual_report_auditor_not_in_signers_gold_standard() {
+    // AUDITOR NOT IN SIGNERS
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_id = create_annual_report_file(owner);
+
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, project_id);
+        let _owner_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(owner), 1);
+        let auditor = ROLES[2].0;
+
+        let auditor_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(auditor), 1);
+        assert_noop!(
+            auditor_sign_result,
+            RuntimeError::IncorrectAnnualReportSigner
+        );
+    });
+}
+
+#[test]
+fn it_fails_sign_annual_report_standard_not_in_signers_gold_standard() {
+    // STANDARD NOT IN SIGNERS
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_id = create_annual_report_file(owner);
+        let auditor = ROLES[2].0;
+        let standard_acc = ROLES[3].0;
+        
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, project_id);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), auditor, ROLES[2].1, project_id);
+
+        let _owner_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(owner), 1);
+        let _auditor_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(auditor), 1);
+
+        let standard_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(standard_acc), 1);
+
+        assert_noop!(
+            standard_sign_result,
+            RuntimeError::IncorrectAnnualReportSigner
+        );
+    });
+}
+
+#[test]
+fn it_fails_sign_annual_report_registry_not_in_signers_gold_standard() {
+    // REGISTRY NOT IN SIGNERS
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_id = create_annual_report_file(owner);
+        let auditor = ROLES[2].0;
+        let standard_acc = ROLES[3].0;
+        let registry = ROLES[5].0;
+        
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, project_id);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), auditor, ROLES[2].1, project_id);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), standard_acc, ROLES[3].1, project_id);
+
+        let _owner_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(owner), 1);
+        let _auditor_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(auditor), 1);
+        let _standard_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(standard_acc), 1);
+
+        let registry_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(registry), 1);
+        assert_noop!(
+            registry_sign_result,
+            RuntimeError::IncorrectAnnualReportSigner
+        );
+    });
+}
+
 
 #[test]
 fn it_fails_sign_annual_report_not_an_auditor_gold_standard() {
