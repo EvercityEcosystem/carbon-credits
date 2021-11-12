@@ -180,6 +180,8 @@ decl_module! {
         ///
         /// Access: Owner of the project 
         ///
+        /// assign signer, that is required for signing project documentation
+        /// also adds signer to filesign PDD 
         /// 
         /// </pre>
         #[weight = 10_000]
@@ -205,11 +207,13 @@ decl_module! {
         }
 
         /// <pre>
-        /// Method: ()
+        /// Method: sign_project(project_id: ProjectId)
         /// Arguments: origin: AccountId - Transaction caller
+        ///            project_id - id of the project
         ///
-        /// Access: 
+        /// Access: Required Signer with signer role 
         ///
+        /// Signs project documentation, changing state of the project state machine
         /// 
         /// </pre>
         #[weight = 10_000]
