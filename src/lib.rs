@@ -33,7 +33,6 @@ use carbon_credits_passport::CarbonCreditsPassport;
 pub mod standard;
 pub mod project;
 pub mod annual_report;
-pub mod file_hash;
 pub mod required_signers;
 pub mod carbon_credits_passport;
 
@@ -147,6 +146,15 @@ decl_module! {
         type Error = Error<T>;
         fn deposit_event() = default;
 
+        /// <pre>
+        /// Method: create_project(standard: Standard, file_id: FileId)
+        /// Arguments: origin: AccountId - Transaction caller
+        ///            standard: Standard - Carbon Credits Standard
+        ///            file_id: FileId - id of file in filesign pallet
+        /// Access: Project Owner Role
+        ///
+        /// Creates new project with relation to PDD file in filesign
+        /// </pre>
         #[weight = 10_000]
         pub fn create_project(origin, standard: Standard, file_id: FileId) -> DispatchResult {
             let caller = ensure_signed(origin)?;
@@ -163,6 +171,17 @@ decl_module! {
             Ok(())
         }
 
+        /// <pre>
+        /// Method: assign_project_signer(signer: T::AccountId, role: RoleMask, project_id: ProjectId)
+        /// Arguments: origin: AccountId - Transaction caller
+        ///            signer: T::AccountId - assign signer account
+        ///            role - Role of the signer
+        ///            project_id - id of the project
+        ///
+        /// Access: Owner of the project 
+        ///
+        /// 
+        /// </pre>
         #[weight = 10_000]
         pub fn assign_project_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin.clone())?;
@@ -185,6 +204,14 @@ decl_module! {
             Ok(())
         }
 
+        /// <pre>
+        /// Method: ()
+        /// Arguments: origin: AccountId - Transaction caller
+        ///
+        /// Access: 
+        ///
+        /// 
+        /// </pre>
         #[weight = 10_000]
         pub fn sign_project(origin, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin.clone())?;
@@ -205,6 +232,14 @@ decl_module! {
             Ok(())
         }
 
+        /// <pre>
+        /// Method: ()
+        /// Arguments: origin: AccountId - Transaction caller
+        ///
+        /// Access: 
+        ///
+        /// 
+        /// </pre> 
         #[weight = 10_000]
         pub fn create_annual_report(origin, project_id: ProjectId, file_id: FileId, carbon_credits_count: T::Balance) -> DispatchResult {
             let caller = ensure_signed(origin)?;
@@ -228,6 +263,15 @@ decl_module! {
             Ok(())
         }
 
+
+        /// <pre>
+        /// Method: ()
+        /// Arguments: origin: AccountId - Transaction caller
+        ///
+        /// Access: 
+        ///
+        /// 
+        /// </pre>
         #[weight = 10_000]
         pub fn assign_last_annual_report_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin.clone())?;
@@ -250,6 +294,14 @@ decl_module! {
             Ok(())
         }
 
+        /// <pre>
+        /// Method: ()
+        /// Arguments: origin: AccountId - Transaction caller
+        ///
+        /// Access: 
+        ///
+        /// 
+        /// </pre>
         #[weight = 10_000]
         pub fn sign_last_annual_report(origin, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin.clone())?;
@@ -275,6 +327,15 @@ decl_module! {
             Ok(())
         }
 
+
+        /// <pre>
+        /// Method: ()
+        /// Arguments: origin: AccountId - Transaction caller
+        ///
+        /// Access: 
+        ///
+        /// 
+        /// </pre>
         #[weight = 10_000]
         pub fn create_carbon_credits(
             origin, 
@@ -307,6 +368,14 @@ decl_module! {
             Ok(())
         }
 
+        /// <pre>
+        /// Method: ()
+        /// Arguments: origin: AccountId - Transaction caller
+        ///
+        /// Access: 
+        ///
+        /// 
+        /// </pre>
         #[weight = 10_000]
         pub fn set_carbon_credits_metadata(
             origin, 
@@ -329,6 +398,14 @@ decl_module! {
             Ok(())
         }
 
+        /// <pre>
+        /// Method: ()
+        /// Arguments: origin: AccountId - Transaction caller
+        ///
+        /// Access: 
+        ///
+        /// 
+        /// </pre>
         #[weight = 10_000]
         pub fn mint_carbon_credits(origin, asset_id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId) -> DispatchResult {
             let project_owner = ensure_signed(origin.clone())?;
@@ -371,6 +448,14 @@ decl_module! {
             Ok(())
         }
 
+        /// <pre>
+        /// Method: ()
+        /// Arguments: origin: AccountId - Transaction caller
+        ///
+        /// Access: 
+        ///
+        /// 
+        /// </pre>
         #[weight = 10_000]
         pub fn transfer_carbon_credits(
             origin, 
@@ -392,6 +477,14 @@ decl_module! {
             Ok(())
         }
 
+        /// <pre>
+        /// Method: ()
+        /// Arguments: origin: AccountId - Transaction caller
+        ///
+        /// Access: 
+        ///
+        /// 
+        /// </pre>
         #[weight = 10_000]
         pub fn burn_carbon_credits(
             origin, 
