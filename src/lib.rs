@@ -310,7 +310,7 @@ decl_module! {
         #[weight = 10_000]
         pub fn set_carbon_credits_metadata(
             origin, 
-            asset_id: <T as pallet_assets::Config>::AssetId, 
+            asset_id: <T as pallet_assets::Config>::AssetId,
             name: Vec<u8>,
             symbol: Vec<u8>,
             decimals: u8,
@@ -403,7 +403,7 @@ decl_module! {
             let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
             ensure!(passport.is_some(), Error::<T>::PassportNotExist);
 
-            
+
             let burn_call = pallet_assets::Call::<T>::burn_self_assets(asset_id, amount);
             let result = burn_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::BurnFailed);

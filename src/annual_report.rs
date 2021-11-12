@@ -16,8 +16,6 @@ pub const REPORT_ISSUED: AnnualReportStateMask = 32;
 
 pub type AnnualReportStruct<AccountId, T, Balance> = AnnualReportStructT<AccountId, <T as pallet_timestamp::Config>::Moment, Balance>;
 
-pub type CarbonCreditsBalance = u32;
-
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
 pub struct AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone, AccountId: PartialEq {
     pub file_id: FileId,
