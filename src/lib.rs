@@ -47,11 +47,12 @@ pub trait Config:
     pallet_timestamp::Config + 
     pallet_assets::Config + 
     pallet_evercity_filesign::Config {
-    type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
+        type Event: From<Event<Self>> + Into<<Self as frame_system::Config>::Event>;
 }
 
 type AssetId<T> = <T as pallet_assets::Config>::AssetId;
 
+// Pallet Storage
 decl_storage! {
     trait Store for Module<T: Config> as CarbonCredits {
         ProjectById
@@ -66,6 +67,7 @@ decl_storage! {
     }
 }
 
+// Pallet events
 decl_event!(
     pub enum Event<T>
     where
