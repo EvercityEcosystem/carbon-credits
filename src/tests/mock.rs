@@ -6,6 +6,7 @@ use frame_support::parameter_types;
 use sp_core::H256;
 use crate as pallet_carbon_credits;
 use pallet_evercity_accounts::accounts::*;
+pub use pallet_evercity_assets as pallet_assets;
 
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<TestRuntime>;

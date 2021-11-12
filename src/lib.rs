@@ -20,7 +20,9 @@ use frame_support::sp_std::{
         Eq, 
         PartialEq}, 
 };
-pub use pallet_assets::weights::WeightInfo;
+pub use pallet_evercity_assets::weights::WeightInfo;
+pub use pallet_evercity_assets as pallet_assets;
+
 use pallet_evercity_accounts as accounts;
 use project::{ProjectStruct, ProjectId};
 use standard::Standard;
@@ -401,8 +403,8 @@ decl_module! {
             let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
             ensure!(passport.is_some(), Error::<T>::PassportNotExist);
 
-            let carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(credits_holder.clone().into());
-            let burn_call = pallet_assets::Call::<T>::burn(asset_id, carbon_credits_holder_source, amount);
+            
+            let burn_call = pallet_assets::Call::<T>::burn_self_assets(asset_id, amount);
             let result = burn_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::BurnFailed);
 
@@ -522,5 +524,10 @@ impl<T: Config> Module<T> {
     #[cfg(test)]
     pub fn get_passport_by_assetid(asset_id: AssetId<T>) -> Option<CarbonCreditsPassport<AssetId<T>>> {
         CarbonCreditPassportRegistry::<T>::get(asset_id)
+    }
+
+    #[cfg(test)]
+    pub fn aa(asset_id: <T as pallet_assets::Config>::AssetId) {
+        let a = pallet_assets::Pallet::<T>::get_asset_details(asset_id);
     }
 }
