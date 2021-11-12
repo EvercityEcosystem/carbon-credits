@@ -102,41 +102,64 @@ decl_event!(
 decl_error! {
     pub enum Error for Module<T: Config> {
         // Account errors:
-        AccountNotAuthorized,
+
+        /// Account does not have an auditor role in Accounts Pallet
         AccountNotAuditor,
+        /// Account is not owner of the project or doenst have auditor role in Accounts Pallet
         AccountNotOwner,
+        /// Account doesnt have Standard role in Accounts Pallet
         AccountNotStandard,
+        /// Account doesnt have Registry role in Accounts Pallet 
         AccountNotRegistry,
+        /// Account doesnt have Investor role in Accounts Pallet 
         AccountNotInvestor,
-        AccountToAddAlreadyExists,
-        AccountRoleParamIncorrect,
-        AccountNotExist,
+        /// Role if the account is incorrect
         AccountIncorrectRole,
 
-        InvalidAction,
+        // State machine errors
+
+        /// Invalid State of the state machine
         InvalidState,
-        InvalidStandard,
+        /// Project does not exits in the storage
         ProjectNotExist,
+        /// Project doesnt have Registered state
         ProjectNotRegistered,
+        /// Annual reports of the project do not exist
         NoAnnualReports,
+        /// State of an annual report doesnt equal to Issued
         NotIssuedAnnualReportsExist,
 
+        /// Error has occured when thred to create asset
         ErrorCreatingAsset,
+        /// Error minting asset
         ErrorMintingAsset,
+        /// Carbon credits are already created error
         CCAlreadyCreated,
+        /// Carbon credits transfer failed
         TransferFailed,
+        /// Carbon Credits asset burn failed
         BurnFailed,
+        /// Bad parameters of metadata
         BadMetadataParameters,
+        /// Set metadata parameters failed
         SetMetadataFailed,
+        /// Annual report is not ready
         AnnualReportNotReady,
 
-        // Passport Errors
+        // Passport Errors:
+
+        /// There is no carbon credits passport in storage
         PassportNotExist,
+        /// Project referenced by passport is equal to given
         BadPassportProject,
+        /// Given Annual report index is bad 
         BadPassportAnnualReport,
 
-        // Sign errors
+        // Signer errors:
+
+        /// Signer does not exist in Project required signers
         IncorrectProjectSigner,
+        /// Signer does not exist in annual report required signers
         IncorrectAnnualReportSigner,
     }
 }
@@ -237,11 +260,16 @@ decl_module! {
         }
 
         /// <pre>
-        /// Method: ()
+        /// Method: create_annual_report(project_id: ProjectId, file_id: FileId, carbon_credits_count: T::Balance)
         /// Arguments: origin: AccountId - Transaction caller
+        ///            project_id: ProjectId - Id of project, where to create annual report
+        ///            file_id: FileId - Id of pre created file of annual report document
+        ///            carbon_credits_count - count of carbon credits to release after signing
         ///
-        /// Access: 
         ///
+        /// Access: Owner of the project
+        ///
+        /// Create annual report entity with link to annual report file
         /// 
         /// </pre> 
         #[weight = 10_000]
@@ -269,11 +297,15 @@ decl_module! {
 
 
         /// <pre>
-        /// Method: ()
+        /// Method: assign_last_annual_report_signer(signer: T::AccountId, role: RoleMask, project_id: ProjectId))
         /// Arguments: origin: AccountId - Transaction caller
+        ///            signer: T::AccountId - assign signer account
+        ///            role - Role of the signer
+        ///            project_id - id of the project
         ///
-        /// Access: 
-        ///
+        /// Access: Owner of the project
+        /// assign signer, that is required for signing фттгфд кузщке document
+        /// also adds signer to filesign document 
         /// 
         /// </pre>
         #[weight = 10_000]
@@ -299,11 +331,12 @@ decl_module! {
         }
 
         /// <pre>
-        /// Method: ()
+        /// Method: sign_last_annual_report(project_id: ProjectId)
         /// Arguments: origin: AccountId - Transaction caller
         ///
-        /// Access: 
+        /// Access: Assigned signer
         ///
+        /// Signs annual repor document, changing state of the project state machine
         /// 
         /// </pre>
         #[weight = 10_000]
@@ -453,11 +486,16 @@ decl_module! {
         }
 
         /// <pre>
-        /// Method: ()
+        /// Method: transfer_carbon_credits(
+        ///    asset_id: <T as pallet_assets::Config>::AssetId, 
+        ///    new_carbon_credits_holder: T::AccountId, 
+        ///    amount: T::Balance
+        ///) 
         /// Arguments: origin: AccountId - Transaction caller
         ///
-        /// Access: 
+        /// Access: Carbon Credits holder
         ///
+        ///  Transfers carbon creadits of asset id in given amount to an adress
         /// 
         /// </pre>
         #[weight = 10_000]
@@ -482,11 +520,15 @@ decl_module! {
         }
 
         /// <pre>
-        /// Method: ()
+        /// Method: burn_carbon_credits(
+        ///    asset_id: <T as pallet_assets::Config>::AssetId, 
+        ///    amount: T::Balance
+        ///) 
         /// Arguments: origin: AccountId - Transaction caller
         ///
-        /// Access: 
+        /// Access: Holder of carbon credits
         ///
+        /// Burns amount of carbon credits
         /// 
         /// </pre>
         #[weight = 10_000]
@@ -499,7 +541,6 @@ decl_module! {
             // check passport creds
             let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
             ensure!(passport.is_some(), Error::<T>::PassportNotExist);
-
 
             let burn_call = pallet_assets::Call::<T>::burn_self_assets(asset_id, amount);
             let result = burn_call.dispatch_bypass_filter(origin);
