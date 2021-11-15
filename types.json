@@ -1,4 +1,6 @@
 {
+    "RoleMask": "u32",
+    "RequiredSigner": "(AccountId, RoleMask)",
     "Standard": {
         "_enum": [
         "GOLD_STANDARD"
@@ -21,17 +23,25 @@
         "id": "ProjectId",
         "status": "ProjectStatus",
         "state": "ProjectStateMask",
-        "document_versions": "Vec<ProjectDocument>",
-        "signatures": "Vec<AccountId, Moment, Balance>",
+        "file_id": "FileId",
         "annual_reports": "Vec<AnnualReportStruct<AccountId, Moment, Balance>>",
+        "required_signers":"Vec<RequiredSigner<AccountId>>",
         "standard": "Standard"
     },
     "AnnualReportStateMask": "u16",
-    "AnnualReportStruct": {
-      "filehash": "H256",
+    "CarbonCreditsMeta": {
+      "name": "Vec<u8>",
+      "symbol": "Vec<u8>",
+      "decimals": "u8"
+    },
+    "AnnualReportStructT": {
+      "file_id": "FileId",
       "state": "AnnualReportStateMask",
-      "signatures": "Vec<AccountId>",
-      "carbon_credits_count": "Balance"
+      "create_time": "Moment",
+      "carbon_credits_released": "bool",
+      "carbon_credits_count": "Balance",
+      "carbon_credits_meta": "CarbonCreditsMeta",
+      "required_signers": "Vec<RequiredSigner<AccountId>>"
     },
     "CarbonCreditsPassport": {
       "asset_id": "AssetId",
