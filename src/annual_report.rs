@@ -14,15 +14,16 @@ pub const REPORT_INVESTOR_SIGN_PENDING: AnnualReportStateMask = 8;
 pub const REPORT_REGISTRY_SIGN_PENDING: AnnualReportStateMask = 16;
 pub const REPORT_ISSUED: AnnualReportStateMask = 32;
 
+/// Generic annual report implementation
 pub type AnnualReportStruct<AccountId, T, Balance> = AnnualReportStructT<AccountId, <T as pallet_timestamp::Config>::Moment, Balance>;
 
+/// Main annual report implementation
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
 pub struct AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone, AccountId: PartialEq {
     pub file_id: FileId,
     pub state: AnnualReportStateMask,
     #[codec(compact)]
     create_time: Moment,
-    full_signed: bool,
     carbon_credits_count: Balance,
     carbon_credits_released: bool,
     carbon_credits_meta: CarbonCreditsMeta,
@@ -36,7 +37,6 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
             state: REPORT_PROJECT_OWNER_SIGN_PENDING,
             required_signers: Vec::new(),
             create_time,
-            full_signed: false,
             carbon_credits_count,
             carbon_credits_released: false,
             carbon_credits_meta: CarbonCreditsMeta::new(),
@@ -60,11 +60,7 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
     }
 
     pub fn is_full_signed(&self) -> bool {
-        self.full_signed
-    }
-
-    pub fn set_full_signed(&mut self) {
-        self.full_signed = true;
+        self.state == REPORT_ISSUED
     }
 
     pub fn assign_required_signer(&mut self, signer: RequiredSigner<AccountId>) {

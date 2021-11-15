@@ -660,7 +660,6 @@ impl<T: Config> Module<T> {
                         ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_REGISTRY_ROLE_MASK),
                             Error::<T>::IncorrectProjectSigner);
                         report.state = annual_report::REPORT_ISSUED;
-                        report.set_full_signed();
                         *event = Some(RawEvent::AnnualReportSignedByRegistry(caller, project.id));
                     },
                     _ => Err(Error::<T>::InvalidState)?

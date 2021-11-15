@@ -4,6 +4,7 @@ use frame_support::{
     sp_runtime::RuntimeDebug,
 };
 
+/// Passport, that prooves, that an asset is a carbon credit asset
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
 pub struct CarbonCreditsPassport<AssetId>{
     asset_id: AssetId,

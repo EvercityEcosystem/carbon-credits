@@ -11,7 +11,6 @@ use frame_support::sp_std::{
         PartialEq}, 
 };
 use crate::required_signers::RequiredSigner;
-// use crate::accounts::accounts;
 
 pub type ProjectStateMask = u16;
 pub const PROJECT_OWNER_SIGN_PENDING: ProjectStateMask = 1;
@@ -23,6 +22,7 @@ pub const REGISTERED: ProjectStateMask = 32;
 
 pub type ProjectId = u32;
 
+/// Main struct for projects
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
 pub struct ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq + Clone, Moment: pallet_timestamp::Config, Balance: Clone {
     pub owner: AccountId,
@@ -30,8 +30,6 @@ pub struct ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq 
     pub status: ProjectStatus,
     pub state: ProjectStateMask,
     pub file_id: FileId,
-    // pub document_versions: Vec<ProjectDocument>,
-    // pub signatures: Vec<AccountId>,
     pub annual_reports: Vec<AnnualReportStruct<AccountId, Moment, Balance>>,
     required_signers: Vec<RequiredSigner<AccountId>>,
     standard: Standard,
@@ -47,7 +45,6 @@ impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where
             standard,
             status: ProjectStatus::default(), 
             state: PROJECT_OWNER_SIGN_PENDING,
-            // document_versions,
             annual_reports: Vec::new(),
             required_signers: Vec::new(),
         }
