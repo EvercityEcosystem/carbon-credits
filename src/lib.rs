@@ -272,7 +272,7 @@ decl_module! {
                     ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
                     let project_documentation_file_id = project_to_mutate.as_ref().unwrap().file_id;
                     ensure!(pallet_evercity_filesign::Module::<T>::address_is_signer_for_file(project_documentation_file_id, &caller), 
-                        Error::<T>::IncorrectAnnualReportSigner);
+                        Error::<T>::IncorrectProjectSigner);
                     Self::change_project_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
                     pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, project_documentation_file_id)?;
                     Ok(())
