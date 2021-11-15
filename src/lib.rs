@@ -55,12 +55,15 @@ type AssetId<T> = <T as pallet_assets::Config>::AssetId;
 // Pallet Storage
 decl_storage! {
     trait Store for Module<T: Config> as CarbonCredits {
+        /// Main storage for projects
         ProjectById
             get(fn project_by_id):
             map hasher(blake2_128_concat) u32 => Option<ProjectStruct<T::AccountId, T, T::Balance>>;
 
+        /// Incremented it of projects
         LastID: ProjectId;
 
+        /// Storage for carbon credits passports
         CarbonCreditPassportRegistry
             get(fn registry_by_asseid):
             map hasher(blake2_128_concat) AssetId<T> => Option<CarbonCreditsPassport<AssetId<T>>>;
@@ -75,27 +78,46 @@ decl_event!(
         AssetId = <T as pallet_assets::Config>::AssetId
     {
         // Project Events:
+
+        /// \[ProjectOwner, ProjectId\]
         ProjectCreated(AccountId, ProjectId),
-        ProjectSubmited(AccountId, ProjectId),    
-        ProjectRegistered(AccountId, ProjectId),
+        /// \[ProjectOwner, ProjectId\]
+        ProjectSubmited(AccountId, ProjectId),
+        /// \[Auditor, ProjectId\]
         ProjectSignedByAduitor(AccountId, ProjectId),
+        /// \[StandardRoleAccount, ProjectId\]
         ProjectSignedByStandard(AccountId, ProjectId),
+        /// \[Registry, ProjectId\]
         ProjectSignedByRegistry(AccountId, ProjectId),
+        /// \[ProjectOwner, Signer, Role, ProjectId\]
         ProjectSignerAdded(AccountId, AccountId, RoleMask, ProjectId),
 
         // Annual Report Events:
+
+        /// \[ProjectOwner, ProjectId\]
         AnnualReportCreated(AccountId, ProjectId),
+        /// \[ProjectOwner, ProjectId\]
         AnnualReportSubmited(AccountId, ProjectId),
+        /// \[Auditor, ProjectId\]
         AnnualReportSignedByAuditor(AccountId, ProjectId),
+        /// \[StandardRoleAccount, ProjectId\]
         AnnualReportSignedByStandard(AccountId, ProjectId),
+        /// \[Registry, ProjectId\]
         AnnualReportSignedByRegistry(AccountId, ProjectId),
+        /// \[ProjectOwner, Signer, Role, ProjectId\]
         AnnualReportSignerAdded(AccountId, AccountId, RoleMask, ProjectId),
 
         // Carbon Credits Events:
+
+        /// \[ProjectOwner, ProjectId, AssetId\]
         CarbonCreditsAssetCreated(AccountId, ProjectId, AssetId),
+        /// \[ProjectOwner, AssetId\]
         CarbonCreditsMetadataChanged(AccountId, AssetId),
+        /// \[ProjectOwner, ProjectId, AssetId\]
         CarbonCreditsMinted(AccountId, ProjectId, AssetId),
+        /// \[CarbonCreditsHolder, AccountToTransfer, AssetId\]
         CarbonCreditsTransfered(AccountId, AccountId, AssetId),
+        /// \[ProjectOwner, AssetId\]
         CarbonCreditsAssetBurned(AccountId, AssetId),
     }
 );
@@ -555,6 +577,7 @@ decl_module! {
 }
 
 impl<T: Config> Module<T> {
+    /// Changes state of a project by signing
     fn change_project_state(project: &mut ProjectStruct<T::AccountId, T, T::Balance>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
         match &mut project.get_standard() {
             // Project Owner submits PDD (changing status to Registration) => 
@@ -599,6 +622,7 @@ impl<T: Config> Module<T> {
         }
     }
 
+    /// Changes state of an annual report by signing
     fn change_project_annual_report_state(project: &mut ProjectStruct<T::AccountId, T, T::Balance>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
         let standard = project.get_standard().clone();
         let owner = project.owner.clone();
