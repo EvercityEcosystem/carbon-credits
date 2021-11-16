@@ -267,6 +267,7 @@ fn it_fails_for_burn_cc_not_owner() {
         let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(ROLES[4].0), asset_id, 20);
 
         assert_ne!(burn_result, Ok(()));
+        assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT);
     });
 }
 
@@ -280,5 +281,6 @@ fn it_fails_for_burn_cc_not_enough() {
         let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(owner), asset_id, TEST_CARBON_CREDITS_COUNT + 666);
 
         assert_noop!(burn_result, RuntimeError::InsufficientCarbonCredits);
+        assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT);
     });
 }
