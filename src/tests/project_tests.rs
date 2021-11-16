@@ -181,7 +181,7 @@ fn it_fails_sign_project_not_owner_signer_gold_standard() {
 
         assert_noop!(
             owner_sign_result,
-            RuntimeError::IncorrectAnnualReportSigner
+            RuntimeError::IncorrectProjectSigner
         );
     });
 }
@@ -203,7 +203,7 @@ fn it_fails_sign_project_not_auditor_signer_gold_standard() {
 
         assert_noop!(
             auditor_sign_result,
-            RuntimeError::IncorrectAnnualReportSigner
+            RuntimeError::IncorrectProjectSigner
         );
     });
 }
@@ -228,7 +228,7 @@ fn it_fails_sign_project_not_standard_signer_gold_standard() {
 
         assert_noop!(
             standard_sign_result,
-            RuntimeError::IncorrectAnnualReportSigner
+            RuntimeError::IncorrectProjectSigner
         );
     });
 }
@@ -255,7 +255,7 @@ fn it_fails_sign_project_not_registry_signer_gold_standard() {
 
         assert_noop!(
             registry_sign_result,
-            RuntimeError::IncorrectAnnualReportSigner
+            RuntimeError::IncorrectProjectSigner
         );
     });
 }

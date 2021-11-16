@@ -29,12 +29,14 @@ use standard::Standard;
 use pallet_evercity_filesign::{FileId};
 use pallet_evercity_accounts::accounts::RoleMask;
 use carbon_credits_passport::CarbonCreditsPassport;
+use carbon_credits_burn_certificate::CarbonCreditsBurnCertificate;
 
 pub mod standard;
 pub mod project;
 pub mod annual_report;
 pub mod required_signers;
 pub mod carbon_credits_passport;
+pub mod carbon_credits_burn_certificate;
 
 #[cfg(test)]    
 pub mod tests;
@@ -67,6 +69,11 @@ decl_storage! {
         CarbonCreditPassportRegistry
             get(fn registry_by_asseid):
             map hasher(blake2_128_concat) AssetId<T> => Option<CarbonCreditsPassport<AssetId<T>>>;
+
+        /// Storage for user burn sertificates
+        BurnCertificates
+            get(fn cert_by_account_id):
+            map hasher(blake2_128_concat) T::AccountId => Vec<CarbonCreditsBurnCertificate<AssetId<T>, T::Balance>>;
     }
 }
 
@@ -566,9 +573,24 @@ decl_module! {
             let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
             ensure!(passport.is_some(), Error::<T>::PassportNotExist);
 
-            let burn_call = pallet_assets::Call::<T>::burn_self_assets(asset_id, amount);
-            let result = burn_call.dispatch_bypass_filter(origin);
-            ensure!(!result.is_err(), Error::<T>::BurnFailed);
+            BurnCertificates::<T>::try_mutate(
+                credits_holder.clone(), |certificates| -> DispatchResult {
+                    match certificates.iter_mut().find(|x| x.asset_id == asset_id) {
+                        Some(cert) => {
+                            cert.burned_amount += amount;
+                        },
+                        None => {
+                            certificates.push(CarbonCreditsBurnCertificate::new(asset_id, amount));
+                        }
+                    }
+
+                    let burn_call = pallet_assets::Call::<T>::burn_self_assets(asset_id, amount);
+                    let result = burn_call.dispatch_bypass_filter(origin);
+                    ensure!(!result.is_err(), Error::<T>::BurnFailed);
+                    Ok(())
+                }
+
+            )?;
 
             Self::deposit_event(RawEvent::CarbonCreditsAssetBurned(credits_holder, asset_id));
             Ok(())
