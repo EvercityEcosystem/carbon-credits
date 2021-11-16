@@ -213,11 +213,16 @@ fn it_works_for_burn_cc() {
     new_test_ext().execute_with(|| {
         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
         let asset_id = 1;
+        let burn_amount = 20;
         let _ = CarbonCredits::create_carbon_credits(Origin::signed(owner), asset_id, owner, 1, project_id);
         let _ = CarbonCredits::mint_carbon_credits(Origin::signed(owner), asset_id, project_id);
-        let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(owner), asset_id, 20);
+        let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(owner), asset_id, burn_amount);
+
+        let burn_cert_value = CarbonCredits::get_certificates_by_account(owner)[0].burned_amount;
 
         assert_ok!(burn_result, ());
+        assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT - burn_amount);
+        assert_eq!(burn_amount, burn_cert_value);
     });
 }
 
@@ -229,9 +234,9 @@ fn it_works_for_burn_cc_after_transfer() {
         let _ = CarbonCredits::create_carbon_credits(Origin::signed(owner), asset_id, owner, 1, project_id);
         let _ = CarbonCredits::mint_carbon_credits(Origin::signed(owner), asset_id, project_id);
 
-        
         let investor = ROLES[4].0;
-        let _ = CarbonCredits::transfer_carbon_credits(Origin::signed(owner), asset_id, investor, 300);
+        let transfer_amount = 300;
+        let _ = CarbonCredits::transfer_carbon_credits(Origin::signed(owner), asset_id, investor, transfer_amount);
 
         let first_burn_amount = 20;
         let first_burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(investor), asset_id, first_burn_amount);
@@ -245,8 +250,10 @@ fn it_works_for_burn_cc_after_transfer() {
         assert_ok!(second_burn_result, ());
         assert_eq!(first_burn_amount, first_burn_cert_value);
         assert_eq!(second_burn_amount + first_burn_amount, second_burn_cert_value);
+        assert_eq!(Assets::balance(asset_id, investor), transfer_amount - first_burn_amount - second_burn_amount);
     });
 }
+
 
 #[test]
 fn it_fails_for_burn_cc_not_owner() {
