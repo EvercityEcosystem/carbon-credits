@@ -160,6 +160,8 @@ decl_error! {
         /// State of an annual report doesnt equal to Issued
         NotIssuedAnnualReportsExist,
 
+        // Asset error
+
         /// Error has occured when thred to create asset
         ErrorCreatingAsset,
         /// Error minting asset
@@ -176,6 +178,8 @@ decl_error! {
         SetMetadataFailed,
         /// Annual report is not ready
         AnnualReportNotReady,
+        /// Carbon Credits Ballance too low
+        InsufficientCarbonCredits,
 
         // Passport Errors:
 
@@ -572,6 +576,9 @@ decl_module! {
             // check passport creds
             let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
             ensure!(passport.is_some(), Error::<T>::PassportNotExist);
+            ensure!(pallet_assets::Pallet::<T>::balance(asset_id, credits_holder.clone()) >= amount,
+                Error::<T>::InsufficientCarbonCredits
+            );
 
             BurnCertificates::<T>::try_mutate(
                 credits_holder.clone(), |certificates| -> DispatchResult {
@@ -712,7 +719,7 @@ impl<T: Config> Module<T> {
     }
 
     #[cfg(test)]
-    pub fn aa(asset_id: <T as pallet_assets::Config>::AssetId) {
-        let a = pallet_assets::Pallet::<T>::get_asset_details(asset_id);
+    pub fn get_certificates_by_account(account: T::AccountId) -> Vec<CarbonCreditsBurnCertificate<AssetId<T>, T::Balance>> {
+        BurnCertificates::<T>::get(account)
     }
 }

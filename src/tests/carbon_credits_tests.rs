@@ -1,16 +1,10 @@
+use crate::Error;
 use crate::tests::mock::*;
-use frame_support::{assert_ok, 
-//     dispatch::{
-//     // DispatchResult,
-//     // Vec,
-// }
-};
-// use crate::H256;
-// use crate::standard::Standard;
-// use crate::project;
-// use crate::annual_report::*;
+use frame_support::{assert_ok, assert_noop};
 use pallet_evercity_accounts::accounts::*;
 use crate::tests::helpers::*;
+
+type RuntimeError = Error<TestRuntime>;
 
 // CC create token test:
 #[test]
@@ -235,11 +229,22 @@ fn it_works_for_burn_cc_after_transfer() {
         let _ = CarbonCredits::create_carbon_credits(Origin::signed(owner), asset_id, owner, 1, project_id);
         let _ = CarbonCredits::mint_carbon_credits(Origin::signed(owner), asset_id, project_id);
 
+        
         let investor = ROLES[4].0;
         let _ = CarbonCredits::transfer_carbon_credits(Origin::signed(owner), asset_id, investor, 300);
-        let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(investor), asset_id, 20);
 
-        assert_ok!(burn_result, ());
+        let first_burn_amount = 20;
+        let first_burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(investor), asset_id, first_burn_amount);
+        let first_burn_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].burned_amount;
+
+        let second_burn_amount = 15;
+        let second_burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(investor), asset_id, second_burn_amount);
+        let second_burn_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].burned_amount;
+
+        assert_ok!(first_burn_result, ());
+        assert_ok!(second_burn_result, ());
+        assert_eq!(first_burn_amount, first_burn_cert_value);
+        assert_eq!(second_burn_amount + first_burn_amount, second_burn_cert_value);
     });
 }
 
@@ -255,5 +260,18 @@ fn it_fails_for_burn_cc_not_owner() {
         let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(ROLES[4].0), asset_id, 20);
 
         assert_ne!(burn_result, Ok(()));
+    });
+}
+
+#[test]
+fn it_fails_for_burn_cc_not_enough() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let _ = CarbonCredits::create_carbon_credits(Origin::signed(owner), asset_id, owner, 1, project_id);
+        let _ = CarbonCredits::mint_carbon_credits(Origin::signed(owner), asset_id, project_id);
+        let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(owner), asset_id, TEST_CARBON_CREDITS_COUNT + 666);
+
+        assert_noop!(burn_result, RuntimeError::InsufficientCarbonCredits);
     });
 }
