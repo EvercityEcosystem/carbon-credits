@@ -1,55 +1,51 @@
 {
-    "RoleMask": "u32",
-    "RequiredSigner": "(AccountId, RoleMask)",
-    "Standard": {
-        "_enum": [
-        "GOLD_STANDARD"
-      ]
-    },
-    "ProjectStateMask": "u16",
-    "ProjectStatus": {
-        "_enum": [
-          "PREPARING",
-          "REGISTRATION",
-          "ISSUANCE"
-      ]
-    },
-    "ProjectDocument": {
-        "filehash": "H256"
-    },
-    "ProjectId": "u32",
-    "ProjectStruct": {
-        "owner": "AccountId",
-        "id": "ProjectId",
-        "status": "ProjectStatus",
-        "state": "ProjectStateMask",
-        "file_id": "FileId",
-        "annual_reports": "Vec<AnnualReportStruct<AccountId, Moment, Balance>>",
-        "required_signers":"Vec<RequiredSigner<AccountId>>",
-        "standard": "Standard"
-    },
-    "AnnualReportStateMask": "u16",
-    "CarbonCreditsMeta": {
-      "name": "Vec<u8>",
-      "symbol": "Vec<u8>",
-      "decimals": "u8"
-    },
-    "AnnualReportStructT": {
-      "file_id": "FileId",
-      "state": "AnnualReportStateMask",
-      "create_time": "Moment",
-      "carbon_credits_released": "bool",
-      "carbon_credits_count": "Balance",
-      "carbon_credits_meta": "CarbonCreditsMeta",
-      "required_signers": "Vec<RequiredSigner<AccountId>>"
-    },
-    "CarbonCreditsPassport": {
-      "asset_id": "AssetId",
-      "project_id": "ProjectId",
-      "annual_report_index": "u64"
-    },
-    "CarbonCreditsBurnCertificate": {
-      "asset_id": "AssetId",
-      "burned_amount": "Balance"
-    }
+  "RequiredSigner": "(AccountId, RoleMask)",
+  "Standard": {
+    "_enum": [
+      "GOLD_STANDARD"
+    ]
+  },
+  "ProjectStateMask": "u16",
+  "ProjectStatus": {
+    "_enum": [
+      "PREPARING",
+      "REGISTRATION",
+      "ISSUANCE"
+    ]
+  },
+  "ProjectId": "u32",
+  "ProjectStruct": {
+    "owner": "AccountId",
+    "id": "ProjectId",
+    "status": "ProjectStatus",
+    "state": "ProjectStateMask",
+    "file_id": "FileId",
+    "annual_reports": "Vec<AnnualReportStruct<AccountId, Moment, Balance>>",
+    "required_signers": "Vec<RequiredSigner<AccountId>>",
+    "standard": "Standard"
+  },
+  "AnnualReportStateMask": "u16",
+  "CarbonCreditsMeta": {
+    "name": "Vec<u8>",
+    "symbol": "Vec<u8>",
+    "decimals": "u8"
+  },
+  "AnnualReportStruct": {
+    "file_id": "FileId",
+    "state": "AnnualReportStateMask",
+    "create_time": "Compact<Moment>",
+    "carbon_credits_count": "Balance",
+    "carbon_credits_released": "bool",
+    "carbon_credits_meta": "CarbonCreditsMeta",
+    "required_signers": "Vec<RequiredSigner>"
+  },
+  "CarbonCreditsPassport": {
+    "asset_id": "AssetId",
+    "project_id": "ProjectId",
+    "annual_report_index": "u64"
+  },
+  "CarbonCreditsBurnCertificate": {
+    "asset_id": "AssetId",
+    "burned_amount": "Balance"
+  }
 }
