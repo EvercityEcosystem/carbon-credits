@@ -1,4 +1,5 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+use crate::sp_api_hidden_includes_decl_storage::hidden_include::traits::Get;
 use frame_support::{
     ensure,
     decl_error, 
@@ -146,6 +147,8 @@ decl_error! {
         AccountNotInvestor,
         /// Role if the account is incorrect
         AccountIncorrectRole,
+        /// Account is not assigned as signer in given role
+        AccountNotGivenRoleSigner,
 
         // State machine errors
 
@@ -213,7 +216,7 @@ decl_module! {
         ///
         /// Creates new project with relation to PDD file in filesign
         /// </pre>
-        #[weight = 10_000]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(1, 2)]
         pub fn create_project(origin, standard: Standard, file_id: FileId) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
@@ -242,7 +245,7 @@ decl_module! {
         /// also adds signer to filesign PDD 
         /// 
         /// </pre>
-        #[weight = 10_000]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(1, 1)]
         pub fn assign_project_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin.clone())?;
             ensure!(pallet_evercity_accounts::Module::<T>::account_is_selected_role(&signer, role), Error::<T>::AccountIncorrectRole);
@@ -255,6 +258,42 @@ decl_module! {
                             proj.assign_required_signer((signer.clone(), role));
 
                             pallet_evercity_filesign::Module::<T>::assign_signer(origin, proj.file_id, signer.clone())?;
+                        }
+                    }
+
+                    Ok(())
+             })?;
+            Self::deposit_event(RawEvent::ProjectSignerAdded(caller, signer, role, project_id));
+            Ok(())
+        }
+
+        /// <pre>
+        /// Method: remove_project_signer(signer: T::AccountId, role: RoleMask, project_id: ProjectId)
+        /// Arguments: origin: AccountId - Transaction caller
+        ///            signer: T::AccountId - assign signer account
+        ///            role - Role of the signer
+        ///            project_id - id of the project
+        ///
+        /// Access: Owner of the project 
+        ///
+        /// remove signer, that is was added for signing project documentation
+        /// also deletes signer from filesign PDD 
+        /// 
+        /// </pre>
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(1, 1)]
+        pub fn remove_project_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
+            let caller = ensure_signed(origin.clone())?;
+            ensure!(pallet_evercity_accounts::Module::<T>::account_is_selected_role(&signer, role), Error::<T>::AccountIncorrectRole);
+            ProjectById::<T>::try_mutate(
+                project_id, |project_to_mutate| -> DispatchResult {
+                    match project_to_mutate  {
+                        None => return Err(Error::<T>::ProjectNotExist)?,
+                        Some(proj) => {
+                            ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
+                            ensure!(proj.is_required_signer((signer.clone(), role)), Error::<T>::AccountNotGivenRoleSigner);
+                            proj.remove_required_signer((signer.clone(), role));
+
+                            pallet_evercity_filesign::Module::<T>::delete_signer(origin, proj.file_id, signer.clone())?;
                         }
                     }
 
