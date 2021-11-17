@@ -409,7 +409,7 @@ decl_module! {
         /// 
         /// </pre>
         #[weight = 10_000]
-        pub fn create_carbon_credits(
+        pub fn set_carbon_credit_asset(
             origin, 
             asset_id: <T as pallet_assets::Config>::AssetId, 
             new_carbon_credits_holder: T::AccountId,
@@ -441,11 +441,22 @@ decl_module! {
         }
 
         /// <pre>
-        /// Method: ()
+        /// Method: set_carbon_credits_metadata(
+        ///             asset_id: <T as pallet_assets::Config>::AssetId,
+        ///             name: Vec<u8>,
+        ///             symbol: Vec<u8>,
+        ///             decimals: u8,
+        ///             )
+        /// 
         /// Arguments: origin: AccountId - Transaction caller
+        ///            asset_id - id of asset in assets pallet
+        ///            name - asset name
+        ///            symbol - asset symbol
+        ///            decimals - decimals count
         ///
-        /// Access: 
+        /// Access: Asset Owner
         ///
+        /// Sets CC asset metadata
         /// 
         /// </pre>
         #[weight = 10_000]
@@ -471,19 +482,21 @@ decl_module! {
         }
 
         /// <pre>
-        /// Method: ()
+        /// Method: release_carbon_credits(asset_id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId)
         /// Arguments: origin: AccountId - Transaction caller
+        ///            asset_id - id of asset in assets pallet
+        ///            project_id - id of project
         ///
-        /// Access: 
+        /// Access: Owner of the project
         ///
+        /// Releases carbon credits, checking its passport calling pallet assets mint
         /// 
         /// </pre>
         #[weight = 10_000]
-        pub fn mint_carbon_credits(origin, asset_id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId) -> DispatchResult {
+        pub fn release_carbon_credits(origin, asset_id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId) -> DispatchResult {
             let project_owner = ensure_signed(origin.clone())?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
 
-            let mut cc_amount: Option<T::Balance> = None;
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
                     ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
@@ -507,15 +520,16 @@ decl_module! {
                     ensure!(!last_annual_report.is_carbon_credits_released(), Error::<T>::CCAlreadyCreated);
                     last_annual_report.set_carbon_credits_released();
     
-                    cc_amount = Some(last_annual_report.carbon_credits_count());
+                    let cc_amount = last_annual_report.carbon_credits_count();
+
+                    let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.clone().into());
+                    let mint_call = pallet_assets::Call::<T>::mint(asset_id, new_carbon_credits_holder_source, cc_amount);
+                    let result = mint_call.dispatch_bypass_filter(origin);
+                    ensure!(!result.is_err(), Error::<T>::ErrorMintingAsset);
+
                     Ok(())
              })?;
     
-            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.clone().into());
-            let mint_call = pallet_assets::Call::<T>::mint(asset_id, new_carbon_credits_holder_source, cc_amount.unwrap());
-            let result = mint_call.dispatch_bypass_filter(origin);
-            ensure!(!result.is_err(), Error::<T>::ErrorMintingAsset);
-
             Self::deposit_event(RawEvent::CarbonCreditsMinted(project_owner, project_id, asset_id));
             Ok(())
         }

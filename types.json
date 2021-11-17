@@ -47,5 +47,9 @@
       "asset_id": "AssetId",
       "project_id": "ProjectId",
       "annual_report_index": "u64"
+    },
+    "CarbonCreditsBurnCertificate": {
+      "asset_id": "AssetId",
+      "burned_amount": "Balance"
     }
 }
