@@ -99,6 +99,8 @@ decl_event!(
         ProjectSignedByRegistry(AccountId, ProjectId),
         /// \[ProjectOwner, Signer, Role, ProjectId\]
         ProjectSignerAdded(AccountId, AccountId, RoleMask, ProjectId),
+        /// \[ProjectOwner, Signer, Role, ProjectId\]
+        ProjectSignerRemoved(AccountId, AccountId, RoleMask, ProjectId),
 
         // Annual Report Events:
 
@@ -114,6 +116,8 @@ decl_event!(
         AnnualReportSignedByRegistry(AccountId, ProjectId),
         /// \[ProjectOwner, Signer, Role, ProjectId\]
         AnnualReportSignerAdded(AccountId, AccountId, RoleMask, ProjectId),
+        /// \[ProjectOwner, Signer, Role, ProjectId\]
+        AnnualReportSignerRemoved(AccountId, AccountId, RoleMask, ProjectId),
 
         // Carbon Credits Events:
 
@@ -299,7 +303,7 @@ decl_module! {
 
                     Ok(())
              })?;
-            Self::deposit_event(RawEvent::ProjectSignerAdded(caller, signer, role, project_id));
+            Self::deposit_event(RawEvent::ProjectSignerRemoved(caller, signer, role, project_id));
             Ok(())
         }
 
@@ -401,6 +405,40 @@ decl_module! {
                     Ok(())
              })?;
             Self::deposit_event(RawEvent::AnnualReportSignerAdded(caller, signer, role, project_id));
+            Ok(())
+        }
+
+        /// <pre>
+        /// Method: remove_last_annual_report_signer(signer: T::AccountId, role: RoleMask, project_id: ProjectId))
+        /// Arguments: origin: AccountId - Transaction caller
+        ///            signer: T::AccountId - assign signer account
+        ///            role - Role of the signer
+        ///            project_id - id of the project
+        ///
+        /// Access: Owner of the project
+        /// remove signer, that was added for signing фттгфд кузщке document
+        /// also deletes signer to filesign document 
+        /// 
+        /// </pre>
+        #[weight = 10_000]
+        pub fn remove_last_annual_report_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
+            let caller = ensure_signed(origin.clone())?;
+            ensure!(pallet_evercity_accounts::Module::<T>::account_is_selected_role(&signer, role), Error::<T>::AccountIncorrectRole);
+            ProjectById::<T>::try_mutate(
+                project_id, |project_to_mutate| -> DispatchResult {
+                    match project_to_mutate  {
+                        None => return Err(Error::<T>::ProjectNotExist)?,
+                        Some(proj) => {
+                            ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
+                            let len = proj.annual_reports.len();
+                            ensure!(len > 0, Error::<T>::NoAnnualReports);
+                            proj.annual_reports[len - 1].remove_required_signer((signer.clone(), role));
+                            pallet_evercity_filesign::Module::<T>::delete_signer(origin.clone(), proj.annual_reports[len - 1].file_id, signer.clone())?;
+                        }
+                    }
+                    Ok(())
+             })?;
+            Self::deposit_event(RawEvent::AnnualReportSignerRemoved(caller, signer, role, project_id));
             Ok(())
         }
 

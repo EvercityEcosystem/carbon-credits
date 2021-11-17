@@ -64,7 +64,20 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
     }
 
     pub fn assign_required_signer(&mut self, signer: RequiredSigner<AccountId>) {
-        self.required_signers.push(signer);
+        if !self.required_signers.iter().any(|(acc, role)| *acc == signer.0 && *role == signer.1) {
+            self.required_signers.push(signer);
+        }
+    }
+
+    pub fn remove_required_signer(&mut self, signer: RequiredSigner<AccountId>) {
+        let index = match self.required_signers.iter().position(|a| *a == signer) {
+            Some(i) => i,
+            None => {
+                return;
+            }
+        };
+
+        self.required_signers.remove(index);
     }
 
     pub fn is_required_signer(&self, signer: RequiredSigner<AccountId>) -> bool {
