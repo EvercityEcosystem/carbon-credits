@@ -52,7 +52,7 @@ fn it_fails_for_create_new_annual_report_no_file() {
         assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
         assert_noop!(
             create_report_result,
-            RuntimeError::AccountNotOwner
+            RuntimeError::AccountNotFileOwner
         );
     });
 }
@@ -70,7 +70,7 @@ fn it_fails_for_create_new_annual_report_not_file_owner() {
         assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
         assert_noop!(
             create_report_result,
-            RuntimeError::AccountNotOwner
+            RuntimeError::AccountNotFileOwner
         );
     });
 }
@@ -140,12 +140,13 @@ fn it_fails_for_create_new_annual_report_not_an_owner_role_gold_standard() {
 #[test]
 fn it_fails_for_create_new_annual_report_not_an_owner_of_the_project_gold_standard() {
     new_test_ext().execute_with(|| {
-        let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
-        let report_id = create_annual_report_file(owner);
+        let (project, project_id, _) = get_registerd_project_and_owner_gold_standard();
+        
 
         // Create new acc with owner role
         let new_owner_id = 555;
         let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
+        let report_id = create_annual_report_file(new_owner_id);
         let is_owner = EvercityAccounts::account_is_cc_project_owner(&new_owner_id);
 
         let create_report_result = CarbonCredits::create_annual_report(Origin::signed(new_owner_id), project_id, report_id, TEST_CARBON_CREDITS_COUNT);

@@ -153,6 +153,8 @@ decl_error! {
         AccountIncorrectRole,
         /// Account is not assigned as signer in given role
         AccountNotGivenRoleSigner,
+        /// Account not owner of file
+        AccountNotFileOwner,
 
         // State machine errors
 
@@ -224,7 +226,7 @@ decl_module! {
         pub fn create_project(origin, standard: Standard, file_id: FileId) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
-            ensure!(pallet_evercity_filesign::Module::<T>::address_is_owner_for_file(file_id, &caller), Error::<T>::AccountNotOwner);
+            ensure!(pallet_evercity_filesign::Module::<T>::address_is_owner_for_file(file_id, &caller), Error::<T>::AccountNotFileOwner);
 
             let new_id = LastID::get() + 1;
             let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T, T::Balance>::new(caller.clone(), new_id, standard, file_id);
@@ -317,7 +319,7 @@ decl_module! {
         /// Signs project documentation, changing state of the project state machine
         /// 
         /// </pre>
-        #[weight = 10_000]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 2)]
         pub fn sign_project(origin, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin.clone())?;
             let mut event_opt: Option<Event<T>> = None;
@@ -350,11 +352,11 @@ decl_module! {
         /// Create annual report entity with link to annual report file
         /// 
         /// </pre> 
-        #[weight = 10_000]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(1, 1)]
         pub fn create_annual_report(origin, project_id: ProjectId, file_id: FileId, carbon_credits_count: T::Balance) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
-            ensure!(pallet_evercity_filesign::Module::<T>::address_is_owner_for_file(file_id, &caller), Error::<T>::AccountNotOwner);
+            ensure!(pallet_evercity_filesign::Module::<T>::address_is_owner_for_file(file_id, &caller), Error::<T>::AccountNotFileOwner);
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
                     ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);

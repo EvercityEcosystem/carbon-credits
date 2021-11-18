@@ -67,7 +67,7 @@ fn it_fails_for_create_new_project_no_file_gold_standard() {
         assert!(project_opt.is_none());
         assert_noop!(
             create_project_result,
-            RuntimeError::AccountNotOwner
+            RuntimeError::AccountNotFileOwner
         );
     });
 }
@@ -85,7 +85,7 @@ fn it_fails_for_create_new_project_other_owner_file_gold_standard() {
         assert!(project_opt.is_none());
         assert_noop!(
             create_project_result,
-            RuntimeError::AccountNotOwner
+            RuntimeError::AccountNotFileOwner
         );
     });
 }
