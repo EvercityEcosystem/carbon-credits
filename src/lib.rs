@@ -352,7 +352,7 @@ decl_module! {
         /// Create annual report entity with link to annual report file
         /// 
         /// </pre> 
-        #[weight = 10_000 + T::DbWeight::get().reads_writes(1, 1)]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 1)]
         pub fn create_annual_report(origin, project_id: ProjectId, file_id: FileId, carbon_credits_count: T::Balance) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
@@ -388,7 +388,7 @@ decl_module! {
         /// also adds signer to filesign document 
         /// 
         /// </pre>
-        #[weight = 10_000]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
         pub fn assign_last_annual_report_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin.clone())?;
             ensure!(pallet_evercity_accounts::Module::<T>::account_is_selected_role(&signer, role), Error::<T>::AccountIncorrectRole);
@@ -422,7 +422,7 @@ decl_module! {
         /// also deletes signer to filesign document 
         /// 
         /// </pre>
-        #[weight = 10_000]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 2)]
         pub fn remove_last_annual_report_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin.clone())?;
             ensure!(pallet_evercity_accounts::Module::<T>::account_is_selected_role(&signer, role), Error::<T>::AccountIncorrectRole);
@@ -453,7 +453,7 @@ decl_module! {
         /// Signs annual repor document, changing state of the project state machine
         /// 
         /// </pre>
-        #[weight = 10_000]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
         pub fn sign_last_annual_report(origin, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin.clone())?;
             let mut event_opt: Option<Event<T>> = None;
@@ -480,14 +480,22 @@ decl_module! {
 
 
         /// <pre>
-        /// Method: ()
+        /// Method: set_carbon_credit_asset(
+        ///           asset_id: <T as pallet_assets::Config>::AssetId, 
+        ///           new_carbon_credits_holder: T::AccountId,
+        ///           min_balance: <T as pallet_assets::Config>::Balance,
+        ///           project_id: ProjectId
+        /// )
         /// Arguments: origin: AccountId - Transaction caller
+        ///            asset_id - new assed Asset id
+        ///            new_carbon_credits_holder - holder of the carbon credits
+        ///            
         ///
         /// Access: 
         ///
         /// 
         /// </pre>
-        #[weight = 10_000]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 2)]
         pub fn set_carbon_credit_asset(
             origin, 
             asset_id: <T as pallet_assets::Config>::AssetId, 
@@ -538,7 +546,7 @@ decl_module! {
         /// Sets CC asset metadata
         /// 
         /// </pre>
-        #[weight = 10_000]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 2)]
         pub fn set_carbon_credits_metadata(
             origin, 
             asset_id: <T as pallet_assets::Config>::AssetId,
@@ -571,7 +579,7 @@ decl_module! {
         /// Releases carbon credits, checking its passport calling pallet assets mint
         /// 
         /// </pre>
-        #[weight = 10_000]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
         pub fn release_carbon_credits(origin, asset_id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId) -> DispatchResult {
             let project_owner = ensure_signed(origin.clone())?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
@@ -626,7 +634,7 @@ decl_module! {
         ///  Transfers carbon creadits of asset id in given amount to an adress
         /// 
         /// </pre>
-        #[weight = 10_000]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 1)]
         pub fn transfer_carbon_credits(
             origin, 
             asset_id: <T as pallet_assets::Config>::AssetId, 
@@ -659,7 +667,7 @@ decl_module! {
         /// Burns amount of carbon credits
         /// 
         /// </pre>
-        #[weight = 10_000]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
         pub fn burn_carbon_credits(
             origin, 
             asset_id: <T as pallet_assets::Config>::AssetId, 
