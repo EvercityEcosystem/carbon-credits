@@ -91,7 +91,7 @@ fn it_fails_for_create_new_project_other_owner_file_gold_standard() {
 }
 
 #[test]
-fn it_works_assign_signer() {
+fn it_works_project_assign_signer() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::default();
@@ -118,7 +118,7 @@ fn it_works_assign_signer() {
 }
 
 #[test]
-fn it_works_remove_signer() {
+fn it_works_project_remove_signer() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::default();

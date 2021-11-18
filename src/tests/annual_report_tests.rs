@@ -161,6 +161,61 @@ fn it_fails_for_create_new_annual_report_not_an_owner_of_the_project_gold_standa
     });
 }
 
+
+#[test]
+fn it_works_annual_report_assign_signer() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+
+        let report_id = create_annual_report_file(owner);
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT); 
+
+        let mut assign_results = Vec::new();
+        assign_results.push(CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id));
+        assign_results.push(CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[2].0, ROLES[2].1, project_id));
+        assign_results.push(CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[3].0, ROLES[3].1, project_id));
+        assign_results.push(CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[5].0, ROLES[5].1, project_id));
+
+
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assign_results.iter().for_each(|result| {
+                assert_ok!(*result, ());
+            }
+        );
+        assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[1].0, ROLES[1].1)));
+        assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[2].0, ROLES[2].1)));
+        assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[3].0, ROLES[3].1)));
+        assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[5].0, ROLES[5].1)));
+    });
+}
+
+#[test]
+fn it_works_annual_report_remove_signer() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+
+        let report_id = create_annual_report_file(owner);
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT); 
+
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[2].0, ROLES[2].1, project_id);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[3].0, ROLES[3].1, project_id);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[5].0, ROLES[5].1, project_id);
+
+        let delete_result = CarbonCredits::remove_last_annual_report_signer(Origin::signed(owner), ROLES[5].0, ROLES[5].1, project_id);
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assert_ok!(delete_result, ());
+        assert!(!project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[5].0, ROLES[5].1)));
+
+        // Assert that others are not deleted:
+        assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[1].0, ROLES[1].1)));
+        assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[2].0, ROLES[2].1)));
+        assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[3].0, ROLES[3].1)));
+    });
+}
+
 // Project Owner sends report for verification =>  Auditor provides and submits verification report => 
 // Standard Approves carbon credit issuance => Registry issues carbon credits
 #[test]
