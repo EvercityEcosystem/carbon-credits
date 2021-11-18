@@ -145,6 +145,30 @@ fn it_works_project_remove_signer() {
     });
 }
 
+#[test]
+fn it_fails_project_remove_unexisting_signer() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let standard = Standard::default();
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), create_project_documentation_file(owner));
+        let project_id = 1;
+
+        let _ = CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id);
+        let _ = CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[2].0, ROLES[2].1, project_id);
+        let _ = CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[3].0, ROLES[3].1, project_id);
+
+        let delete_result = CarbonCredits::remove_project_signer(Origin::signed(owner), ROLES[5].0, ROLES[5].1, project_id);
+        let project = CarbonCredits::get_proj_by_id(1).unwrap();
+
+        assert_ne!(delete_result, DispatchResult::Ok(()));
+
+        // Assert other are not deleted:
+        assert!(project.is_required_signer((ROLES[1].0, ROLES[1].1)));
+        assert!(project.is_required_signer((ROLES[2].0, ROLES[2].1)));
+        assert!(project.is_required_signer((ROLES[3].0, ROLES[3].1)));
+    });
+}
+
 // Main flow test
 // Project Owner submits PDD (changing status to Registration) => 
 // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
