@@ -258,7 +258,7 @@ decl_module! {
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
                     match project_to_mutate  {
-                        None => return Err(Error::<T>::ProjectNotExist)?,
+                        None => return Err(Error::<T>::ProjectNotExist.into()),
                         Some(proj) => {
                             ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
                             proj.assign_required_signer((signer.clone(), role));
@@ -293,7 +293,7 @@ decl_module! {
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
                     match project_to_mutate  {
-                        None => return Err(Error::<T>::ProjectNotExist)?,
+                        None => return Err(Error::<T>::ProjectNotExist.into()),
                         Some(proj) => {
                             ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
                             ensure!(proj.is_required_signer((signer.clone(), role)), Error::<T>::AccountNotGivenRoleSigner);
@@ -395,7 +395,7 @@ decl_module! {
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
                     match project_to_mutate  {
-                        None => return Err(Error::<T>::ProjectNotExist)?,
+                        None => return Err(Error::<T>::ProjectNotExist.into()),
                         Some(proj) => {
                             ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
                             let len = proj.annual_reports.len();
@@ -429,7 +429,7 @@ decl_module! {
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
                     match project_to_mutate  {
-                        None => return Err(Error::<T>::ProjectNotExist)?,
+                        None => return Err(Error::<T>::ProjectNotExist.into()),
                         Some(proj) => {
                             ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
                             let len = proj.annual_reports.len();
@@ -515,7 +515,7 @@ decl_module! {
             ensure!(project.as_ref().unwrap().annual_reports.last().unwrap().is_full_signed(), Error::<T>::AnnualReportNotReady);
     
             // Create Asset:
-            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.into());
+            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder);
             let create_call = pallet_assets::Call::<T>::create(asset_id, new_carbon_credits_holder_source, 0, min_balance);
             let result = create_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::ErrorCreatingAsset);
@@ -559,7 +559,7 @@ decl_module! {
             let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
             ensure!(passport.is_some(), Error::<T>::PassportNotExist);
 
-            ensure!(name.len() != 0 && symbol.len() != 0, Error::<T>::BadMetadataParameters);
+            ensure!(!name.is_empty() && !symbol.is_empty(), Error::<T>::BadMetadataParameters);
             let transfer_call = pallet_assets::Call::<T>::set_metadata(asset_id, name, symbol, decimals);
             let result = transfer_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::SetMetadataFailed);
@@ -585,7 +585,7 @@ decl_module! {
 
             // get project id
             let project_id = match CarbonCreditPassportRegistry::<T>::get(asset_id) {
-                None => Err(Error::<T>::PassportNotExist)?,
+                None => return Err(Error::<T>::PassportNotExist.into()),
                 Some(passport) => passport.get_project_id()
             };
 
@@ -608,7 +608,7 @@ decl_module! {
     
                     let cc_amount = last_annual_report.carbon_credits_count();
 
-                    let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.clone().into());
+                    let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.clone());
                     let mint_call = pallet_assets::Call::<T>::mint(asset_id, new_carbon_credits_holder_source, cc_amount);
                     let result = mint_call.dispatch_bypass_filter(origin);
                     ensure!(!result.is_err(), Error::<T>::ErrorMintingAsset);
@@ -746,7 +746,7 @@ impl<T: Config> Module<T> {
                         project.status = project::ProjectStatus::ISSUANCE;
                         *event = Some(RawEvent::ProjectSignedByRegistry(caller, project.id));
                     },
-                    _ => Err(Error::<T>::InvalidState)?
+                    _ => return Err(Error::<T>::InvalidState.into())
                 }
                 Ok(())
             }
@@ -793,7 +793,7 @@ impl<T: Config> Module<T> {
                         report.state = annual_report::REPORT_ISSUED;
                         *event = Some(RawEvent::AnnualReportSignedByRegistry(caller, project.id));
                     },
-                    _ => Err(Error::<T>::InvalidState)?
+                    _ => return Err(Error::<T>::InvalidState.into())
                 }
                 Ok(())
             },

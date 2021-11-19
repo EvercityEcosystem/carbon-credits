@@ -23,7 +23,7 @@ pub(crate) fn get_registerd_project_and_owner_gold_standard() -> (ProjectStruct<
     get_project_and_owner_and_custom_signers(assign_project_mock_users_required_signers_gold_standard)
 }
 
-pub(crate) fn get_project_and_owner_and_custom_signers<F>(sign_func: F) -> (ProjectStruct<u64, TestRuntime, Balance>, ProjectId, u64) where F: Fn(ProjectId) -> () {
+pub(crate) fn get_project_and_owner_and_custom_signers<F>(sign_func: F) -> (ProjectStruct<u64, TestRuntime, Balance>, ProjectId, u64) where F: Fn(ProjectId) {
     let owner = ROLES[1].0;
     let auditor = ROLES[2].0;
     let standard_acc = ROLES[3].0;
@@ -47,7 +47,7 @@ pub(crate) fn full_sign_annual_report_gold_standard() -> (ProjectStruct<u64, Tes
     get_annual_report_and_owner_custom_signers(assign_annual_report_mock_users_required_signers_gold_standard)
 }
 
-pub(crate) fn get_annual_report_and_owner_custom_signers<F>(sign_func: F) -> (ProjectStruct<u64, TestRuntime, Balance>, ProjectId, u64) where F: Fn(ProjectId) -> () {
+pub(crate) fn get_annual_report_and_owner_custom_signers<F>(sign_func: F) -> (ProjectStruct<u64, TestRuntime, Balance>, ProjectId, u64) where F: Fn(ProjectId) {
     let (project, proj_id, owner) = get_registerd_project_and_owner_gold_standard();
     let auditor = ROLES[2].0;
     let standard_acc = ROLES[3].0;

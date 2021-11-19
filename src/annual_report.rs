@@ -102,7 +102,7 @@ impl CarbonCreditsMeta {
     }
 
     pub fn is_metadata_valid(&self) -> bool {
-        self.name.len() != 0 && self.symbol.len() != 0 
+        !self.name.is_empty() && !self.symbol.is_empty()
     }
 
     pub fn set_metadata(&mut self, name: Vec<u8>, symbol: Vec<u8>, decimals: u8){
