@@ -2,7 +2,6 @@
 
 This repositary contains source code of blockchain node, which is a main part of Evercity's Carbon Credits project.
 
-
 # 2. Introduction
 
 # 3. Overview
@@ -38,7 +37,17 @@ Here is the basic scenario on of carbon credits releasing and offetting:
 
 - Project owner adds signers and their roles to project
 
-- Then starts project signing
+- Then starts project signing, the sign order depends on carbon credits standard. At the end, the project owner is ready for producing annual report for carbon credits production
+
+- Project owner creates document for annual report and stores its hash into filesign pallet
+
+- Project owner create annual report in project
+
+- Project owner adds signers and their roles to annual report
+
+- Then starts project signing, the sign order depends on carbon credits standard. At the end, the project owner can create carbon credits asset and offset them
+
+
 
 # 6. Evercity documentation
 
