@@ -51,6 +51,7 @@ construct_runtime!(
         ...
         EvercityCarbonCredits: pallet_evercity_carbon_credits::{ Module, Call, Storage, Event<T>},
         ...
+        // Add dependent pallets:
         EvercityAccounts: pallet_evercity_accounts::{ Module, Call, Storage, Config<T>, Event<T>},
         EvercityFilesign: pallet_evercity_filesign::{ Module, Call, Storage, Event<T> },
         EvercityAssets: pallet_evercity_assets::{ Module, Storage, Event<T> },
@@ -59,4 +60,11 @@ construct_runtime!(
 );
 ```
 
+### 6.5 Check on smart sustainable bond node
 
+```bash
+git clone https://github.com/EvercityEcosystem/smart-sustainable-bond.git
+cd smart-sustainable-bond
+git checkout add_carbon_credits #temporary
+make run
+```
