@@ -5,6 +5,26 @@ This repositary contains source code of blockchain node, which is a main part of
 
 # 2. Introduction
 
+# 3. Overview
+
+# 4. Evercity carbon credits project main entities
+
+Carbon Credits pallet has several main entities: 
+
+### 4.1 Project 
+Is the main entity for carbon credits project documentation signing and annual reports creating 
+
+### 4.2 Annual Report 
+
+Is the main entity for signing carbon credits annual gain 
+
+### 4.3 Annual Report Burn Certificate 
+
+Is the main entity for granting certificates for carbon credits offceting 
+
+### 4.4 Carbon Credits Passport 
+
+Is the entity for registering carbon credits as assets  
 
 # 6. Evercity documentation
 
