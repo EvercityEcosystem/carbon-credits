@@ -68,3 +68,15 @@ cd smart-sustainable-bond
 git checkout add_carbon_credits #temporary
 make run
 ```
+
+### 6.6 Run Unit Tests
+
+```bash
+make test
+```
+
+### 6.7 Launch linter
+
+```bash
+make lint
+```
