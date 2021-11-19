@@ -138,7 +138,7 @@ fn it_works_for_mint_cc() {
         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
         let asset_id = 1;
         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-        let mint_result = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id, project_id);
+        let mint_result = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
         let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
         let last_annual_report = project.annual_reports.last().unwrap();
         assert!(last_annual_report.is_carbon_credits_released());
@@ -151,7 +151,7 @@ fn it_fails_for_mint_cc_not_existing_asset() {
     new_test_ext().execute_with(|| {
         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
         let asset_id = 1;
-        let mint_result = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id, project_id);
+        let mint_result = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
         let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
         let last_annual_report = project.annual_reports.last().unwrap();
         assert!(!last_annual_report.is_carbon_credits_released());
@@ -166,7 +166,7 @@ fn it_fails_for_mint_cc_not_owner_role() {
         let asset_id = 1;
         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
         let _ = EvercityAccounts::account_withdraw_role(Origin::signed(ROLES[0].0), owner, CC_PROJECT_OWNER_ROLE_MASK);
-        let mint_result = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id, project_id);
+        let mint_result = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
         let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
         let last_annual_report = project.annual_reports.last().unwrap();
 
@@ -184,7 +184,7 @@ fn it_fails_for_mint_cc_not_project_owner() {
 
         let new_owner_id = 555;
         let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
-        let mint_result = CarbonCredits::release_carbon_credits(Origin::signed(new_owner_id), asset_id, project_id);
+        let mint_result = CarbonCredits::release_carbon_credits(Origin::signed(new_owner_id), asset_id);
         let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
         let last_annual_report = project.annual_reports.last().unwrap();
 
@@ -200,7 +200,7 @@ fn it_works_for_ransfer_cc() {
         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
         let asset_id = 1;
         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id, project_id);
+        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
         let investor = ROLES[4].0;
         let transfer_result = CarbonCredits::transfer_carbon_credits(Origin::signed(owner), asset_id, investor, 30);
         assert_ok!(transfer_result, ());
@@ -215,7 +215,7 @@ fn it_works_for_burn_cc() {
         let asset_id = 1;
         let burn_amount = 20;
         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id, project_id);
+        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
         let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(owner), asset_id, burn_amount);
 
         let burn_cert_value = CarbonCredits::get_certificates_by_account(owner)[0].burned_amount;
@@ -232,7 +232,7 @@ fn it_works_for_burn_cc_after_transfer() {
         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
         let asset_id = 1;
         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id, project_id);
+        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
 
         let investor = ROLES[4].0;
         let transfer_amount = 300;
@@ -261,7 +261,7 @@ fn it_fails_for_burn_cc_not_owner() {
         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
         let asset_id = 1;
         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id, project_id);
+        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
 
         // Doesnt have assets
         let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(ROLES[4].0), asset_id, 20);
@@ -277,7 +277,7 @@ fn it_fails_for_burn_cc_not_enough() {
         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
         let asset_id = 1;
         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id, project_id);
+        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
         let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(owner), asset_id, TEST_CARBON_CREDITS_COUNT + 666);
 
         assert_noop!(burn_result, RuntimeError::InsufficientCarbonCredits);
