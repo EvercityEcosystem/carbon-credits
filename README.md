@@ -22,17 +22,15 @@ make build
 ### 6.3 Add to runtime cargo.toml
 
 ```toml
-    pallet-evercity-carbon-credits = { default-features = false, version = '0.1.12', git = 'https://github.com/EvercityEcosystem/carbon-credits' }
-
-    ...
-
-    [features]
+pallet-evercity-carbon-credits = { default-features = false, version = '0.1.12', git = 'https://github.com/EvercityEcosystem/carbon-credits' }
+#...
+[features]
 default = ['std']
 
 std = [
-    ...
+    #...
     'pallet-evercity-carbon-credits/std',
-    ...
+    #...
 ]
 ```
 
