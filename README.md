@@ -19,8 +19,24 @@ git clone https://github.com/EvercityEcosystem/carbon-credits
 cd carbon-credits
 make build
 ```
+### 6.3 Add to runtime cargo.toml
 
-### 6.3 Add to runtime
+```toml
+    pallet-evercity-carbon-credits = { default-features = false, version = '0.1.12', git = 'https://github.com/EvercityEcosystem/carbon-credits' }
+
+    ...
+
+    [features]
+default = ['std']
+
+std = [
+    ...
+    'pallet-evercity-carbon-credits/std',
+    ...
+]
+```
+
+### 6.4 Add to runtime constructing
 
 ```rust
 pub use pallet_evercity_carbon_credits;
