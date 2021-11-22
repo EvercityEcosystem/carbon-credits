@@ -3,7 +3,7 @@ use frame_support::{
     sp_runtime::RuntimeDebug,
 };
 
-#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq)]
+#[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 pub enum Standard {
     GOLD_STANDARD,

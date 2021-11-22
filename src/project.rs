@@ -55,6 +55,13 @@ impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where
         &self.standard
     }
 
+    // Standart must be guaranted immutable for lifetime of the progect on register and issuance step 
+    pub fn set_new_standard(&mut self, new_standard: Standard) {
+        if self.state != PROJECT_OWNER_SIGN_PENDING {
+            self.standard = new_standard
+        }
+    }
+
     pub fn assign_required_signer(&mut self, signer: RequiredSigner<AccountId>) {
         if !self.required_signers.iter().any(|(acc, role)| *acc == signer.0 && *role == signer.1) {
             self.required_signers.push(signer);

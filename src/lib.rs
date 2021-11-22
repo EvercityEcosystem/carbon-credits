@@ -89,6 +89,8 @@ decl_event!(
 
         /// \[ProjectOwner, ProjectId\]
         ProjectCreated(AccountId, ProjectId),
+        /// \[ProjectOwner, ProjectId, OldStandard, NewStandard\]
+        ProjectStandardChanged(AccountId, ProjectId, Standard, Standard),
         /// \[ProjectOwner, ProjectId\]
         ProjectSubmited(AccountId, ProjectId),
         /// \[Auditor, ProjectId\]
@@ -137,6 +139,12 @@ decl_event!(
 
 decl_error! {
     pub enum Error for Module<T: Config> {
+
+        // Project errors:
+
+        /// Separate Error for project validation
+        InvalidProjectState,
+
         // Account errors:
 
         /// Account does not have an auditor role in Accounts Pallet
@@ -237,6 +245,45 @@ decl_module! {
             Self::deposit_event(RawEvent::ProjectCreated(caller, new_id));
             Ok(())
         }
+
+        // /// <pre>
+        // /// Method: change_project_standard(project_id: ProjectId, standard: Standard)
+        // /// Arguments: origin: AccountId - Transaction caller
+        // ///            project_id: ProjectId
+        // ///            standard: Standard - Carbon Credits Standard
+        // /// Access: Project Owner Role
+        // ///
+        // /// Creates new project with relation to PDD file in filesign
+        // /// </pre>
+        // #[weight = 10_000 + T::DbWeight::get().reads_writes(1, 2)]
+        // pub fn change_project_standard(origin, project_id: ProjectId, standard: Standard) -> DispatchResult {
+        //     let caller = ensure_signed(origin)?;
+        //     ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+
+        //     ProjectById::<T>::try_mutate(
+        //         project_id, |project_to_mutate| -> DispatchResult {
+        //             match project_to_mutate  {
+        //                 None => return Err(Error::<T>::ProjectNotExist.into()),
+        //                 Some(proj) => {
+        //                     ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
+        //                     ensure!(proj.state == project::PROJECT_OWNER_SIGN_PENDING, Error::<T>::InvalidProjectState);
+        //                 }
+        //             }
+
+        //             Ok(())
+        //      })?;
+
+        //     // let new_id = LastID::get() + 1;
+        //     // let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T, T::Balance>::new(caller.clone(), new_id, standard, file_id);
+        //     // <ProjectById<T>>::insert(new_id, new_project);
+        //     // LastID::mutate(|x| *x = x.checked_add(1).unwrap());
+
+        //     // SendEvent
+        //     //ProjectStandardChanged
+        //     // Self::deposit_event(RawEvent::ProjectCreated(caller, new_id));
+        //     todo!();
+        //     Ok(())
+        // }
 
         /// <pre>
         /// Method: assign_project_signer(signer: T::AccountId, role: RoleMask, project_id: ProjectId)
