@@ -55,6 +55,12 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
         self.carbon_credits_count.clone()
     }
 
+    pub fn change_carbon_credits_count(&mut self, new_count: Balance) {
+        if self.state == REPORT_PROJECT_OWNER_SIGN_PENDING {
+            self.carbon_credits_count = new_count;
+        }
+    }
+
     pub fn set_metadata(&mut self, name: Vec<u8>, symbol: Vec<u8>, decimals: u8){
         self.carbon_credits_meta.set_metadata(name, symbol, decimals);
     }

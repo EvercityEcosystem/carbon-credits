@@ -83,7 +83,8 @@ decl_event!(
     pub enum Event<T>
     where
         AccountId = <T as frame_system::Config>::AccountId,
-        AssetId = <T as pallet_assets::Config>::AssetId
+        AssetId = <T as pallet_assets::Config>::AssetId,
+        Balance = <T as pallet_assets::Config>::Balance,
     {
         // Project Events:
 
@@ -108,8 +109,10 @@ decl_event!(
 
         /// \[ProjectOwner, ProjectId\]
         AnnualReportCreated(AccountId, ProjectId),
+        // \[ProjectOwner, ProjectId, NewCount\]
+        AnnualReportCreditsCountChanged(AccountId, ProjectId, Balance),
         /// \[ProjectOwner, ProjectId\]
-        AnnualReportSubmited(AccountId, ProjectId),
+        AnnualReportSubmited(AccountId, ProjectId), 
         /// \[Auditor, ProjectId\]
         AnnualReportSignedByAuditor(AccountId, ProjectId),
         /// \[StandardRoleAccount, ProjectId\]
@@ -419,6 +422,41 @@ decl_module! {
              })?;
             // SendEvent
             Self::deposit_event(RawEvent::AnnualReportCreated(caller, project_id));
+            Ok(())
+        }
+
+        /// <pre>
+        /// Method: change_report_carbon_credits_count(project_id: ProjectId, new_carbon_credits_count: T::Balance)
+        /// Arguments: origin: AccountId - Transaction caller
+        ///            project_id: ProjectId - Id of project, where to create annual report
+        ///            new_carbon_credits_count - new count of carbon credits to release after signing
+        ///
+        ///
+        /// Access: Owner of the project
+        ///
+        /// Change annual report balance. Can only be changed in preparing step
+        /// 
+        /// </pre> 
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 1)]
+        pub fn change_report_carbon_credits_count(origin, project_id: ProjectId, new_carbon_credits_count: T::Balance) -> DispatchResult {
+            let caller = ensure_signed(origin)?;
+            ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+            ProjectById::<T>::try_mutate(
+                project_id, |project_to_mutate| -> DispatchResult {
+                    match project_to_mutate  {
+                        None => return Err(Error::<T>::ProjectNotExist.into()),
+                        Some(proj) => {
+                            ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
+                            let len = proj.annual_reports.len();
+                            ensure!(len > 0, Error::<T>::NoAnnualReports);
+                            ensure!(proj.annual_reports[len - 1].state == annual_report::REPORT_PROJECT_OWNER_SIGN_PENDING, Error::<T>::InvalidState);
+                            proj.annual_reports[len - 1].change_carbon_credits_count(new_carbon_credits_count);
+                        }
+                    }
+                    Ok(())
+             })?;
+            // SendEvent
+            Self::deposit_event(RawEvent::AnnualReportCreditsCountChanged(caller, project_id, new_carbon_credits_count));
             Ok(())
         }
 
