@@ -537,7 +537,82 @@ fn it_fails_sign_annual_report_already_issued_gold_standard() {
     });
 }
 
+#[test]
+fn it_works_change_report_carbon_credits_count() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_id = create_annual_report_file(owner);
 
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let new_carbon_credits_count = 555666;
+        let change_count_result = CarbonCredits::change_report_carbon_credits_count(Origin::signed(owner), project_id, new_carbon_credits_count);
+
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assert_eq!(project_with_report.annual_reports.last().unwrap().carbon_credits_count(), new_carbon_credits_count);
+        assert_ok!(change_count_result, ());
+    });
+}
+
+#[test]
+fn it_fails_change_report_carbon_credits_count_last_annual_report_not_owner() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_id = create_annual_report_file(owner);
+
+        // Create new acc with owner role
+        let new_owner_id = 555;
+        let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
+
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let new_carbon_credits_count = 555666;
+        let change_count_result = CarbonCredits::change_report_carbon_credits_count(Origin::signed(new_owner_id), project_id, new_carbon_credits_count);
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assert_eq!(project_with_report.annual_reports.last().unwrap().carbon_credits_count(), TEST_CARBON_CREDITS_COUNT);
+        assert_noop!(change_count_result, RuntimeError::AccountNotOwner);
+    });
+}
+
+
+#[test]
+fn it_fails_change_report_carbon_credits_count_last_annual_report_not_correct_state() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let report_id = create_annual_report_file(owner);
+        let auditor = ROLES[2].0;
+        let standard_acc = ROLES[3].0;
+        let registry = ROLES[5].0;
+
+        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, project_id);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), auditor, ROLES[2].1, project_id);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), standard_acc, ROLES[3].1, project_id);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), registry, ROLES[5].1, project_id);
+
+        let new_carbon_credits_count = 555666;
+        let mut change_count_results = Vec::new();
+
+        let _owner_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id);
+        change_count_results.push(CarbonCredits::change_report_carbon_credits_count(Origin::signed(owner), project_id, new_carbon_credits_count));
+        let _auditor_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(auditor), project_id);
+        change_count_results.push(CarbonCredits::change_report_carbon_credits_count(Origin::signed(owner), project_id, new_carbon_credits_count));
+        let _auditor_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(standard_acc), project_id);
+        change_count_results.push(CarbonCredits::change_report_carbon_credits_count(Origin::signed(owner), project_id, new_carbon_credits_count));
+        let _auditor_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(registry), project_id);
+        change_count_results.push(CarbonCredits::change_report_carbon_credits_count(Origin::signed(owner), project_id, new_carbon_credits_count));
+        
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assert_eq!(project_with_report.annual_reports.last().unwrap().carbon_credits_count(), TEST_CARBON_CREDITS_COUNT);
+        change_count_results.iter().for_each(|res|{
+            assert_noop!(*res, RuntimeError::InvalidState);
+        });
+        
+    });
+}
+
+// Delete tests:
 #[test]
 fn it_works_delete_last_annual_report() {
     new_test_ext().execute_with(|| {
