@@ -1,4 +1,15 @@
 #![cfg_attr(not(feature = "std"), no_std)]
+
+pub mod standard;
+pub mod project;
+pub mod annual_report;
+pub mod required_signers;
+pub mod carbon_credits_passport;
+pub mod carbon_credits_burn_certificate;
+
+#[cfg(test)]    
+pub mod tests;
+
 use crate::sp_api_hidden_includes_decl_storage::hidden_include::traits::Get;
 use frame_support::{
     ensure,
@@ -31,16 +42,6 @@ use pallet_evercity_filesign::{FileId};
 use pallet_evercity_accounts::accounts::RoleMask;
 use carbon_credits_passport::CarbonCreditsPassport;
 use carbon_credits_burn_certificate::CarbonCreditsBurnCertificate;
-
-pub mod standard;
-pub mod project;
-pub mod annual_report;
-pub mod required_signers;
-pub mod carbon_credits_passport;
-pub mod carbon_credits_burn_certificate;
-
-#[cfg(test)]    
-pub mod tests;
 
 type Timestamp<T> = pallet_timestamp::Module<T>;
  
@@ -451,6 +452,7 @@ decl_module! {
                             ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
                             let len = proj.annual_reports.len();
                             ensure!(len > 0, Error::<T>::NoAnnualReports);
+                            // Ensure, that report in initial preparing state REPORT_PROJECT_OWNER_SIGN_PENDING
                             ensure!(proj.annual_reports[len - 1].state == annual_report::REPORT_PROJECT_OWNER_SIGN_PENDING, Error::<T>::InvalidState);
                             proj.annual_reports[len - 1].change_carbon_credits_count(new_carbon_credits_count);
                         }
@@ -486,6 +488,8 @@ decl_module! {
                             ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
                             let len = proj.annual_reports.len();
                             ensure!(len > 0, Error::<T>::NoAnnualReports);
+                            // Ensure, that report not in final issued state
+                            // To prevent deleting ready reports, that have its carbon credits released
                             ensure!(proj.annual_reports[len - 1].state != annual_report::REPORT_ISSUED, Error::<T>::InvalidState);
                             proj.annual_reports.remove(len - 1);
                         }
@@ -523,6 +527,7 @@ decl_module! {
                             let len = proj.annual_reports.len();
                             ensure!(len > 0, Error::<T>::NoAnnualReports);
                             proj.annual_reports[len - 1].assign_required_signer((signer.clone(), role));
+                            // Assign signer in filesign pallet:
                             pallet_evercity_filesign::Module::<T>::assign_signer(origin.clone(), proj.annual_reports[len - 1].file_id, signer.clone())?;
                         }
                     }
@@ -557,6 +562,7 @@ decl_module! {
                             let len = proj.annual_reports.len();
                             ensure!(len > 0, Error::<T>::NoAnnualReports);
                             proj.annual_reports[len - 1].remove_required_signer((signer.clone(), role));
+                            // delete signer in filesign pallet
                             pallet_evercity_filesign::Module::<T>::delete_signer(origin.clone(), proj.annual_reports[len - 1].file_id, signer.clone())?;
                         }
                     }
@@ -581,17 +587,27 @@ decl_module! {
             let mut event_opt: Option<Event<T>> = None;
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
-                    ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                    ensure!(project_to_mutate.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
-                    let annual_report_file_id =  project_to_mutate.as_ref().unwrap().annual_reports.last().unwrap().file_id;
-                    ensure!(pallet_evercity_filesign::Module::<T>::address_is_signer_for_file(annual_report_file_id, &caller), 
-                        Error::<T>::IncorrectAnnualReportSigner);
-
-                    Self::change_project_annual_report_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
-
-                    pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, 
-                        annual_report_file_id)?;
-
+                    match project_to_mutate {
+                        None => return Err(Error::<T>::ProjectNotExist.into()),
+                        Some(project) => {
+                            let len = project.annual_reports.len();
+                            ensure!(len > 0, Error::<T>::NoAnnualReports);
+                            let annual_report_file_id =  project.annual_reports[len - 1].file_id;
+                            ensure!(pallet_evercity_filesign::Module::<T>::address_is_signer_for_file(annual_report_file_id, &caller), 
+                                Error::<T>::IncorrectAnnualReportSigner);
+                            Self::change_project_annual_report_state(project, caller, &mut event_opt)?;
+                            pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, 
+                                annual_report_file_id)?;
+                        }
+                    }
+                    // ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
+                    // ensure!(project_to_mutate.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
+                    // let annual_report_file_id =  project_to_mutate.as_ref().unwrap().annual_reports.last().unwrap().file_id;
+                    // ensure!(pallet_evercity_filesign::Module::<T>::address_is_signer_for_file(annual_report_file_id, &caller), 
+                    //     Error::<T>::IncorrectAnnualReportSigner);
+                    // Self::change_project_annual_report_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
+                    // pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, 
+                    //     annual_report_file_id)?;
                     Ok(())
             })?;
             if let Some(event) = event_opt {
