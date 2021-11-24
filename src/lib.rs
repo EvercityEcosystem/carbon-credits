@@ -109,6 +109,8 @@ decl_event!(
 
         /// \[ProjectOwner, ProjectId\]
         AnnualReportCreated(AccountId, ProjectId),
+        /// \[ProjectOwner, ProjectId\]
+        AnnualReportDeleted(AccountId, ProjectId),
         // \[ProjectOwner, ProjectId, NewCount\]
         AnnualReportCreditsCountChanged(AccountId, ProjectId, Balance),
         /// \[ProjectOwner, ProjectId\]
@@ -437,7 +439,7 @@ decl_module! {
         /// Change annual report balance. Can only be changed in preparing step
         /// 
         /// </pre> 
-        #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 1)]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 1)]
         pub fn change_report_carbon_credits_count(origin, project_id: ProjectId, new_carbon_credits_count: T::Balance) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
@@ -457,6 +459,41 @@ decl_module! {
              })?;
             // SendEvent
             Self::deposit_event(RawEvent::AnnualReportCreditsCountChanged(caller, project_id, new_carbon_credits_count));
+            Ok(())
+        }
+
+
+        /// <pre>
+        /// Method: delete_last_annual_report(project_id: ProjectId: T::Balance)
+        /// Arguments: origin: AccountId - Transaction caller
+        ///            project_id: ProjectId - Id of project, where to create annual report
+        ///
+        ///
+        /// Access: Owner of the project
+        ///
+        /// Deletes project's last annual report if it is not issued
+        /// 
+        /// </pre> 
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 1)]
+        pub fn delete_last_annual_report(origin, project_id: ProjectId) -> DispatchResult {
+            let caller = ensure_signed(origin)?;
+            ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+            ProjectById::<T>::try_mutate(
+                project_id, |project_to_mutate| -> DispatchResult {
+                    match project_to_mutate  {
+                        None => return Err(Error::<T>::ProjectNotExist.into()),
+                        Some(proj) => {
+                            ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
+                            let len = proj.annual_reports.len();
+                            ensure!(len > 0, Error::<T>::NoAnnualReports);
+                            ensure!(!proj.annual_reports[len - 1].state == annual_report::REPORT_ISSUED, Error::<T>::InvalidState);
+                            proj.annual_reports.remove(len - 1);
+                        }
+                    }
+                    Ok(())
+             })?;
+            // SendEvent
+            Self::deposit_event(RawEvent::AnnualReportDeleted(caller, project_id));
             Ok(())
         }
 
