@@ -629,8 +629,10 @@ decl_module! {
         ///            new_carbon_credits_holder - holder of the carbon credits
         ///            
         ///
-        /// Access: 
+        /// Access: Project Owner
         ///
+        /// Creates carbon credits asset in asset pallet and also
+        /// Creates carbon credits passport, prooving, that asset is registered carbon credit
         /// 
         /// </pre>
         #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 2)]
