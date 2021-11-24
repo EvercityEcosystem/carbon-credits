@@ -486,7 +486,7 @@ decl_module! {
                             ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
                             let len = proj.annual_reports.len();
                             ensure!(len > 0, Error::<T>::NoAnnualReports);
-                            ensure!(!proj.annual_reports[len - 1].state == annual_report::REPORT_ISSUED, Error::<T>::InvalidState);
+                            ensure!(proj.annual_reports[len - 1].state != annual_report::REPORT_ISSUED, Error::<T>::InvalidState);
                             proj.annual_reports.remove(len - 1);
                         }
                     }
