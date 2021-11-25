@@ -706,6 +706,7 @@ decl_module! {
             decimals: u8,
         ) -> DispatchResult {
             let owner = ensure_signed(origin.clone())?;
+            todo!("change function signatchure");
             // check passport creds
             let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
             ensure!(passport.is_some(), Error::<T>::PassportNotExist);
@@ -729,47 +730,47 @@ decl_module! {
         /// Releases carbon credits, checking its passport calling pallet assets mint
         /// 
         /// </pre>
-        #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
-        pub fn release_carbon_credits_old(origin, asset_id: <T as pallet_assets::Config>::AssetId) -> DispatchResult {
-            let project_owner = ensure_signed(origin.clone())?;
-            ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
+        // #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
+        // pub fn release_carbon_credits_old(origin, asset_id: <T as pallet_assets::Config>::AssetId) -> DispatchResult {
+        //     let project_owner = ensure_signed(origin.clone())?;
+        //     ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
 
-            // get project id
-            let project_id = match CarbonCreditPassportRegistry::<T>::get(asset_id) {
-                None => return Err(Error::<T>::PassportNotExist.into()),
-                Some(passport) => passport.get_project_id()
-            };
+        //     // get project id
+        //     let project_id = match CarbonCreditPassportRegistry::<T>::get(asset_id) {
+        //         None => return Err(Error::<T>::PassportNotExist.into()),
+        //         Some(passport) => passport.get_project_id()
+        //     };
 
-            ProjectById::<T>::try_mutate(
-                project_id, |project_to_mutate| -> DispatchResult {
-                    ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                    ensure!(project_to_mutate.as_ref().unwrap().owner == project_owner, Error::<T>::AccountNotOwner);
-                    ensure!(project_to_mutate.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
+        //     ProjectById::<T>::try_mutate(
+        //         project_id, |project_to_mutate| -> DispatchResult {
+        //             ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
+        //             ensure!(project_to_mutate.as_ref().unwrap().owner == project_owner, Error::<T>::AccountNotOwner);
+        //             ensure!(project_to_mutate.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
     
-                    // Check that there is at least one annual report
-                    let reports_len = project_to_mutate.as_ref().unwrap().annual_reports.len();
-                    ensure!(reports_len > 0,
-                        Error::<T>::NoAnnualReports
-                    );
+        //             // Check that there is at least one annual report
+        //             let reports_len = project_to_mutate.as_ref().unwrap().annual_reports.len();
+        //             ensure!(reports_len > 0,
+        //                 Error::<T>::NoAnnualReports
+        //             );
 
-                    // ensure that carbon credits not released, then
-                    let last_annual_report = &mut project_to_mutate.as_mut().unwrap().annual_reports[reports_len - 1];
-                    ensure!(!last_annual_report.is_carbon_credits_released(), Error::<T>::CCAlreadyCreated);
-                    last_annual_report.set_carbon_credits_released();
+        //             // ensure that carbon credits not released, then
+        //             let last_annual_report = &mut project_to_mutate.as_mut().unwrap().annual_reports[reports_len - 1];
+        //             ensure!(!last_annual_report.is_carbon_credits_released(), Error::<T>::CCAlreadyCreated);
+        //             last_annual_report.set_carbon_credits_released();
     
-                    let cc_amount = last_annual_report.carbon_credits_count();
+        //             let cc_amount = last_annual_report.carbon_credits_count();
 
-                    let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.clone());
-                    let mint_call = pallet_assets::Call::<T>::mint(asset_id, new_carbon_credits_holder_source, cc_amount);
-                    let result = mint_call.dispatch_bypass_filter(origin);
-                    ensure!(!result.is_err(), Error::<T>::ErrorMintingAsset);
+        //             let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.clone());
+        //             let mint_call = pallet_assets::Call::<T>::mint(asset_id, new_carbon_credits_holder_source, cc_amount);
+        //             let result = mint_call.dispatch_bypass_filter(origin);
+        //             ensure!(!result.is_err(), Error::<T>::ErrorMintingAsset);
 
-                    Ok(())
-             })?;
+        //             Ok(())
+        //      })?;
     
-            Self::deposit_event(RawEvent::CarbonCreditsMinted(project_owner, project_id, asset_id));
-            Ok(())
-        }
+        //     Self::deposit_event(RawEvent::CarbonCreditsMinted(project_owner, project_id, asset_id));
+        //     Ok(())
+        // }
 
 
         #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
