@@ -31,15 +31,15 @@ pub struct AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone,
 }
 
 impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone, AccountId: PartialEq {
-    pub fn new(file_id: FileId, carbon_credits_count: Balance, create_time: Moment) -> Self {
+    pub fn new(file_id: FileId, carbon_credits_count: Balance, create_time: Moment, carbon_credits_meta: CarbonCreditsMeta) -> Self {
         AnnualReportStructT{
             file_id,
             state: REPORT_PROJECT_OWNER_SIGN_PENDING,
+            carbon_credits_meta,
             required_signers: Vec::new(),
             create_time,
             carbon_credits_count,
             carbon_credits_released: false,
-            carbon_credits_meta: CarbonCreditsMeta::new(),
         }
     }
 
@@ -103,11 +103,11 @@ pub struct CarbonCreditsMeta {
 }
 
 impl CarbonCreditsMeta {
-    pub fn new() -> Self {
+    pub fn new(name: Vec<u8>, symbol: Vec<u8>, decimals: u8) -> Self {
         CarbonCreditsMeta {
-            name: Vec::new(), 
-            symbol: Vec::new(),
-            decimals: 0
+            name, 
+            symbol,
+            decimals,
         }
     }
 

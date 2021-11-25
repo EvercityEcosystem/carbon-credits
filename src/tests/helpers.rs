@@ -5,6 +5,15 @@ use crate::project::{ProjectId, ProjectStruct};
 use crate::annual_report::*;
 
 pub const TEST_CARBON_CREDITS_COUNT: u64 = 15000;
+pub const TEST_CARBON_CREDITS_DECIMAL: u8 = 0;
+
+pub(crate) fn get_test_carbon_credits_name() -> Vec<u8> {
+    "CarbonToken".to_owned().as_bytes().to_vec()
+}
+
+pub(crate) fn get_test_carbon_credits_symbol() -> Vec<u8> {
+    "CT".to_owned().as_bytes().to_vec()
+}
 
 pub(crate) fn create_project_documentation_file(account: u64) -> FileId {
     let filehash = H256::from([0x66; 32]);
@@ -53,7 +62,9 @@ pub(crate) fn get_annual_report_and_owner_custom_signers<F>(sign_func: F) -> (Pr
     let standard_acc = ROLES[3].0;
     let registry = ROLES[5].0;
 
-    let _ = CarbonCredits::create_annual_report(Origin::signed(owner), proj_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT);
+    let _ = CarbonCredits::create_annual_report(
+        Origin::signed(owner), proj_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT, get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+    );
     sign_func(proj_id);
 
     let mut tuple_vec = Vec::new();

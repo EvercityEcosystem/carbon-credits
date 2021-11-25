@@ -16,7 +16,10 @@ fn it_works_for_create_new_annual_report_gold_standard() {
     new_test_ext().execute_with(|| {
         let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
 
-        let create_report_result = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT);
+        let create_report_result = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
 
         assert_eq!(project.annual_reports.len() + 1, project_with_report.annual_reports.len());
@@ -31,8 +34,14 @@ fn it_works_for_create_new_annual_report_multiple_annual_reports_gold_standard()
         let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
 
         let report_id = create_annual_report_file(owner);
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
-        let create_second_report_result = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
+        let create_second_report_result = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
 
         assert_ne!(create_second_report_result, DispatchResult::Ok(()));
@@ -46,7 +55,10 @@ fn it_fails_for_create_new_annual_report_no_file() {
         let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
         let unexisting_file_id = 666;
 
-        let create_report_result = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, unexisting_file_id, TEST_CARBON_CREDITS_COUNT);
+        let create_report_result = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, unexisting_file_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
 
         assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
@@ -64,7 +76,10 @@ fn it_fails_for_create_new_annual_report_not_file_owner() {
         let auditor = ROLES[2].0;
         let unexisting_file_id = create_annual_report_file(auditor);
 
-        let create_report_result = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, unexisting_file_id, TEST_CARBON_CREDITS_COUNT);
+        let create_report_result = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, unexisting_file_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
 
         assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
@@ -89,19 +104,31 @@ fn it_fails_for_create_new_annual_report_gold_standard_not_registered() {
         let mut projects = Vec::with_capacity(4);
     
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
-        report_results.push(CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT));
+        report_results.push(CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        ));
         projects.push(CarbonCredits::get_proj_by_id(1).unwrap());
 
         let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
-        report_results.push(CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT));
+        report_results.push(CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        ));
         projects.push(CarbonCredits::get_proj_by_id(1).unwrap());
 
         let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
-        report_results.push(CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT));
+        report_results.push(CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        ));
         projects.push(CarbonCredits::get_proj_by_id(1).unwrap());
 
         let _ = CarbonCredits::sign_project(Origin::signed(standard_acc), 1);
-        report_results.push(CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT));
+        report_results.push(CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        ));
         projects.push(CarbonCredits::get_proj_by_id(1).unwrap());
 
         // assertion after all steps
@@ -124,7 +151,10 @@ fn it_fails_for_create_new_annual_report_not_an_owner_role_gold_standard() {
             .filter(|x| x.1 != CC_PROJECT_OWNER_ROLE_MASK)
             .map(|x| x.0)
             .for_each(|x| {
-                let create_report_result = CarbonCredits::create_annual_report(Origin::signed(x), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+                let create_report_result = CarbonCredits::create_annual_report(
+                    Origin::signed(x), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+                    get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+                );
                 let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
 
                 assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
@@ -149,7 +179,10 @@ fn it_fails_for_create_new_annual_report_not_an_owner_of_the_project_gold_standa
         let report_id = create_annual_report_file(new_owner_id);
         let is_owner = EvercityAccounts::account_is_cc_project_owner(&new_owner_id);
 
-        let create_report_result = CarbonCredits::create_annual_report(Origin::signed(new_owner_id), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let create_report_result = CarbonCredits::create_annual_report(
+            Origin::signed(new_owner_id), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
 
         assert!(is_owner);
@@ -169,7 +202,10 @@ fn it_works_annual_report_assign_signer() {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
 
         let report_id = create_annual_report_file(owner);
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT); 
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        ); 
 
         let mut assign_results = Vec::new();
         assign_results.push(CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id));
@@ -197,7 +233,10 @@ fn it_works_annual_report_remove_signer() {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
 
         let report_id = create_annual_report_file(owner);
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT); 
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        ); 
 
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[2].0, ROLES[2].1, project_id);
@@ -223,7 +262,10 @@ fn it_fails_annual_report_remove_unexisting_signer() {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
 
         let report_id = create_annual_report_file(owner);
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT); 
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        ); 
 
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[2].0, ROLES[2].1, project_id);
@@ -251,7 +293,10 @@ fn it_works_for_full_cycle_sign_annual_report_gold_standard() {
         let registry = ROLES[5].0;
         let report_id = create_annual_report_file(owner);
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
 
         let mut tuple_vec = Vec::new();
@@ -286,7 +331,10 @@ fn it_fails_sign_annual_report_not_an_owner_of_project_gold_standard() {
     new_test_ext().execute_with(|| {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
         let report_id = create_annual_report_file(owner);
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL 
+        );
         crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
         
         // Create new acc with owner role
@@ -305,7 +353,10 @@ fn it_fails_sign_annual_report_not_an_owner_role_gold_standard() {
     new_test_ext().execute_with(|| {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
         let report_id = create_annual_report_file(owner);
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
 
         ROLES.iter()
         .filter(|x| x.1 != CC_PROJECT_OWNER_ROLE_MASK)
@@ -323,7 +374,10 @@ fn it_fails_sign_annual_report_owner_not_in_signers_gold_standard() {
     new_test_ext().execute_with(|| {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
         let report_id = create_annual_report_file(owner);
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let owner_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(owner), 1);
         assert_noop!(
             owner_sign_result,
@@ -339,7 +393,10 @@ fn it_fails_sign_annual_report_auditor_not_in_signers_gold_standard() {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
         let report_id = create_annual_report_file(owner);
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, project_id);
         let _owner_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(owner), 1);
         let auditor = ROLES[2].0;
@@ -361,7 +418,10 @@ fn it_fails_sign_annual_report_standard_not_in_signers_gold_standard() {
         let auditor = ROLES[2].0;
         let standard_acc = ROLES[3].0;
         
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), auditor, ROLES[2].1, project_id);
 
@@ -387,7 +447,10 @@ fn it_fails_sign_annual_report_registry_not_in_signers_gold_standard() {
         let standard_acc = ROLES[3].0;
         let registry = ROLES[5].0;
         
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), auditor, ROLES[2].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), standard_acc, ROLES[3].1, project_id);
@@ -411,7 +474,10 @@ fn it_fails_sign_annual_report_not_an_auditor_gold_standard() {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
         let report_id = create_annual_report_file(owner);
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
         let _ = CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id);
 
@@ -441,7 +507,10 @@ fn it_fails_sign_annual_report_not_a_standard_role_gold_standard() {
         let report_id = create_annual_report_file(owner);
         let auditor = ROLES[2].0;
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
         let _ = CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id);
         let _ = CarbonCredits::sign_last_annual_report(Origin::signed(auditor), project_id);
@@ -478,7 +547,10 @@ fn it_fails_sign_annual_report_not_an_registry_role_gold_standard() {
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), standard_acc, ROLES[3].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), registry, ROLES[5].1, project_id);
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
         let _ = CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id);
         let _ = CarbonCredits::sign_last_annual_report(Origin::signed(auditor), project_id);
@@ -511,7 +583,10 @@ fn it_fails_sign_annual_report_already_issued_gold_standard() {
         let standard_acc = ROLES[3].0;
         let registry = ROLES[5].0;
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
 
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), auditor, ROLES[2].1, project_id);
@@ -543,7 +618,10 @@ fn it_works_change_report_carbon_credits_count() {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
         let report_id = create_annual_report_file(owner);
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let new_carbon_credits_count = 555666;
         let change_count_result = CarbonCredits::change_report_carbon_credits_count(Origin::signed(owner), project_id, new_carbon_credits_count);
 
@@ -564,7 +642,10 @@ fn it_fails_change_report_carbon_credits_count_last_annual_report_not_owner() {
         let new_owner_id = 555;
         let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let new_carbon_credits_count = 555666;
         let change_count_result = CarbonCredits::change_report_carbon_credits_count(Origin::signed(new_owner_id), project_id, new_carbon_credits_count);
         let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
@@ -584,7 +665,10 @@ fn it_fails_change_report_carbon_credits_count_last_annual_report_not_correct_st
         let standard_acc = ROLES[3].0;
         let registry = ROLES[5].0;
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), auditor, ROLES[2].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), standard_acc, ROLES[3].1, project_id);
@@ -622,7 +706,10 @@ fn it_works_delete_last_annual_report() {
         let standard_acc = ROLES[3].0;
         let registry = ROLES[5].0;
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), auditor, ROLES[2].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), standard_acc, ROLES[3].1, project_id);
@@ -644,7 +731,10 @@ fn it_fails_delete_issued_annual_report() {
         let standard_acc = ROLES[3].0;
         let registry = ROLES[5].0;
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
 
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), owner, ROLES[1].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), auditor, ROLES[2].1, project_id);
@@ -671,7 +761,10 @@ fn it_fails_delete_last_annual_report_not_project_owner() {
         let new_owner_id = 555;
         let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let result = CarbonCredits::delete_last_annual_report(Origin::signed(new_owner_id), project_id);
 
         assert_noop!(result, RuntimeError::AccountNotOwner);
@@ -683,7 +776,10 @@ fn it_works_for_create_new_annual_report_deposit_event_gold_standard() {
     new_test_ext_with_event().execute_with(|| {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
         let report_id = create_annual_report_file(owner);
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         let last_event = last_event().unwrap();
         let check_event = Event::pallet_carbon_credits(crate::RawEvent::AnnualReportCreated(owner, project_id));
 
@@ -700,7 +796,10 @@ fn it_works_sign_annual_report_deposit_events_gold_standard() {
         let registry = ROLES[5].0;
         let report_id = create_annual_report_file(owner);
 
-        let _ = CarbonCredits::create_annual_report(Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
         crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
 
         let mut tuple_vec = Vec::new();

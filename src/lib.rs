@@ -406,7 +406,15 @@ decl_module! {
         /// 
         /// </pre> 
         #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 1)]
-        pub fn create_annual_report(origin, project_id: ProjectId, file_id: FileId, carbon_credits_count: T::Balance) -> DispatchResult {
+        pub fn create_annual_report(
+            origin, 
+            project_id: ProjectId, 
+            file_id: FileId, 
+            carbon_credits_count: T::Balance,
+            name: Vec<u8>,
+            symbol: Vec<u8>,
+            decimals: u8,
+        ) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
             ensure!(pallet_evercity_filesign::Module::<T>::address_is_owner_for_file(file_id, &caller), Error::<T>::AccountNotFileOwner);
@@ -419,8 +427,9 @@ decl_module! {
                                 .all(|x| x.state == annual_report::REPORT_ISSUED),
                         Error::<T>::NotIssuedAnnualReportsExist
                     );
+                    let meta = annual_report::CarbonCreditsMeta::new(name, symbol, decimals);
                     project_to_mutate.as_mut().unwrap().annual_reports
-                                .push(annual_report::AnnualReportStruct::<T::AccountId, T, T::Balance>::new(file_id, carbon_credits_count, Timestamp::<T>::get()));
+                                .push(annual_report::AnnualReportStruct::<T::AccountId, T, T::Balance>::new(file_id, carbon_credits_count, Timestamp::<T>::get(), meta));
                     Ok(())
              })?;
             // SendEvent
