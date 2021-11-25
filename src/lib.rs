@@ -664,6 +664,8 @@ decl_module! {
             <CarbonCreditPassportRegistry<T>>::insert(asset_id, CarbonCreditsPassport::new(asset_id, project_id, project.as_ref().unwrap().annual_reports.len()));
 
             Self::deposit_event(RawEvent::CarbonCreditsAssetCreated(project_owner, project_id, asset_id));
+            todo!("multiple assets problem");
+            unimplemented!("multiple assets problem");
             Ok(())
         }
 
@@ -709,7 +711,7 @@ decl_module! {
         }
 
         /// <pre>
-        /// Method: release_carbon_credits(asset_id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId)
+        /// Method: release_carbon_credits_old(asset_id: <T as pallet_assets::Config>::AssetId, project_id: ProjectId)
         /// Arguments: origin: AccountId - Transaction caller
         ///            asset_id - id of asset in assets pallet
         ///
@@ -719,7 +721,7 @@ decl_module! {
         /// 
         /// </pre>
         #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
-        pub fn release_carbon_credits(origin, asset_id: <T as pallet_assets::Config>::AssetId) -> DispatchResult {
+        pub fn release_carbon_credits_old(origin, asset_id: <T as pallet_assets::Config>::AssetId) -> DispatchResult {
             let project_owner = ensure_signed(origin.clone())?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
 
@@ -752,6 +754,79 @@ decl_module! {
                     let mint_call = pallet_assets::Call::<T>::mint(asset_id, new_carbon_credits_holder_source, cc_amount);
                     let result = mint_call.dispatch_bypass_filter(origin);
                     ensure!(!result.is_err(), Error::<T>::ErrorMintingAsset);
+
+                    Ok(())
+             })?;
+    
+            Self::deposit_event(RawEvent::CarbonCreditsMinted(project_owner, project_id, asset_id));
+            Ok(())
+        }
+
+
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
+        pub fn release_carbon_credits(
+            origin, 
+            project_id: ProjectId,
+            asset_id: <T as pallet_assets::Config>::AssetId,
+            new_carbon_credits_holder: T::AccountId,
+            min_balance: <T as pallet_assets::Config>::Balance,
+            // name: Vec<u8>,
+            // symbol: Vec<u8>,
+            // decimals: u8,
+        ) -> DispatchResult {
+            let project_owner = ensure_signed(origin.clone())?;
+            ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
+
+            ProjectById::<T>::try_mutate(
+                project_id, |project_to_mutate| -> DispatchResult {
+                    ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
+                    ensure!(project_to_mutate.as_ref().unwrap().owner == project_owner, Error::<T>::AccountNotOwner);
+                    ensure!(project_to_mutate.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
+
+                    // Check that there is at least one annual report
+                    let reports_len = project_to_mutate.as_ref().unwrap().annual_reports.len();
+                    ensure!(reports_len > 0,
+                        Error::<T>::NoAnnualReports
+                    );
+
+                    // ensure that carbon credits not released, and then set it to released state
+                    let last_annual_report = &mut project_to_mutate.as_mut().unwrap().annual_reports[reports_len - 1];
+                    ensure!(!last_annual_report.is_carbon_credits_released(), Error::<T>::CCAlreadyCreated);
+                    last_annual_report.set_carbon_credits_released();
+    
+                    // Create Asset:
+                    let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder);
+                    let create_asset_call = pallet_assets::Call::<T>::create(asset_id, new_carbon_credits_holder_source, 0, min_balance);
+                    let create_asset_result = create_asset_call.dispatch_bypass_filter(origin.clone());
+                    ensure!(!create_asset_result.is_err(), Error::<T>::ErrorCreatingAsset);
+    
+                    // Set metadata from annual report
+                    // Changing metadata of annual report to empty struct
+                    let mut meta = annual_report::CarbonCreditsMeta::default();
+                    sp_std::mem::swap(&mut meta, &mut last_annual_report.carbon_credits_meta);
+                    let transfer_call = pallet_assets::Call::<T>::set_metadata(asset_id, 
+                                            meta.name, 
+                                            meta.symbol, 
+                                            meta.decimals
+                                        );
+
+                    let result = transfer_call.dispatch_bypass_filter(origin.clone());
+                    ensure!(!result.is_err(), {
+                        // destroy if failed
+                        pallet_assets::Call::<T>::destroy(asset_id, 0);
+                        Error::<T>::SetMetadataFailed
+                    });
+
+                    // Mint Carbon Credits
+                    let cc_amount = last_annual_report.carbon_credits_count();
+                    let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(project_owner.clone());
+                    let mint_call = pallet_assets::Call::<T>::mint(asset_id, new_carbon_credits_holder_source, cc_amount);
+                    let result = mint_call.dispatch_bypass_filter(origin);
+                    ensure!(!result.is_err(), {
+                        // destroy if failed
+                        pallet_assets::Call::<T>::destroy(asset_id, 0);
+                        Error::<T>::ErrorMintingAsset
+                    });
 
                     Ok(())
              })?;
@@ -909,6 +984,7 @@ impl<T: Config> Module<T> {
                         ensure!(owner == caller, Error::<T>::AccountNotOwner);
                         ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_PROJECT_OWNER_ROLE_MASK),
                             Error::<T>::IncorrectProjectSigner);
+                        ensure!(report.carbon_credits_meta.is_metadata_valid(), Error::<T>::BadMetadataParameters);
                         report.state = annual_report::REPORT_AUDITOR_SIGN_PENDING;
                         *event = Some(RawEvent::AnnualReportSubmited(caller, project.id));
                     },

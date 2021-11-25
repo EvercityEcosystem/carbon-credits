@@ -22,11 +22,11 @@ pub type AnnualReportStruct<AccountId, T, Balance> = AnnualReportStructT<Account
 pub struct AnnualReportStructT<AccountId, Moment, Balance> where Balance: Clone, AccountId: PartialEq {
     pub file_id: FileId,
     pub state: AnnualReportStateMask,
+    pub carbon_credits_meta: CarbonCreditsMeta,
     #[codec(compact)]
     create_time: Moment,
     carbon_credits_count: Balance,
     carbon_credits_released: bool,
-    carbon_credits_meta: CarbonCreditsMeta,
     required_signers: Vec<RequiredSigner<AccountId>>,
 }
 
@@ -65,6 +65,10 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
         self.carbon_credits_meta.set_metadata(name, symbol, decimals);
     }
 
+    // pub fn get_metadata_name(&self) -> Vec<u8> {
+    //     self.carbon_credits_meta.name
+    // }
+
     pub fn is_full_signed(&self) -> bool {
         self.state == REPORT_ISSUED
     }
@@ -93,13 +97,13 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
 
 #[derive(Encode, Decode, Clone, Default, RuntimeDebug, PartialEq)]
 pub struct CarbonCreditsMeta {
-    name: Vec<u8>,
-    symbol: Vec<u8>,
-    decimals: u8,
+    pub name: Vec<u8>,
+    pub symbol: Vec<u8>,
+    pub decimals: u8,
 }
 
 impl CarbonCreditsMeta {
-    pub fn new() -> Self{
+    pub fn new() -> Self {
         CarbonCreditsMeta {
             name: Vec::new(), 
             symbol: Vec::new(),
