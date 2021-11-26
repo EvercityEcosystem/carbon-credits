@@ -76,128 +76,6 @@ fn it_fails_for_release_cc_no_annual_reports() {
     });
 }
 
-// // CC Metadata test:
-// #[test]
-// fn it_works_for_set_cc_metadata() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-//         let set_metadata_result = CarbonCredits::set_carbon_credits_metadata(
-//             Origin::signed(owner), 
-//             asset_id, 
-//             "CarbonToken".to_owned().as_bytes().to_vec(), 
-//             "CT".to_owned().as_bytes().to_vec(), 
-//             1
-//         );
-//         assert_ok!(set_metadata_result, ());
-//     });
-// }
-
-// #[test]
-// fn it_fails_for_set_empty_cc_metadata() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-//         let set_metadata_result_empty_name = CarbonCredits::set_carbon_credits_metadata(
-//             Origin::signed(owner), 
-//             asset_id, 
-//             "".to_owned().as_bytes().to_vec(), 
-//             "CT".to_owned().as_bytes().to_vec(), 
-//             1
-//         );
-
-//         let set_metadata_result_empty_symbol = CarbonCredits::set_carbon_credits_metadata(
-//             Origin::signed(owner), 
-//             asset_id, 
-//             "CarbonToken".to_owned().as_bytes().to_vec(), 
-//             "".to_owned().as_bytes().to_vec(), 
-//             1
-//         );
-//         assert_ne!(set_metadata_result_empty_name, Ok(()));
-//         assert_ne!(set_metadata_result_empty_symbol, Ok(()));
-//     });
-// }
-
-// #[test]
-// fn it_fails_for_set_cc_metadata_not_existing_asset() {
-//     new_test_ext().execute_with(|| {
-//         let (_, _, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let set_metadata_result = CarbonCredits::set_carbon_credits_metadata(
-//             Origin::signed(owner), 
-//             asset_id, 
-//             "CarbonToken".to_owned().as_bytes().to_vec(), 
-//             "CT".to_owned().as_bytes().to_vec(), 
-//             1
-//         );
-//         assert_ne!(set_metadata_result, Ok(()));
-//     });
-// }
-
-// // CC MINT TESTS:
-// #[test]
-// fn it_works_for_mint_cc() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-//         let mint_result = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
-//         let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
-//         let last_annual_report = project.annual_reports.last().unwrap();
-//         assert!(last_annual_report.is_carbon_credits_released());
-//         assert_ok!(mint_result, ());
-//     });
-// }
-
-// #[test]
-// fn it_fails_for_mint_cc_not_existing_asset() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let mint_result = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
-//         let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
-//         let last_annual_report = project.annual_reports.last().unwrap();
-//         assert!(!last_annual_report.is_carbon_credits_released());
-//         assert_ne!(mint_result, Ok(()));
-//     });
-// }
-
-// #[test]
-// fn it_fails_for_mint_cc_not_owner_role() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-//         let _ = EvercityAccounts::account_withdraw_role(Origin::signed(ROLES[0].0), owner, CC_PROJECT_OWNER_ROLE_MASK);
-//         let mint_result = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
-//         let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
-//         let last_annual_report = project.annual_reports.last().unwrap();
-
-//         assert!(!last_annual_report.is_carbon_credits_released());
-//         assert_ne!(mint_result, Ok(()));
-//     });
-// }
-
-// #[test]
-// fn it_fails_for_mint_cc_not_project_owner() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-
-//         let new_owner_id = 555;
-//         let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
-//         let mint_result = CarbonCredits::release_carbon_credits(Origin::signed(new_owner_id), asset_id);
-//         let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
-//         let last_annual_report = project.annual_reports.last().unwrap();
-
-//         assert!(!last_annual_report.is_carbon_credits_released());
-//         assert_ne!(mint_result, Ok(()));
-//     });
-// }
-
 // cc transfer tests
 #[test]
 fn it_works_for_ransfer_cc() {
@@ -264,32 +142,30 @@ fn it_works_for_burn_cc_after_transfer() {
 }
 
 
-// #[test]
-// fn it_fails_for_burn_cc_not_owner() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-//         let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
+#[test]
+fn it_fails_for_burn_cc_no_assets () {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), project_id, asset_id, owner, 1);
 
-//         // Doesnt have assets
-//         let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(ROLES[4].0), asset_id, 20);
+        // Doesnt have assets
+        let offset_result = CarbonCredits::offset_carbon_credits(Origin::signed(ROLES[4].0), asset_id, 20);
 
-//         assert_ne!(burn_result, Ok(()));
-//         assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT);
-//     });
-// }
+        assert_noop!(offset_result, RuntimeError::InsufficientCarbonCredits);
+        assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT);
+    });
+}
 
-// #[test]
-// fn it_fails_for_burn_cc_not_enough() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-//         let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
-//         let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(owner), asset_id, TEST_CARBON_CREDITS_COUNT + 666);
+#[test]
+fn it_fails_for_burn_cc_not_enough() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), project_id, asset_id, owner, 1);
+        let offset_result = CarbonCredits::offset_carbon_credits(Origin::signed(owner), asset_id, TEST_CARBON_CREDITS_COUNT + 666);
 
-//         assert_noop!(burn_result, RuntimeError::InsufficientCarbonCredits);
-//         assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT);
-//     });
-// }
+        assert_noop!(offset_result, RuntimeError::InsufficientCarbonCredits);
+        assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT);
+    });
+}
