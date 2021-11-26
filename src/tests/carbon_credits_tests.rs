@@ -1,75 +1,80 @@
-// use crate::Error;
-// use crate::tests::mock::*;
-// use frame_support::{assert_ok, assert_noop};
-// use pallet_evercity_accounts::accounts::*;
-// use crate::tests::helpers::*;
+use crate::Error;
+use crate::tests::mock::*;
+use frame_support::{assert_ok, assert_noop};
+use pallet_evercity_accounts::accounts::*;
+use crate::tests::helpers::*;
 
-// type RuntimeError = Error<TestRuntime>;
+type RuntimeError = Error<TestRuntime>;
 
-// // CC create token test:
-// #[test]
-// fn it_works_for_create_new_cc_gold_standard() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let create_cc_result = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
 
-//         let passport = CarbonCredits::get_passport_by_assetid(asset_id).unwrap();
-//         let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
+// CC create token test:
+#[test]
+fn it_works_for_relase_new_cc_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let release_call = CarbonCredits::release_carbon_credits(Origin::signed(owner), project_id, asset_id, owner, 1);
+        let passport = CarbonCredits::get_passport_by_assetid(asset_id).unwrap();
+        let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
+        let balance = Assets::balance(asset_id, owner);
 
-//         assert_eq!(passport.get_project_id(), project_id);
-//         assert_eq!(*passport.get_asset_id_ref(), asset_id);
-//         assert_eq!(passport.get_annual_report_index(), project.annual_reports.len() as u64);
-//         assert_ok!(create_cc_result, ());
-//     });
-// }
+        assert_ok!(release_call, ());
+        assert_eq!(passport.get_project_id(), project_id);
+        assert_eq!(TEST_CARBON_CREDITS_COUNT, balance);
+        assert_eq!(*passport.get_asset_id_ref(), asset_id);
+        assert_eq!(passport.get_annual_report_index(), project.annual_reports.len() as u64);
+        assert!(project.annual_reports.last().unwrap().is_carbon_credits_released());
+    });
+}
 
-// #[test]
-// fn it_fails_for_create_cc_asset_not_owner_role() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
+#[test]
+fn it_fails_for_relase_cc_not_owner_role() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
 
-//         let _ = EvercityAccounts::account_withdraw_role(Origin::signed(ROLES[0].0), owner, CC_PROJECT_OWNER_ROLE_MASK);
-//         let create_cc_result = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-//         let passport = CarbonCredits::get_passport_by_assetid(asset_id);
+        let _ = EvercityAccounts::account_withdraw_role(Origin::signed(ROLES[0].0), owner, CC_PROJECT_OWNER_ROLE_MASK);
+        let release_call = CarbonCredits::release_carbon_credits(Origin::signed(owner), project_id, asset_id, owner, 1);
+        let passport = CarbonCredits::get_passport_by_assetid(asset_id);
+        let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
         
-//         assert!(passport.is_none());
-//         assert_ne!(create_cc_result, Ok(()));
-//     });
-// }
+        assert!(passport.is_none());
+        assert!(!project.annual_reports.last().unwrap().is_carbon_credits_released());
+        assert_noop!(release_call, RuntimeError::AccountNotOwner);
+    });
+}
 
-// #[test]
-// fn it_fails_for_create_cc_asset_not_owner_account() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, _) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let new_owner_id = 555;
-//         let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
-//         let create_cc_result = CarbonCredits::set_carbon_credit_asset(Origin::signed(new_owner_id), asset_id, new_owner_id, 1, project_id);
+#[test]
+fn it_fails_for_relase_cc_not_owner_account() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, _) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let new_owner_id = 555;
+        let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
+        let release_call = CarbonCredits::release_carbon_credits(Origin::signed(new_owner_id), project_id, asset_id, new_owner_id, 1);
 
-//         let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
-//         let last_annual_report = project.annual_reports.last().unwrap();
-//         let passport = CarbonCredits::get_passport_by_assetid(asset_id);
+        let project = CarbonCredits::get_proj_by_id(project_id).unwrap();
+        let last_annual_report = project.annual_reports.last().unwrap();
+        let passport = CarbonCredits::get_passport_by_assetid(asset_id);
         
-//         assert!(passport.is_none());
-//         assert!(!last_annual_report.is_carbon_credits_released());
-//         assert_ne!(create_cc_result, Ok(()));
-//     });
-// }
+        assert!(passport.is_none());
+        assert!(!last_annual_report.is_carbon_credits_released());
+        assert_noop!(release_call, RuntimeError::AccountNotOwner);
+    });
+}
 
-// #[test]
-// fn it_fails_for_create_new_cc_not_registered_project() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
-//         let asset_id = 1;
-//         let create_cc_result = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
+#[test]
+fn it_fails_for_release_cc_no_annual_reports() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let asset_id = 1;
+        let release_call = CarbonCredits::release_carbon_credits(Origin::signed(owner), project_id, asset_id, owner, 1);
 
-//         let passport = CarbonCredits::get_passport_by_assetid(asset_id);
-//         assert!(passport.is_none());
-//         assert_ne!(create_cc_result, Ok(()));
-//     });
-// }
+        let passport = CarbonCredits::get_passport_by_assetid(asset_id);
+        assert!(passport.is_none());
+        assert_noop!(release_call, RuntimeError::NoAnnualReports);
+    });
+}
 
 // // CC Metadata test:
 // #[test]

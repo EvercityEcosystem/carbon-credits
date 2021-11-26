@@ -610,14 +610,6 @@ decl_module! {
                                 annual_report_file_id)?;
                         }
                     }
-                    // ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                    // ensure!(project_to_mutate.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
-                    // let annual_report_file_id =  project_to_mutate.as_ref().unwrap().annual_reports.last().unwrap().file_id;
-                    // ensure!(pallet_evercity_filesign::Module::<T>::address_is_signer_for_file(annual_report_file_id, &caller), 
-                    //     Error::<T>::IncorrectAnnualReportSigner);
-                    // Self::change_project_annual_report_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
-                    // pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, 
-                    //     annual_report_file_id)?;
                     Ok(())
             })?;
             if let Some(event) = event_opt {
@@ -645,39 +637,39 @@ decl_module! {
         /// Creates carbon credits passport, prooving, that asset is registered carbon credit
         /// 
         /// </pre>
-        #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 2)]
-        pub fn set_carbon_credit_asset(
-            origin, 
-            asset_id: <T as pallet_assets::Config>::AssetId, 
-            new_carbon_credits_holder: T::AccountId,
-            min_balance: <T as pallet_assets::Config>::Balance,
-            project_id: ProjectId,
-        ) -> DispatchResult {
-            let project_owner = ensure_signed(origin.clone())?;
-            ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
+        // #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 2)]
+        // pub fn set_carbon_credit_asset(
+        //     origin, 
+        //     asset_id: <T as pallet_assets::Config>::AssetId, 
+        //     new_carbon_credits_holder: T::AccountId,
+        //     min_balance: <T as pallet_assets::Config>::Balance,
+        //     project_id: ProjectId,
+        // ) -> DispatchResult {
+        //     let project_owner = ensure_signed(origin.clone())?;
+        //     ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
     
-            let project = ProjectById::<T>::get(project_id);
-            ensure!(project.is_some(), Error::<T>::ProjectNotExist);
-            ensure!(project.as_ref().unwrap().owner == project_owner, Error::<T>::AccountNotOwner);
-            ensure!(project.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
-            // Annual Report Check:
-            ensure!(project.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
-            ensure!(project.as_ref().unwrap().annual_reports.last().unwrap().is_full_signed(), Error::<T>::AnnualReportNotReady);
+        //     let project = ProjectById::<T>::get(project_id);
+        //     ensure!(project.is_some(), Error::<T>::ProjectNotExist);
+        //     ensure!(project.as_ref().unwrap().owner == project_owner, Error::<T>::AccountNotOwner);
+        //     ensure!(project.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
+        //     // Annual Report Check:
+        //     ensure!(project.as_ref().unwrap().annual_reports.last().is_some(), Error::<T>::NoAnnualReports);
+        //     ensure!(project.as_ref().unwrap().annual_reports.last().unwrap().is_full_signed(), Error::<T>::AnnualReportNotReady);
     
-            // Create Asset:
-            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder);
-            let create_call = pallet_assets::Call::<T>::create(asset_id, new_carbon_credits_holder_source, 0, min_balance);
-            let result = create_call.dispatch_bypass_filter(origin);
-            ensure!(!result.is_err(), Error::<T>::ErrorCreatingAsset);
+        //     // Create Asset:
+        //     let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder);
+        //     let create_call = pallet_assets::Call::<T>::create(asset_id, new_carbon_credits_holder_source, 0, min_balance);
+        //     let result = create_call.dispatch_bypass_filter(origin);
+        //     ensure!(!result.is_err(), Error::<T>::ErrorCreatingAsset);
 
-            // Create passport
-            <CarbonCreditPassportRegistry<T>>::insert(asset_id, CarbonCreditsPassport::new(asset_id, project_id, project.as_ref().unwrap().annual_reports.len()));
+        //     // Create passport
+        //     <CarbonCreditPassportRegistry<T>>::insert(asset_id, CarbonCreditsPassport::new(asset_id, project_id, project.as_ref().unwrap().annual_reports.len()));
 
-            Self::deposit_event(RawEvent::CarbonCreditsAssetCreated(project_owner, project_id, asset_id));
-            todo!("multiple assets problem");
-            unimplemented!("multiple assets problem");
-            Ok(())
-        }
+        //     Self::deposit_event(RawEvent::CarbonCreditsAssetCreated(project_owner, project_id, asset_id));
+        //     todo!("multiple assets problem");
+        //     unimplemented!("multiple assets problem");
+        //     Ok(())
+        // }
 
         /// <pre>
         /// Method: set_carbon_credits_metadata(
@@ -781,9 +773,6 @@ decl_module! {
             asset_id: <T as pallet_assets::Config>::AssetId,
             new_carbon_credits_holder: T::AccountId,
             min_balance: <T as pallet_assets::Config>::Balance,
-            // name: Vec<u8>,
-            // symbol: Vec<u8>,
-            // decimals: u8,
         ) -> DispatchResult {
             let project_owner = ensure_signed(origin.clone())?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&project_owner), Error::<T>::AccountNotOwner);
@@ -810,18 +799,19 @@ decl_module! {
                     let create_asset_call = pallet_assets::Call::<T>::create(asset_id, new_carbon_credits_holder_source, 0, min_balance);
                     let create_asset_result = create_asset_call.dispatch_bypass_filter(origin.clone());
                     ensure!(!create_asset_result.is_err(), Error::<T>::ErrorCreatingAsset);
-    
+
+  
                     // Set metadata from annual report
                     // Changing metadata of annual report to empty struct
                     let mut meta = annual_report::CarbonCreditsMeta::default();
                     sp_std::mem::swap(&mut meta, &mut last_annual_report.carbon_credits_meta);
-                    let transfer_call = pallet_assets::Call::<T>::set_metadata(asset_id, 
+                    let set_metadata_call = pallet_assets::Call::<T>::set_metadata(asset_id, 
                                             meta.name, 
                                             meta.symbol, 
                                             meta.decimals
                                         );
 
-                    let result = transfer_call.dispatch_bypass_filter(origin.clone());
+                    let result = set_metadata_call.dispatch_bypass_filter(origin.clone());
                     ensure!(!result.is_err(), {
                         // destroy if failed
                         pallet_assets::Call::<T>::destroy(asset_id, 0);
@@ -839,6 +829,8 @@ decl_module! {
                         Error::<T>::ErrorMintingAsset
                     });
 
+                    // Create passport
+                    <CarbonCreditPassportRegistry<T>>::insert(asset_id, CarbonCreditsPassport::new(asset_id, project_id, project_to_mutate.as_ref().unwrap().annual_reports.len()));
                     Ok(())
              })?;
     

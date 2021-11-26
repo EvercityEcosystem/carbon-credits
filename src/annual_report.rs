@@ -65,10 +65,6 @@ impl<AccountId, Moment, Balance> AnnualReportStructT<AccountId, Moment, Balance>
         self.carbon_credits_meta.set_metadata(name, symbol, decimals);
     }
 
-    // pub fn get_metadata_name(&self) -> Vec<u8> {
-    //     self.carbon_credits_meta.name
-    // }
-
     pub fn is_full_signed(&self) -> bool {
         self.state == REPORT_ISSUED
     }
