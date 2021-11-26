@@ -125,19 +125,19 @@ fn it_works_for_burn_cc_after_transfer() {
         let transfer_amount = 300;
         let _ = CarbonCredits::transfer_carbon_credits(Origin::signed(owner), asset_id, investor, transfer_amount);
 
-        let first_burn_amount = 20;
-        let first_burn_result = CarbonCredits::offset_carbon_credits(Origin::signed(investor), asset_id, first_burn_amount);
-        let first_burn_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].offset_amount;
+        let first_offset_amount = 20;
+        let first_offset_result = CarbonCredits::offset_carbon_credits(Origin::signed(investor), asset_id, first_offset_amount);
+        let first_offset_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].offset_amount;
 
-        let second_burn_amount = 15;
-        let second_burn_result = CarbonCredits::offset_carbon_credits(Origin::signed(investor), asset_id, second_burn_amount);
-        let second_burn_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].offset_amount;
+        let second_offset_amount = 15;
+        let second_offset_result = CarbonCredits::offset_carbon_credits(Origin::signed(investor), asset_id, second_offset_amount);
+        let second_offset_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].offset_amount;
 
-        assert_ok!(first_burn_result, ());
-        assert_ok!(second_burn_result, ());
-        assert_eq!(first_burn_amount, first_burn_cert_value);
-        assert_eq!(second_burn_amount + first_burn_amount, second_burn_cert_value);
-        assert_eq!(Assets::balance(asset_id, investor), transfer_amount - first_burn_amount - second_burn_amount);
+        assert_ok!(first_offset_result, ());
+        assert_ok!(second_offset_result, ());
+        assert_eq!(first_offset_amount, first_offset_cert_value);
+        assert_eq!(second_offset_amount + first_offset_amount, second_offset_cert_value);
+        assert_eq!(Assets::balance(asset_id, investor), transfer_amount - first_offset_amount - second_offset_amount);
     });
 }
 
