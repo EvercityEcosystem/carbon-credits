@@ -420,19 +420,23 @@ decl_module! {
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
             ensure!(pallet_evercity_filesign::Module::<T>::address_is_owner_for_file(file_id, &caller), Error::<T>::AccountNotFileOwner);
             ProjectById::<T>::try_mutate(
-                project_id, |project_to_mutate| -> DispatchResult {
-                    ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                    ensure!(project_to_mutate.as_ref().unwrap().owner == caller, Error::<T>::AccountNotOwner);
-                    ensure!(project_to_mutate.as_ref().unwrap().state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
-                    ensure!(project_to_mutate.as_ref().unwrap().annual_reports.iter()
-                                .all(|x| x.state == annual_report::REPORT_ISSUED),
-                        Error::<T>::NotIssuedAnnualReportsExist
-                    );
-                    let meta = annual_report::CarbonCreditsMeta::new(name, symbol, decimals);
-                    ensure!(meta.is_metadata_valid(), Error::<T>::BadMetadataParameters);
-                    project_to_mutate.as_mut().unwrap().annual_reports
-                                .push(annual_report::AnnualReportStruct::<T::AccountId, T, T::Balance>::new(file_id, carbon_credits_count, Timestamp::<T>::get(), meta));
-                    Ok(())
+                project_id, |project_option| -> DispatchResult {
+                    match project_option {
+                        None => return Err(Error::<T>::ProjectNotExist.into()),
+                        Some(project) => {
+                            ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
+                            ensure!(project.state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
+                            ensure!(project.annual_reports.iter()
+                                        .all(|x| x.state == annual_report::REPORT_ISSUED),
+                                Error::<T>::NotIssuedAnnualReportsExist
+                            );
+                            let meta = annual_report::CarbonCreditsMeta::new(name, symbol, decimals);
+                            ensure!(meta.is_metadata_valid(), Error::<T>::BadMetadataParameters);
+                            project.annual_reports
+                                        .push(annual_report::AnnualReportStruct::<T::AccountId, T, T::Balance>::new(file_id, carbon_credits_count, Timestamp::<T>::get(), meta));
+                            Ok(())
+                        }
+                    }
              })?;
             // SendEvent
             Self::deposit_event(RawEvent::AnnualReportCreated(caller, project_id));
