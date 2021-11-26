@@ -50,6 +50,36 @@ fn it_works_for_create_new_annual_report_multiple_annual_reports_gold_standard()
 }
 
 #[test]
+fn it_failss_for_create_new_annual_report_empty_name_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+
+        let mut results = Vec::new();
+
+        results.push(CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT,
+            Vec::new() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        ));
+
+        results.push(CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name(), Vec::new(), TEST_CARBON_CREDITS_DECIMAL
+        ));
+
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
+
+        results.iter().for_each(|create_report_result| {
+            assert_noop!(
+                *create_report_result,
+                RuntimeError::BadMetadataParameters
+            );
+        })
+    });
+}
+
+#[test]
 fn it_fails_for_create_new_annual_report_no_file() {
     new_test_ext().execute_with(|| {
         let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
@@ -466,7 +496,6 @@ fn it_fails_sign_annual_report_registry_not_in_signers_gold_standard() {
         );
     });
 }
-
 
 #[test]
 fn it_fails_sign_annual_report_not_an_auditor_gold_standard() {

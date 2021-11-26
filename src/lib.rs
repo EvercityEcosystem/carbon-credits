@@ -428,6 +428,7 @@ decl_module! {
                         Error::<T>::NotIssuedAnnualReportsExist
                     );
                     let meta = annual_report::CarbonCreditsMeta::new(name, symbol, decimals);
+                    ensure!(meta.is_metadata_valid(), Error::<T>::BadMetadataParameters);
                     project_to_mutate.as_mut().unwrap().annual_reports
                                 .push(annual_report::AnnualReportStruct::<T::AccountId, T, T::Balance>::new(file_id, carbon_credits_count, Timestamp::<T>::get(), meta));
                     Ok(())
