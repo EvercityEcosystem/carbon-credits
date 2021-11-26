@@ -5,7 +5,7 @@ pub mod project;
 pub mod annual_report;
 pub mod required_signers;
 pub mod carbon_credits_passport;
-pub mod carbon_credits_burn_certificate;
+pub mod offset_certificate;
 
 #[cfg(test)]    
 pub mod tests;
@@ -41,7 +41,7 @@ use standard::Standard;
 use pallet_evercity_filesign::{FileId};
 use pallet_evercity_accounts::accounts::RoleMask;
 use carbon_credits_passport::CarbonCreditsPassport;
-use carbon_credits_burn_certificate::CarbonCreditsBurnCertificate;
+use offset_certificate::CarbonCreditsOffsetCertificate;
 
 type Timestamp<T> = pallet_timestamp::Module<T>;
  
@@ -73,9 +73,9 @@ decl_storage! {
             map hasher(blake2_128_concat) AssetId<T> => Option<CarbonCreditsPassport<AssetId<T>>>;
 
         /// Storage for user burn sertificates
-        BurnCertificates
+        OffsetCertificates
             get(fn cert_by_account_id):
-            map hasher(blake2_128_concat) T::AccountId => Vec<CarbonCreditsBurnCertificate<AssetId<T>, T::Balance>>;
+            map hasher(blake2_128_concat) T::AccountId => Vec<CarbonCreditsOffsetCertificate<AssetId<T>, T::Balance>>;
     }
 }
 
@@ -873,7 +873,7 @@ decl_module! {
         }
 
         /// <pre>
-        /// Method: burn_carbon_credits(
+        /// Method: offset_carbon_credits(
         ///    asset_id: <T as pallet_assets::Config>::AssetId, 
         ///    amount: T::Balance
         ///) 
@@ -883,11 +883,11 @@ decl_module! {
         ///
         /// Access: Holder of carbon credits
         ///
-        /// Burns amount of carbon credits
+        /// Offsets amount of carbon credits
         /// 
         /// </pre>
         #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
-        pub fn burn_carbon_credits(
+        pub fn offset_carbon_credits(
             origin, 
             asset_id: <T as pallet_assets::Config>::AssetId, 
             amount: T::Balance
@@ -900,14 +900,14 @@ decl_module! {
                 Error::<T>::InsufficientCarbonCredits
             );
 
-            BurnCertificates::<T>::try_mutate(
+            OffsetCertificates::<T>::try_mutate(
                 credits_holder.clone(), |certificates| -> DispatchResult {
                     match certificates.iter_mut().find(|x| x.asset_id == asset_id) {
                         Some(cert) => {
-                            cert.burned_amount += amount;
+                            cert.offset_amount += amount;
                         },
                         None => {
-                            certificates.push(CarbonCreditsBurnCertificate::new(asset_id, amount));
+                            certificates.push(CarbonCreditsOffsetCertificate::new(asset_id, amount));
                         }
                     }
 
@@ -1040,7 +1040,7 @@ impl<T: Config> Module<T> {
     }
 
     #[cfg(test)]
-    pub fn get_certificates_by_account(account: T::AccountId) -> Vec<CarbonCreditsBurnCertificate<AssetId<T>, T::Balance>> {
-        BurnCertificates::<T>::get(account)
+    pub fn get_certificates_by_account(account: T::AccountId) -> Vec<CarbonCreditsOffsetCertificate<AssetId<T>, T::Balance>> {
+        OffsetCertificates::<T>::get(account)
     }
 }

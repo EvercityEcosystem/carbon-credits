@@ -198,66 +198,70 @@ fn it_fails_for_release_cc_no_annual_reports() {
 //     });
 // }
 
-// // cc transfer tests
-// #[test]
-// fn it_works_for_ransfer_cc() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-//         let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
-//         let investor = ROLES[4].0;
-//         let transfer_result = CarbonCredits::transfer_carbon_credits(Origin::signed(owner), asset_id, investor, 30);
-//         assert_ok!(transfer_result, ());
-//     });
-// }
+// cc transfer tests
+#[test]
+fn it_works_for_ransfer_cc() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), project_id, asset_id, owner, 1);
+        let investor = ROLES[4].0;
+
+        let tranfer_amount = 30;
+        let transfer_result = CarbonCredits::transfer_carbon_credits(Origin::signed(owner), asset_id, investor, tranfer_amount);
+
+        let balance = Assets::balance(asset_id, investor);
+
+        assert_eq!(tranfer_amount, balance);
+        assert_ok!(transfer_result, ());
+    });
+}
 
 // // CC burn tests:
-// #[test]
-// fn it_works_for_burn_cc() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let burn_amount = 20;
-//         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-//         let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
-//         let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(owner), asset_id, burn_amount);
+#[test]
+fn it_works_for_offset_cc() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let offset_amount = 20;
+        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), project_id, asset_id, owner, 1);
 
-//         let burn_cert_value = CarbonCredits::get_certificates_by_account(owner)[0].burned_amount;
+        let offset_result = CarbonCredits::offset_carbon_credits(Origin::signed(owner), asset_id, offset_amount);
 
-//         assert_ok!(burn_result, ());
-//         assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT - burn_amount);
-//         assert_eq!(burn_amount, burn_cert_value);
-//     });
-// }
+        let offset_cert_value = CarbonCredits::get_certificates_by_account(owner)[0].offset_amount;
 
-// #[test]
-// fn it_works_for_burn_cc_after_transfer() {
-//     new_test_ext().execute_with(|| {
-//         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
-//         let asset_id = 1;
-//         let _ = CarbonCredits::set_carbon_credit_asset(Origin::signed(owner), asset_id, owner, 1, project_id);
-//         let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), asset_id);
+        assert_ok!(offset_result, ());
+        assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT - offset_amount);
+        assert_eq!(offset_amount, offset_cert_value);
+    });
+}
 
-//         let investor = ROLES[4].0;
-//         let transfer_amount = 300;
-//         let _ = CarbonCredits::transfer_carbon_credits(Origin::signed(owner), asset_id, investor, transfer_amount);
+#[test]
+fn it_works_for_burn_cc_after_transfer() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = full_sign_annual_report_gold_standard();
+        let asset_id = 1;
+        let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), project_id, asset_id, owner, 1);
 
-//         let first_burn_amount = 20;
-//         let first_burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(investor), asset_id, first_burn_amount);
-//         let first_burn_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].burned_amount;
+        let investor = ROLES[4].0;
+        let transfer_amount = 300;
+        let _ = CarbonCredits::transfer_carbon_credits(Origin::signed(owner), asset_id, investor, transfer_amount);
 
-//         let second_burn_amount = 15;
-//         let second_burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(investor), asset_id, second_burn_amount);
-//         let second_burn_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].burned_amount;
+        let first_burn_amount = 20;
+        let first_burn_result = CarbonCredits::offset_carbon_credits(Origin::signed(investor), asset_id, first_burn_amount);
+        let first_burn_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].offset_amount;
 
-//         assert_ok!(first_burn_result, ());
-//         assert_ok!(second_burn_result, ());
-//         assert_eq!(first_burn_amount, first_burn_cert_value);
-//         assert_eq!(second_burn_amount + first_burn_amount, second_burn_cert_value);
-//         assert_eq!(Assets::balance(asset_id, investor), transfer_amount - first_burn_amount - second_burn_amount);
-//     });
-// }
+        let second_burn_amount = 15;
+        let second_burn_result = CarbonCredits::offset_carbon_credits(Origin::signed(investor), asset_id, second_burn_amount);
+        let second_burn_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].offset_amount;
+
+        assert_ok!(first_burn_result, ());
+        assert_ok!(second_burn_result, ());
+        assert_eq!(first_burn_amount, first_burn_cert_value);
+        assert_eq!(second_burn_amount + first_burn_amount, second_burn_cert_value);
+        assert_eq!(Assets::balance(asset_id, investor), transfer_amount - first_burn_amount - second_burn_amount);
+    });
+}
 
 
 // #[test]
