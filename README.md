@@ -31,22 +31,33 @@ Is the entity for registering carbon credits as assets
 
 Here is the basic scenario on of carbon credits releasing and offetting:
 
-- Project owner creates document and stores its hash into filesign pallet
+- Project owner creates document and stores its hash into filesign pallet (extrinsic - pallet_evercity_filesign - create_new_file())
 
-- Project owner creates a Project in Carbon Credits pallet, choosing a carbon credits standard
+- Project owner creates a Project in Carbon Credits pallet, choosing a carbon credits standard (extrinsic - create_project())
 
-- Project owner adds signers and their roles to project
+- Project owner adds signers and their roles to project(extrinsic - assign_project_signer())
 
-- Then starts project signing, the sign order depends on carbon credits standard. At the end, the project owner is ready for producing annual report for carbon credits production
+- Then starts project signing, the sign order depends on carbon credits standard. 
+At the end, the project owner is ready for producing annual report for carbon credits production (extrinsic - sign_project())
 
-- Project owner creates document for annual report and stores its hash into filesign pallet
+- Project owner creates document for annual report and stores its hash into filesign pallet(extrinsic - pallet_evercity_filesign - create_new_file())
 
-- Project owner create annual report in project
+- Project owner create annual report in project with carbon credits asset_id and asset metadata (extrinsic - create_annual_report())
 
-- Project owner adds signers and their roles to annual report
+- Project owner adds signers and their roles to annual report (extrinsic - assign_last_annual_report_signer())
 
-- Then starts project signing, the sign order depends on carbon credits standard. At the end, the project owner can create carbon credits asset and offset them
+- Then starts report signing, the sign order depends on carbon credits standard (extrinsic - sign_last_annual_report())
 
+- At the end, the project owner can release carbon credits (extrinsic - release_carbon_credits())
+
+- User can transfer carbon credits (extrinsic - transfer_carbon_credits())
+
+- User can burn carbon credits (extrinsic - burn_carbon_credits())
+
+
+Some other functions:
+
+- Project owner can delete last annual report if it is not full signed(extrinsic - delete_last_annual_report())
 
 
 # 6. Evercity documentation

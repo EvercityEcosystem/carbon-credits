@@ -352,7 +352,9 @@ decl_module! {
                             ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
                             ensure!(proj.is_required_signer((signer.clone(), role)), Error::<T>::AccountNotGivenRoleSigner);
                             proj.remove_required_signer((signer.clone(), role));
+                            let hastable = std::collections::HashMap::<i32,i32>::new();
 
+                            todo!("check if signed");
                             pallet_evercity_filesign::Module::<T>::delete_signer(origin, proj.file_id, signer.clone())?;
                         }
                     }
@@ -578,6 +580,7 @@ decl_module! {
                             ensure!(len > 0, Error::<T>::NoAnnualReports);
                             proj.annual_reports[len - 1].remove_required_signer((signer.clone(), role));
                             // delete signer in filesign pallet
+                            todo!("check if signed");
                             pallet_evercity_filesign::Module::<T>::delete_signer(origin.clone(), proj.annual_reports[len - 1].file_id, signer.clone())?;
                         }
                     }
