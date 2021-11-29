@@ -5,7 +5,7 @@ pub mod project;
 pub mod annual_report;
 pub mod required_signers;
 pub mod carbon_credits_passport;
-pub mod offset_certificate;
+pub mod burn_certificate;
 
 #[cfg(test)]    
 pub mod tests;
@@ -41,7 +41,7 @@ use standard::Standard;
 use pallet_evercity_filesign::{FileId};
 use pallet_evercity_accounts::accounts::RoleMask;
 use carbon_credits_passport::CarbonCreditsPassport;
-use offset_certificate::CarbonCreditsOffsetCertificate;
+use burn_certificate::CarbonCreditsBurnCertificate;
 
 type Timestamp<T> = pallet_timestamp::Module<T>;
  
@@ -73,9 +73,9 @@ decl_storage! {
             map hasher(blake2_128_concat) AssetId<T> => Option<CarbonCreditsPassport<AssetId<T>>>;
 
         /// Storage for user burn sertificates
-        OffsetCertificates
+        BurnCertificates
             get(fn cert_by_account_id):
-            map hasher(blake2_128_concat) T::AccountId => Vec<CarbonCreditsOffsetCertificate<AssetId<T>, T::Balance>>;
+            map hasher(blake2_128_concat) T::AccountId => Vec<CarbonCreditsBurnCertificate<AssetId<T>, T::Balance>>;
     }
 }
 
@@ -261,36 +261,36 @@ decl_module! {
         ///
         /// Creates new project with relation to PDD file in filesign
         /// </pre>
-        #[weight = 10_000 + T::DbWeight::get().reads_writes(1, 2)]
-        pub fn change_project_standard(origin, project_id: ProjectId, standard: Standard) -> DispatchResult {
-            todo!("just one standard");
-            let caller = ensure_signed(origin)?;
-            ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+        // #[weight = 10_000 + T::DbWeight::get().reads_writes(1, 2)]
+        // pub fn change_project_standard(origin, project_id: ProjectId, standard: Standard) -> DispatchResult {
+        //     todo!("just one standard");
+        //     let caller = ensure_signed(origin)?;
+        //     ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
 
-            ProjectById::<T>::try_mutate(
-                project_id, |project_to_mutate| -> DispatchResult {
-                    match project_to_mutate  {
-                        None => return Err(Error::<T>::ProjectNotExist.into()),
-                        Some(proj) => {
-                            ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
-                            ensure!(proj.state == project::PROJECT_OWNER_SIGN_PENDING, Error::<T>::InvalidProjectState);
-                        }
-                    }
+        //     ProjectById::<T>::try_mutate(
+        //         project_id, |project_to_mutate| -> DispatchResult {
+        //             match project_to_mutate  {
+        //                 None => return Err(Error::<T>::ProjectNotExist.into()),
+        //                 Some(proj) => {
+        //                     ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
+        //                     ensure!(proj.state == project::PROJECT_OWNER_SIGN_PENDING, Error::<T>::InvalidProjectState);
+        //                 }
+        //             }
 
-                    Ok(())
-             })?;
+        //             Ok(())
+        //      })?;
 
-            // let new_id = LastID::get() + 1;
-            // let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T, T::Balance>::new(caller.clone(), new_id, standard, file_id);
-            // <ProjectById<T>>::insert(new_id, new_project);
-            // LastID::mutate(|x| *x = x.checked_add(1).unwrap());
+        //     // let new_id = LastID::get() + 1;
+        //     // let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T, T::Balance>::new(caller.clone(), new_id, standard, file_id);
+        //     // <ProjectById<T>>::insert(new_id, new_project);
+        //     // LastID::mutate(|x| *x = x.checked_add(1).unwrap());
 
-            // SendEvent
-            //ProjectStandardChanged
-            // Self::deposit_event(RawEvent::ProjectCreated(caller, new_id));
-            todo!();
-            Ok(())
-        }
+        //     // SendEvent
+        //     //ProjectStandardChanged
+        //     // Self::deposit_event(RawEvent::ProjectCreated(caller, new_id));
+        //     todo!();
+        //     Ok(())
+        // }
 
         /// <pre>
         /// Method: assign_project_signer(signer: T::AccountId, role: RoleMask, project_id: ProjectId)
@@ -642,29 +642,29 @@ decl_module! {
         /// Sets CC asset metadata
         /// 
         /// </pre>
-        #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 2)]
-        pub fn set_carbon_credits_metadata(
-            origin, 
-            asset_id: <T as pallet_assets::Config>::AssetId,
-            name: Vec<u8>,
-            symbol: Vec<u8>,
-            decimals: u8,
-        ) -> DispatchResult {
-            todo!("change function signatchure");
-            let owner = ensure_signed(origin.clone())?;
+        // #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 2)]
+        // pub fn set_carbon_credits_metadata(
+        //     origin, 
+        //     asset_id: <T as pallet_assets::Config>::AssetId,
+        //     name: Vec<u8>,
+        //     symbol: Vec<u8>,
+        //     decimals: u8,
+        // ) -> DispatchResult {
+        //     todo!("change function signatchure");
+        //     let owner = ensure_signed(origin.clone())?;
             
-            // check passport creds
-            let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
-            ensure!(passport.is_some(), Error::<T>::PassportNotExist);
+        //     // check passport creds
+        //     let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
+        //     ensure!(passport.is_some(), Error::<T>::PassportNotExist);
 
-            ensure!(!name.is_empty() && !symbol.is_empty(), Error::<T>::BadMetadataParameters);
-            let transfer_call = pallet_assets::Call::<T>::set_metadata(asset_id, name, symbol, decimals);
-            let result = transfer_call.dispatch_bypass_filter(origin);
-            ensure!(!result.is_err(), Error::<T>::SetMetadataFailed);
+        //     ensure!(!name.is_empty() && !symbol.is_empty(), Error::<T>::BadMetadataParameters);
+        //     let transfer_call = pallet_assets::Call::<T>::set_metadata(asset_id, name, symbol, decimals);
+        //     let result = transfer_call.dispatch_bypass_filter(origin);
+        //     ensure!(!result.is_err(), Error::<T>::SetMetadataFailed);
 
-            Self::deposit_event(RawEvent::CarbonCreditsMetadataChanged(owner, asset_id));
-            Ok(())
-        }
+        //     Self::deposit_event(RawEvent::CarbonCreditsMetadataChanged(owner, asset_id));
+        //     Ok(())
+        // }
 
         #[weight = 10_000 + T::DbWeight::get().reads_writes(5, 4)]
         pub fn release_carbon_credits(
@@ -777,7 +777,7 @@ decl_module! {
         }
 
         /// <pre>
-        /// Method: offset_carbon_credits(
+        /// Method: burn_carbon_credits(
         ///    asset_id: <T as pallet_assets::Config>::AssetId, 
         ///    amount: T::Balance
         ///) 
@@ -787,11 +787,11 @@ decl_module! {
         ///
         /// Access: Holder of carbon credits
         ///
-        /// Offsets amount of carbon credits
+        /// Burns amount of carbon credits
         /// 
         /// </pre>
         #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
-        pub fn offset_carbon_credits(
+        pub fn burn_carbon_credits(
             origin, 
             asset_id: <T as pallet_assets::Config>::AssetId, 
             amount: T::Balance
@@ -804,14 +804,14 @@ decl_module! {
                 Error::<T>::InsufficientCarbonCredits
             );
 
-            OffsetCertificates::<T>::try_mutate(
+            BurnCertificates::<T>::try_mutate(
                 credits_holder.clone(), |certificates| -> DispatchResult {
                     match certificates.iter_mut().find(|x| x.asset_id == asset_id) {
                         Some(cert) => {
-                            cert.offset_amount += amount;
+                            cert.burn_amount += amount;
                         },
                         None => {
-                            certificates.push(CarbonCreditsOffsetCertificate::new(asset_id, amount));
+                            certificates.push(CarbonCreditsBurnCertificate::new(asset_id, amount));
                         }
                     }
 
@@ -944,7 +944,7 @@ impl<T: Config> Module<T> {
     }
 
     #[cfg(test)]
-    pub fn get_certificates_by_account(account: T::AccountId) -> Vec<CarbonCreditsOffsetCertificate<AssetId<T>, T::Balance>> {
-        OffsetCertificates::<T>::get(account)
+    pub fn get_certificates_by_account(account: T::AccountId) -> Vec<CarbonCreditsBurnCertificate<AssetId<T>, T::Balance>> {
+        BurnCertificates::<T>::get(account)
     }
 }

@@ -97,20 +97,20 @@ fn it_works_for_ransfer_cc() {
 
 // // CC burn tests:
 #[test]
-fn it_works_for_offset_cc() {
+fn it_works_for_burn_cc() {
     new_test_ext().execute_with(|| {
         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
         let asset_id = 1;
-        let offset_amount = 20;
+        let burn_amount = 20;
         let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), project_id, asset_id, owner, 1);
 
-        let offset_result = CarbonCredits::offset_carbon_credits(Origin::signed(owner), asset_id, offset_amount);
+        let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(owner), asset_id, burn_amount);
 
-        let offset_cert_value = CarbonCredits::get_certificates_by_account(owner)[0].offset_amount;
+        let burn_cert_value = CarbonCredits::get_certificates_by_account(owner)[0].burn_amount;
 
-        assert_ok!(offset_result, ());
-        assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT - offset_amount);
-        assert_eq!(offset_amount, offset_cert_value);
+        assert_ok!(burn_result, ());
+        assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT - burn_amount);
+        assert_eq!(burn_amount, burn_cert_value);
     });
 }
 
@@ -125,19 +125,19 @@ fn it_works_for_burn_cc_after_transfer() {
         let transfer_amount = 300;
         let _ = CarbonCredits::transfer_carbon_credits(Origin::signed(owner), asset_id, investor, transfer_amount);
 
-        let first_offset_amount = 20;
-        let first_offset_result = CarbonCredits::offset_carbon_credits(Origin::signed(investor), asset_id, first_offset_amount);
-        let first_offset_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].offset_amount;
+        let first_burn_amount = 20;
+        let first_burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(investor), asset_id, first_burn_amount);
+        let first_burn_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].burn_amount;
 
-        let second_offset_amount = 15;
-        let second_offset_result = CarbonCredits::offset_carbon_credits(Origin::signed(investor), asset_id, second_offset_amount);
-        let second_offset_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].offset_amount;
+        let second_burn_amount = 15;
+        let second_burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(investor), asset_id, second_burn_amount);
+        let second_burn_cert_value = CarbonCredits::get_certificates_by_account(investor)[0].burn_amount;
 
-        assert_ok!(first_offset_result, ());
-        assert_ok!(second_offset_result, ());
-        assert_eq!(first_offset_amount, first_offset_cert_value);
-        assert_eq!(second_offset_amount + first_offset_amount, second_offset_cert_value);
-        assert_eq!(Assets::balance(asset_id, investor), transfer_amount - first_offset_amount - second_offset_amount);
+        assert_ok!(first_burn_result, ());
+        assert_ok!(second_burn_result, ());
+        assert_eq!(first_burn_amount, first_burn_cert_value);
+        assert_eq!(second_burn_amount + first_burn_amount, second_burn_cert_value);
+        assert_eq!(Assets::balance(asset_id, investor), transfer_amount - first_burn_amount - second_burn_amount);
     });
 }
 
@@ -150,9 +150,9 @@ fn it_fails_for_burn_cc_no_assets () {
         let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), project_id, asset_id, owner, 1);
 
         // Doesnt have assets
-        let offset_result = CarbonCredits::offset_carbon_credits(Origin::signed(ROLES[4].0), asset_id, 20);
+        let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(ROLES[4].0), asset_id, 20);
 
-        assert_noop!(offset_result, RuntimeError::InsufficientCarbonCredits);
+        assert_noop!(burn_result, RuntimeError::InsufficientCarbonCredits);
         assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT);
     });
 }
@@ -163,9 +163,9 @@ fn it_fails_for_burn_cc_not_enough() {
         let (_, project_id, owner) = full_sign_annual_report_gold_standard();
         let asset_id = 1;
         let _ = CarbonCredits::release_carbon_credits(Origin::signed(owner), project_id, asset_id, owner, 1);
-        let offset_result = CarbonCredits::offset_carbon_credits(Origin::signed(owner), asset_id, TEST_CARBON_CREDITS_COUNT + 666);
+        let burn_result = CarbonCredits::burn_carbon_credits(Origin::signed(owner), asset_id, TEST_CARBON_CREDITS_COUNT + 666);
 
-        assert_noop!(offset_result, RuntimeError::InsufficientCarbonCredits);
+        assert_noop!(burn_result, RuntimeError::InsufficientCarbonCredits);
         assert_eq!(Assets::balance(asset_id, owner), TEST_CARBON_CREDITS_COUNT);
     });
 }
