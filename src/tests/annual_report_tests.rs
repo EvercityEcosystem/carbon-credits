@@ -204,8 +204,7 @@ fn it_fails_for_create_new_annual_report_not_an_owner_of_the_project_gold_standa
         
 
         // Create new acc with owner role
-        let new_owner_id = 555;
-        let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
+        let new_owner_id = create_user_with_owner_role();
         let report_id = create_annual_report_file(new_owner_id);
         let is_owner = EvercityAccounts::account_is_cc_project_owner(&new_owner_id);
 
@@ -368,8 +367,7 @@ fn it_fails_sign_annual_report_not_an_owner_of_project_gold_standard() {
         crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
         
         // Create new acc with owner role
-        let new_owner_id = 555;
-        let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
+        let new_owner_id = create_user_with_owner_role();
         let is_owner = EvercityAccounts::account_is_cc_project_owner(&new_owner_id);
         let owner_sign_result = CarbonCredits::sign_last_annual_report(Origin::signed(new_owner_id), 1);
 
@@ -668,8 +666,7 @@ fn it_fails_change_report_carbon_credits_count_last_annual_report_not_owner() {
         let report_id = create_annual_report_file(owner);
 
         // Create new acc with owner role
-        let new_owner_id = 555;
-        let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
+        let new_owner_id = create_user_with_owner_role();
 
         let _ = CarbonCredits::create_annual_report(
             Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
@@ -787,8 +784,7 @@ fn it_fails_delete_last_annual_report_not_project_owner() {
         let report_id = create_annual_report_file(owner);
 
         // Create new acc with owner role
-        let new_owner_id = 555;
-        let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
+        let new_owner_id = create_user_with_owner_role();
 
         let _ = CarbonCredits::create_annual_report(
             Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,

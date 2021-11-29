@@ -49,8 +49,7 @@ fn it_fails_for_relase_cc_not_owner_account() {
     new_test_ext().execute_with(|| {
         let (_, project_id, _) = full_sign_annual_report_gold_standard();
         let asset_id = 1;
-        let new_owner_id = 555;
-        let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
+        let new_owner_id = create_user_with_owner_role();
         let release_call = CarbonCredits::release_carbon_credits(Origin::signed(new_owner_id), project_id, asset_id, new_owner_id, 1);
 
         let project = CarbonCredits::get_proj_by_id(project_id).unwrap();

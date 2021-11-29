@@ -346,8 +346,7 @@ fn it_fails_sign_project_not_an_owner_of_project_gold_standard() {
         let standard = Standard::GOLD_STANDARD;
 
         // Create new acc with owner role
-        let new_owner_id = 555;
-        let _ = EvercityAccounts::account_add_with_role_and_data(Origin::signed(ROLES[0].0), new_owner_id, CC_PROJECT_OWNER_ROLE_MASK);
+        let new_owner_id = create_user_with_owner_role();
         let is_owner = EvercityAccounts::account_is_cc_project_owner(&new_owner_id);
         
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
