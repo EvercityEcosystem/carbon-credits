@@ -1,3 +1,8 @@
+//! <div>
+//! Crate "pallet-evercity-carbon-credits" implements functions for processing
+//! the lifecycle of carbon credits
+//! </div>
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub mod standard;
@@ -169,6 +174,8 @@ decl_error! {
         AccountNotGivenRoleSigner,
         /// Account not owner of file
         AccountNotFileOwner,
+        /// Account has already signed a project or annual report
+        AccountAlreadySigned,
 
         // State machine errors
 
@@ -185,7 +192,7 @@ decl_error! {
 
         // Asset error
 
-        /// Error has occured when thred to create asset
+        /// Error has occured when tried to create asset
         ErrorCreatingAsset,
         /// Error minting asset
         ErrorMintingAsset,
@@ -253,46 +260,6 @@ decl_module! {
         }
 
         /// <pre>
-        /// Method: change_project_standard(project_id: ProjectId, standard: Standard)
-        /// Arguments: origin: AccountId - Transaction caller
-        ///            project_id: ProjectId
-        ///            standard: Standard - Carbon Credits Standard
-        /// Access: Project Owner Role
-        ///
-        /// Creates new project with relation to PDD file in filesign
-        /// </pre>
-        // #[weight = 10_000 + T::DbWeight::get().reads_writes(1, 2)]
-        // pub fn change_project_standard(origin, project_id: ProjectId, standard: Standard) -> DispatchResult {
-        //     todo!("just one standard");
-        //     let caller = ensure_signed(origin)?;
-        //     ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
-
-        //     ProjectById::<T>::try_mutate(
-        //         project_id, |project_to_mutate| -> DispatchResult {
-        //             match project_to_mutate  {
-        //                 None => return Err(Error::<T>::ProjectNotExist.into()),
-        //                 Some(proj) => {
-        //                     ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
-        //                     ensure!(proj.state == project::PROJECT_OWNER_SIGN_PENDING, Error::<T>::InvalidProjectState);
-        //                 }
-        //             }
-
-        //             Ok(())
-        //      })?;
-
-        //     // let new_id = LastID::get() + 1;
-        //     // let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T, T::Balance>::new(caller.clone(), new_id, standard, file_id);
-        //     // <ProjectById<T>>::insert(new_id, new_project);
-        //     // LastID::mutate(|x| *x = x.checked_add(1).unwrap());
-
-        //     // SendEvent
-        //     //ProjectStandardChanged
-        //     // Self::deposit_event(RawEvent::ProjectCreated(caller, new_id));
-        //     todo!();
-        //     Ok(())
-        // }
-
-        /// <pre>
         /// Method: assign_project_signer(signer: T::AccountId, role: RoleMask, project_id: ProjectId)
         /// Arguments: origin: AccountId - Transaction caller
         ///            signer: T::AccountId - assign signer account
@@ -340,7 +307,7 @@ decl_module! {
         /// also deletes signer from filesign PDD 
         /// 
         /// </pre>
-        #[weight = 10_000 + T::DbWeight::get().reads_writes(1, 1)]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
         pub fn remove_project_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin.clone())?;
             ensure!(pallet_evercity_accounts::Module::<T>::account_is_selected_role(&signer, role), Error::<T>::AccountIncorrectRole);
@@ -348,14 +315,15 @@ decl_module! {
                 project_id, |project_to_mutate| -> DispatchResult {
                     match project_to_mutate  {
                         None => return Err(Error::<T>::ProjectNotExist.into()),
-                        Some(proj) => {
-                            ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
-                            ensure!(proj.is_required_signer((signer.clone(), role)), Error::<T>::AccountNotGivenRoleSigner);
-                            proj.remove_required_signer((signer.clone(), role));
-                            let hastable = std::collections::HashMap::<i32,i32>::new();
-
-                            todo!("check if signed");
-                            pallet_evercity_filesign::Module::<T>::delete_signer(origin, proj.file_id, signer.clone())?;
+                        Some(project) => {
+                            ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
+                            ensure!(project.is_required_signer((signer.clone(), role)), Error::<T>::AccountNotGivenRoleSigner);
+                            // Check if signer did not already sign the project
+                            let has_signed = pallet_evercity_filesign::Module::<T>::address_has_signed_the_file(project.file_id, &signer);
+                            ensure!(!has_signed, Error::<T>::AccountAlreadySigned);
+                            project.remove_required_signer((signer.clone(), role));
+                            // delete from filesign:
+                            pallet_evercity_filesign::Module::<T>::delete_signer(origin, project.file_id, signer.clone())?;
                         }
                     }
 
@@ -566,7 +534,7 @@ decl_module! {
         /// also deletes signer to filesign document 
         /// 
         /// </pre>
-        #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 2)]
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(3, 2)]
         pub fn remove_last_annual_report_signer(origin, signer: T::AccountId, role: RoleMask, project_id: ProjectId) -> DispatchResult {
             let caller = ensure_signed(origin.clone())?;
             ensure!(pallet_evercity_accounts::Module::<T>::account_is_selected_role(&signer, role), Error::<T>::AccountIncorrectRole);
@@ -578,9 +546,12 @@ decl_module! {
                             ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
                             let len = proj.annual_reports.len();
                             ensure!(len > 0, Error::<T>::NoAnnualReports);
+                            // Check if signer did not already sign the project
+                            ensure!(proj.annual_reports[len - 1].is_required_signer((signer.clone(), role)), Error::<T>::AccountNotGivenRoleSigner);
+                            let has_signed = pallet_evercity_filesign::Module::<T>::address_has_signed_the_file(proj.annual_reports[len - 1].file_id, &signer);
+                            ensure!(!has_signed, Error::<T>::AccountAlreadySigned);
                             proj.annual_reports[len - 1].remove_required_signer((signer.clone(), role));
                             // delete signer in filesign pallet
-                            todo!("check if signed");
                             pallet_evercity_filesign::Module::<T>::delete_signer(origin.clone(), proj.annual_reports[len - 1].file_id, signer.clone())?;
                         }
                     }
@@ -625,49 +596,6 @@ decl_module! {
             }
             Ok(())
         }
-
-        /// <pre>
-        /// Method: set_carbon_credits_metadata(
-        ///             asset_id: <T as pallet_assets::Config>::AssetId,
-        ///             name: Vec<u8>,
-        ///             symbol: Vec<u8>,
-        ///             decimals: u8,
-        ///             )
-        /// 
-        /// Arguments: origin: AccountId - Transaction caller
-        ///            asset_id - id of asset in assets pallet
-        ///            name - asset name
-        ///            symbol - asset symbol
-        ///            decimals - decimals count
-        ///
-        /// Access: Asset Owner
-        ///
-        /// Sets CC asset metadata
-        /// 
-        /// </pre>
-        // #[weight = 10_000 + T::DbWeight::get().reads_writes(2, 2)]
-        // pub fn set_carbon_credits_metadata(
-        //     origin, 
-        //     asset_id: <T as pallet_assets::Config>::AssetId,
-        //     name: Vec<u8>,
-        //     symbol: Vec<u8>,
-        //     decimals: u8,
-        // ) -> DispatchResult {
-        //     todo!("change function signatchure");
-        //     let owner = ensure_signed(origin.clone())?;
-            
-        //     // check passport creds
-        //     let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
-        //     ensure!(passport.is_some(), Error::<T>::PassportNotExist);
-
-        //     ensure!(!name.is_empty() && !symbol.is_empty(), Error::<T>::BadMetadataParameters);
-        //     let transfer_call = pallet_assets::Call::<T>::set_metadata(asset_id, name, symbol, decimals);
-        //     let result = transfer_call.dispatch_bypass_filter(origin);
-        //     ensure!(!result.is_err(), Error::<T>::SetMetadataFailed);
-
-        //     Self::deposit_event(RawEvent::CarbonCreditsMetadataChanged(owner, asset_id));
-        //     Ok(())
-        // }
 
         #[weight = 10_000 + T::DbWeight::get().reads_writes(5, 4)]
         pub fn release_carbon_credits(

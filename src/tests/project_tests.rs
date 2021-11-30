@@ -118,7 +118,7 @@ fn it_works_project_assign_signer() {
 }
 
 #[test]
-fn it_works_project_remove_signer() {
+fn it_works_remove_signer() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::default();
@@ -146,7 +146,7 @@ fn it_works_project_remove_signer() {
 }
 
 #[test]
-fn it_fails_project_remove_unexisting_signer() {
+fn it_fails_remove_unexisting_signer() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::default();
@@ -160,12 +160,40 @@ fn it_fails_project_remove_unexisting_signer() {
         let delete_result = CarbonCredits::remove_project_signer(Origin::signed(owner), ROLES[5].0, ROLES[5].1, project_id);
         let project = CarbonCredits::get_proj_by_id(1).unwrap();
 
-        assert_ne!(delete_result, DispatchResult::Ok(()));
+        assert_noop!(delete_result, RuntimeError::AccountNotGivenRoleSigner);
 
         // Assert other are not deleted:
         assert!(project.is_required_signer((ROLES[1].0, ROLES[1].1)));
         assert!(project.is_required_signer((ROLES[2].0, ROLES[2].1)));
         assert!(project.is_required_signer((ROLES[3].0, ROLES[3].1)));
+    });
+}
+
+
+#[test]
+fn it_fails_remove_signed_signer() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let auditor = ROLES[2].0;
+        let standard = Standard::default();
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), create_project_documentation_file(owner));
+        let project_id = 1;
+
+        let _ = CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id);
+        let _ = CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[2].0, ROLES[2].1, project_id);
+        let _ = CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[3].0, ROLES[3].1, project_id);
+        let _ = CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[5].0, ROLES[5].1, project_id);
+
+        let _ = CarbonCredits::sign_project(Origin::signed(owner), 1);
+        let _ = CarbonCredits::sign_project(Origin::signed(auditor), 1);
+
+        let delete_result = CarbonCredits::remove_project_signer(Origin::signed(owner), auditor, ROLES[2].1, project_id);
+        let project = CarbonCredits::get_proj_by_id(1).unwrap();
+
+        assert_noop!(delete_result, RuntimeError::AccountAlreadySigned);
+
+        // Assert signer is not deleted:
+        assert!(project.is_required_signer((ROLES[2].0, ROLES[2].1)));
     });
 }
 
@@ -391,7 +419,7 @@ fn it_fails_sign_project_not_an_auditor_gold_standard() {
 }
 
 #[test]
-    fn it_fails_sign_project_not_a_standard_acc_gold_standard() {
+fn it_fails_sign_project_not_a_standard_acc_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;

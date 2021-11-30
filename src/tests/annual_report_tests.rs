@@ -303,13 +303,45 @@ fn it_fails_annual_report_remove_unexisting_signer() {
         let delete_result = CarbonCredits::remove_last_annual_report_signer(Origin::signed(owner), ROLES[5].0, ROLES[5].1, project_id);
         let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
 
-        assert_ne!(delete_result, DispatchResult::Ok(()));
+        assert_noop!(delete_result, RuntimeError::AccountNotGivenRoleSigner);
 
         assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[1].0, ROLES[1].1)));
         assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[2].0, ROLES[2].1)));
         assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[3].0, ROLES[3].1)));
     });
 }
+
+#[test]
+fn it_fails_annual_report_remove_signed_signer() {
+    new_test_ext().execute_with(|| {
+        let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+        let auditor = ROLES[2].0;
+
+        let report_id = create_annual_report_file(owner);
+        let _ = CarbonCredits::create_annual_report(
+            Origin::signed(owner), project_id, report_id, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        ); 
+
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[2].0, ROLES[2].1, project_id);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[3].0, ROLES[3].1, project_id);
+        let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[5].0, ROLES[5].1, project_id);
+
+        let _ = CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id);
+        let _ = CarbonCredits::sign_last_annual_report(Origin::signed(auditor), project_id);
+
+        let delete_result = CarbonCredits::remove_last_annual_report_signer(Origin::signed(owner), auditor, ROLES[2].1, project_id);
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assert_noop!(delete_result, RuntimeError::AccountAlreadySigned);
+
+        assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[1].0, ROLES[1].1)));
+        assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[2].0, ROLES[2].1)));
+        assert!(project_with_report.annual_reports.last().unwrap().is_required_signer((ROLES[3].0, ROLES[3].1)));
+    });
+}
+
 
 // Project Owner sends report for verification =>  Auditor provides and submits verification report => 
 // Standard Approves carbon credit issuance => Registry issues carbon credits
