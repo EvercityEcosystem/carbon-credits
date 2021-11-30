@@ -91,11 +91,12 @@ fn it_fails_for_create_new_project_other_owner_file_gold_standard() {
 }
 
 #[test]
+#[allow(clippy::vec_init_then_push)] 
 fn it_works_project_assign_signer() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::default();
-        let _ = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), create_project_documentation_file(owner));
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
         let project_id = 1;
 
         let mut assign_results = Vec::new();
@@ -122,7 +123,7 @@ fn it_works_remove_signer() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::default();
-        let _ = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), create_project_documentation_file(owner));
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
         let project_id = 1;
 
         let _ = CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id);
@@ -150,7 +151,7 @@ fn it_fails_remove_unexisting_signer() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::default();
-        let _ = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), create_project_documentation_file(owner));
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
         let project_id = 1;
 
         let _ = CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id);
@@ -176,7 +177,7 @@ fn it_fails_remove_signed_signer() {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;
         let standard = Standard::default();
-        let _ = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), create_project_documentation_file(owner));
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
         let project_id = 1;
 
         let _ = CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id);
@@ -201,6 +202,7 @@ fn it_fails_remove_signed_signer() {
 // Project Owner submits PDD (changing status to Registration) => 
 // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
 #[test]
+#[allow(clippy::vec_init_then_push)] 
 fn it_works_for_full_cycle_sign_project_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
@@ -523,7 +525,7 @@ fn it_works_for_create_new_project_deposit_event_gold_standard() {
     new_test_ext_with_event().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::default();
-        let _ = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), create_project_documentation_file(owner));
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
         let last_event = last_event().unwrap();
         crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
 
@@ -534,6 +536,7 @@ fn it_works_for_create_new_project_deposit_event_gold_standard() {
 }
 
 #[test]
+#[allow(clippy::vec_init_then_push)]
 fn it_works_sign_project_deposit_events_gold_standard() {
     new_test_ext_with_event().execute_with(|| {
         let owner = ROLES[1].0;

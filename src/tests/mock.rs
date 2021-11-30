@@ -1,3 +1,5 @@
+#![allow(clippy::from_over_into)]
+
 use frame_support::sp_runtime::{
     testing::Header,
     traits::{BlakeTwo256, IdentityLookup},
@@ -201,6 +203,7 @@ pub fn new_test_ext_with_event() -> frame_support::sp_io::TestExternalities {
 }
 
 // get and cut last event
+#[allow(clippy::result_unit_err)] 
 pub fn last_event() -> Result<Event, ()> {
 	match System::events().pop() {
 		Some(ev) => Ok(ev.event),

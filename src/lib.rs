@@ -3,6 +3,7 @@
 //! the lifecycle of carbon credits
 //! </div>
 
+#![allow(clippy::unused_unit)]
 #![cfg_attr(not(feature = "std"), no_std)]
 
 pub mod standard;
@@ -392,7 +393,7 @@ decl_module! {
             ProjectById::<T>::try_mutate(
                 project_id, |project_option| -> DispatchResult {
                     match project_option {
-                        None => return Err(Error::<T>::ProjectNotExist.into()),
+                        None => Err(Error::<T>::ProjectNotExist.into()),
                         Some(project) => {
                             ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
                             ensure!(project.state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
@@ -611,7 +612,7 @@ decl_module! {
             ProjectById::<T>::try_mutate(
                 project_id, |project_option| -> DispatchResult {
                     match project_option {
-                        None => return Err(Error::<T>::ProjectNotExist.into()),
+                        None => Err(Error::<T>::ProjectNotExist.into()),
                         Some(project) => {
                             ensure!(project.owner == project_owner, Error::<T>::AccountNotOwner);
                             ensure!(project.state == project::REGISTERED, Error::<T>::ProjectNotRegistered);
@@ -647,7 +648,7 @@ decl_module! {
                             let result = set_metadata_call.dispatch_bypass_filter(origin.clone());
                             ensure!(!result.is_err(), {
                                 // destroy if failed
-                                pallet_assets::Call::<T>::destroy(asset_id, 0);
+                                let _ = pallet_assets::Call::<T>::destroy(asset_id, 0);
                                 Error::<T>::SetMetadataFailed
                             });
         
@@ -658,7 +659,7 @@ decl_module! {
                             let result = mint_call.dispatch_bypass_filter(origin);
                             ensure!(!result.is_err(), {
                                 // destroy if failed
-                                pallet_assets::Call::<T>::destroy(asset_id, 0);
+                                let _ = pallet_assets::Call::<T>::destroy(asset_id, 0);
                                 Error::<T>::ErrorMintingAsset
                             });
         
@@ -698,7 +699,7 @@ decl_module! {
             let passport = CarbonCreditPassportRegistry::<T>::get(asset_id);
             ensure!(passport.is_some(), Error::<T>::PassportNotExist);
 
-            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.clone().into());
+            let new_carbon_credits_holder_source = <T::Lookup as StaticLookup>::unlookup(new_carbon_credits_holder.clone());
             let transfer_call = pallet_assets::Call::<T>::transfer(asset_id, new_carbon_credits_holder_source, amount);
             let result = transfer_call.dispatch_bypass_filter(origin);
             ensure!(!result.is_err(), Error::<T>::TransferFailed);
@@ -771,7 +772,7 @@ impl<T: Config> Module<T> {
                     project::PROJECT_OWNER_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
                         ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
-                        ensure!(Self::is_correct_project_signer(&project, caller.clone(), accounts::accounts::CC_PROJECT_OWNER_ROLE_MASK), 
+                        ensure!(Self::is_correct_project_signer(project, caller.clone(), accounts::accounts::CC_PROJECT_OWNER_ROLE_MASK), 
                             Error::<T>::IncorrectProjectSigner);
                         project.state = project::AUDITOR_SIGN_PENDING;
                         project.status = project::ProjectStatus::REGISTRATION;
@@ -779,21 +780,21 @@ impl<T: Config> Module<T> {
                     },
                     project::AUDITOR_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
-                        ensure!(Self::is_correct_project_signer(&project, caller.clone(), accounts::accounts::CC_AUDITOR_ROLE_MASK), 
+                        ensure!(Self::is_correct_project_signer(project, caller.clone(), accounts::accounts::CC_AUDITOR_ROLE_MASK), 
                             Error::<T>::IncorrectProjectSigner);
                         project.state = project::STANDARD_SIGN_PENDING;
                         *event = Some(RawEvent::ProjectSignedByAduitor(caller, project.id));
                     },
                     project::STANDARD_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_standard(&caller), Error::<T>::AccountNotStandard);
-                        ensure!(Self::is_correct_project_signer(&project, caller.clone(), accounts::accounts::CC_STANDARD_ROLE_MASK), 
+                        ensure!(Self::is_correct_project_signer(project, caller.clone(), accounts::accounts::CC_STANDARD_ROLE_MASK), 
                             Error::<T>::IncorrectProjectSigner);
                         project.state = project::REGISTRY_SIGN_PENDING;
                         *event = Some(RawEvent::ProjectSignedByStandard(caller, project.id));
                     },
                     project::REGISTRY_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
-                        ensure!(Self::is_correct_project_signer(&project, caller.clone(), accounts::accounts::CC_REGISTRY_ROLE_MASK), 
+                        ensure!(Self::is_correct_project_signer(project, caller.clone(), accounts::accounts::CC_REGISTRY_ROLE_MASK), 
                             Error::<T>::IncorrectProjectSigner);
                         project.state = project::REGISTERED;
                         project.status = project::ProjectStatus::ISSUANCE;
@@ -820,7 +821,7 @@ impl<T: Config> Module<T> {
                     annual_report::REPORT_PROJECT_OWNER_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
                         ensure!(owner == caller, Error::<T>::AccountNotOwner);
-                        ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_PROJECT_OWNER_ROLE_MASK),
+                        ensure!(Self::is_correct_annual_report_signer(report, caller.clone(), accounts::accounts::CC_PROJECT_OWNER_ROLE_MASK),
                             Error::<T>::IncorrectProjectSigner);
                         ensure!(report.carbon_credits_meta.is_metadata_valid(), Error::<T>::BadMetadataParameters);
                         report.state = annual_report::REPORT_AUDITOR_SIGN_PENDING;
@@ -828,21 +829,21 @@ impl<T: Config> Module<T> {
                     },
                     annual_report::REPORT_AUDITOR_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_auditor(&caller), Error::<T>::AccountNotAuditor);
-                        ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_AUDITOR_ROLE_MASK),
+                        ensure!(Self::is_correct_annual_report_signer(report, caller.clone(), accounts::accounts::CC_AUDITOR_ROLE_MASK),
                             Error::<T>::IncorrectProjectSigner);
                         report.state = annual_report::REPORT_STANDARD_SIGN_PENDING;
                         *event = Some(RawEvent::AnnualReportSignedByAuditor(caller, project.id));
                     },
                     annual_report::REPORT_STANDARD_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_standard(&caller), Error::<T>::AccountNotStandard);
-                        ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_STANDARD_ROLE_MASK),
+                        ensure!(Self::is_correct_annual_report_signer(report, caller.clone(), accounts::accounts::CC_STANDARD_ROLE_MASK),
                             Error::<T>::IncorrectProjectSigner);
                         report.state = annual_report::REPORT_REGISTRY_SIGN_PENDING;
                         *event = Some(RawEvent::AnnualReportSignedByStandard(caller, project.id));
                     },
                     annual_report::REPORT_REGISTRY_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_registry(&caller), Error::<T>::AccountNotRegistry);
-                        ensure!(Self::is_correct_annual_report_signer(&report, caller.clone(), accounts::accounts::CC_REGISTRY_ROLE_MASK),
+                        ensure!(Self::is_correct_annual_report_signer(report, caller.clone(), accounts::accounts::CC_REGISTRY_ROLE_MASK),
                             Error::<T>::IncorrectProjectSigner);
                         report.state = annual_report::REPORT_ISSUED;
                         *event = Some(RawEvent::AnnualReportSignedByRegistry(caller, project.id));

@@ -50,6 +50,7 @@ fn it_works_for_create_new_annual_report_multiple_annual_reports_gold_standard()
 }
 
 #[test]
+#[allow(clippy::vec_init_then_push)] 
 fn it_failss_for_create_new_annual_report_empty_name_gold_standard() {
     new_test_ext().execute_with(|| {
         let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
@@ -226,6 +227,7 @@ fn it_fails_for_create_new_annual_report_not_an_owner_of_the_project_gold_standa
 
 
 #[test]
+#[allow(clippy::vec_init_then_push)]
 fn it_works_annual_report_assign_signer() {
     new_test_ext().execute_with(|| {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
@@ -634,6 +636,7 @@ fn it_fails_sign_annual_report_not_an_registry_role_gold_standard() {
 }
 
 #[test]
+#[allow(clippy::vec_init_then_push)] 
 fn it_fails_sign_annual_report_already_issued_gold_standard() {
     new_test_ext().execute_with(|| {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
@@ -845,6 +848,7 @@ fn it_works_for_create_new_annual_report_deposit_event_gold_standard() {
 }
 
 #[test]
+#[allow(clippy::vec_init_then_push)] 
 fn it_works_sign_annual_report_deposit_events_gold_standard() {
     new_test_ext_with_event().execute_with(|| {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
@@ -859,7 +863,7 @@ fn it_works_sign_annual_report_deposit_events_gold_standard() {
         );
         crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
 
-        let mut tuple_vec = Vec::new();
+        let mut tuple_vec = Vec::with_capacity(4);
         tuple_vec.push((owner, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSubmited(owner, 1))));
         tuple_vec.push((auditor, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSignedByAuditor(auditor, 1))));
         tuple_vec.push((standard_acc, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSignedByStandard(standard_acc, 1))));
