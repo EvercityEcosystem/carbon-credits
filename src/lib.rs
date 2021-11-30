@@ -598,6 +598,24 @@ decl_module! {
             Ok(())
         }
 
+        /// <pre>
+        /// Method: release_carbon_credits(
+        ///         project_id: ProjectId
+        ///         asset_id: <T as pallet_assets::Config>::AssetId,
+        ///         new_carbon_credits_holder: T::AccountId,
+        ///         min_balance: <T as pallet_assets::Config>::Balance,
+        ///     )
+        /// 
+        /// Arguments: origin: AccountId - Transaction caller
+        ///            asset_id: <T as pallet_assets::Config>::AssetId - Asset Id in assets pallet
+        ///            new_carbon_credits_holder - carbo credits holder, can be other than project owner
+        ///            min_balance - min balance for assets pallet
+        ///
+        /// Access: Project owner
+        ///
+        /// Creates assets in assets pallet, creates carbon credits passport and calls mint in assets pallet
+        /// 
+        /// </pre>
         #[weight = 10_000 + T::DbWeight::get().reads_writes(5, 4)]
         pub fn release_carbon_credits(
             origin, 
