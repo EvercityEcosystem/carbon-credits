@@ -4,7 +4,12 @@ This repositary contains source code of blockchain node, which is a main part of
 
 # 2. Introduction
 
+Evercity Carbon Credits Pallet provides Substrate-based Sustainable Finance Protocol to issue and monitor carbon credits, as well as to integrate carbon credits with green and sustainability-linked bonds. 
+Carbon credits are financial instruments, tradable certificates that represent a right to emit one ton of CO2. Carbon markets can be divided into three main parts: UNFCCC-led international carbon market which is compulsory for countries operating under Kyoto protocol (CDM), national compulsory carbon markets (e.g. in China) and voluntary carbon markets which are led by voluntary standards (VCS, Gold Standard, and others). 
+
 # 3. Overview
+
+Powered by Parity Substrate blockchain engine, Pallet Carbon Credits is an open-source software which allows participants to issue, transfer and monitor carbon credits.
 
 # 4. Evercity carbon credits project main entities
 
@@ -59,8 +64,12 @@ Some other functions:
 
 - Project owner can delete last annual report if it is not full signed(extrinsic - delete_last_annual_report())
 
+- Project owner can remove account from project signers if it didnt sign the document (extrinsic - remove_project_signer())
 
-# 6. Evercity documentation
+- Project owner can remove account from last annual report signers if it didnt sign the document (extrinsic - remove_last_annual_report_signer())
+
+
+# 6. Pallet Carbon Credits documentation
 
 ### 6.1 Runtime methods
 
