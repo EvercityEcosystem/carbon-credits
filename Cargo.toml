@@ -8,7 +8,6 @@ homepage = 'https://evercity.io'
 license = 'Apache-2.0'
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies.serde]
 optional = true
 features = ['derive']
@@ -18,8 +17,6 @@ version = '1.0.124'
 targets = ['x86_64-unknown-linux-gnu']
 [dev-dependencies.serde]
 version = '1.0.119'
-
-try-runtime = ['frame-support/try-runtime']
 
 [dependencies.codec]
 default-features = false
@@ -34,8 +31,6 @@ pallet-timestamp = { default-features = false, version = '3.0.0' }
 sp-api = { default-features = false, version = '3.0.0' }
 sp-runtime = { default-features = false, version = '3.0.0' }
 sp-std = { default-features = false, version = '3.0.0' }
-# pallet-assets = { default-features = false, version = '3.0.0' }
-
 pallet-evercity-assets = { default-features = false, version = '0.1.0', git = 'https://github.com/EvercityEcosystem/evercity-assets' }
 pallet-evercity-accounts = { default-features = false, version = '0.1.7', git = 'https://github.com/EvercityEcosystem/evercity-accounts' }
 # add filesign with temp branch:

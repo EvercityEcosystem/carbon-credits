@@ -12,7 +12,6 @@ pub mod annual_report;
 pub mod required_signers;
 pub mod carbon_credits_passport;
 pub mod burn_certificate;
-
 #[cfg(test)]    
 pub mod tests;
 
