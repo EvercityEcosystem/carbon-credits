@@ -143,3 +143,19 @@ make test
 ```bash
 make lint
 ```
+
+# 7. Dependent evercity pallets
+
+Check documentation on dependent pallets:
+
+### 7.1 Evercity Accounts - main accounting pallet with evercity role model
+
+https://github.com/EvercityEcosystem/evercity-accounts
+
+### 7.2 Evercity Filesing - pallet for storing file hashes and signing
+
+https://github.com/EvercityEcosystem/filesign
+
+### 7.3 Evercity Assets - pallet for assets
+
+https://github.com/EvercityEcosystem/evercity-assets
