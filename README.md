@@ -32,13 +32,25 @@ Is the main entity for granting certificates for carbon credits offceting
 Is the entity for registering carbon credits as assets  
 
 
-# 5. Evercity carbon creditis project scenario
+# 5. Evercity Roles and Carbon Creditis project scenario
+
+### 5.1 Roles
+
+The evercity role model presented in evercity accounts pallet https://github.com/EvercityEcosystem/evercity-accounts
+
+- CC_PROJECT_OWNER: the role which can create carbon projects, annual report and issue caebon credits
+- CC_AUDITOR: the role to sign project documentation and annual reports according to carbon credits standard
+- CC_STANDARD: the role to sign project documentation and annual reports according to carbon credits standard
+- CC_REGISTRY: the role to sign project documentation and annual reports according to carbon credits standard
+- CC_INVESTOR: carbon credits investor
+
+### 5.2 Basic scenario
 
 Here is the basic scenario on of carbon credits releasing and offetting:
 
 - Project owner creates document and stores its hash into filesign pallet (extrinsic - pallet_evercity_filesign - create_new_file())
 
-- Project owner creates a Project in Carbon Credits pallet, choosing a carbon credits standard (extrinsic - create_project())
+- Project owner creates a Project in Carbon Credits pallet, choosing a carbon credits standard and adds file id (extrinsic - create_project())
 
 - Project owner adds signers and their roles to project(extrinsic - assign_project_signer())
 
