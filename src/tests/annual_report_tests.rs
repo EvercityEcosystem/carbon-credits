@@ -8,6 +8,7 @@ use crate::standard::Standard;
 use crate::annual_report::*;
 use pallet_evercity_accounts::accounts::*;
 use crate::tests::helpers::*;
+use sp_std::vec;
 
 type RuntimeError = Error<TestRuntime>;
 
@@ -50,22 +51,19 @@ fn it_works_for_create_new_annual_report_multiple_annual_reports_gold_standard()
 }
 
 #[test]
-#[allow(clippy::vec_init_then_push)] 
 fn it_failss_for_create_new_annual_report_empty_name_gold_standard() {
     new_test_ext().execute_with(|| {
         let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
-
-        let mut results = Vec::new();
-
-        results.push(CarbonCredits::create_annual_report(
-            Origin::signed(owner), project_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT,
-            Vec::new() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
-        ));
-
-        results.push(CarbonCredits::create_annual_report(
-            Origin::signed(owner), project_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT,
-            get_test_carbon_credits_name(), Vec::new(), TEST_CARBON_CREDITS_DECIMAL
-        ));
+        let results = vec![
+            CarbonCredits::create_annual_report(
+                Origin::signed(owner), project_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT,
+                Vec::new() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+            ),
+            CarbonCredits::create_annual_report(
+                Origin::signed(owner), project_id, create_annual_report_file(owner), TEST_CARBON_CREDITS_COUNT,
+                get_test_carbon_credits_name(), Vec::new(), TEST_CARBON_CREDITS_DECIMAL
+            )
+        ];
 
         let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
 
@@ -227,7 +225,6 @@ fn it_fails_for_create_new_annual_report_not_an_owner_of_the_project_gold_standa
 
 
 #[test]
-#[allow(clippy::vec_init_then_push)]
 fn it_works_annual_report_assign_signer() {
     new_test_ext().execute_with(|| {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
@@ -238,12 +235,12 @@ fn it_works_annual_report_assign_signer() {
             get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
         ); 
 
-        let mut assign_results = Vec::new();
-        assign_results.push(CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id));
-        assign_results.push(CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[2].0, ROLES[2].1, project_id));
-        assign_results.push(CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[3].0, ROLES[3].1, project_id));
-        assign_results.push(CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[5].0, ROLES[5].1, project_id));
-
+        let assign_results = vec![
+            CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id),
+            CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[2].0, ROLES[2].1, project_id),
+            CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[3].0, ROLES[3].1, project_id),
+            CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), ROLES[5].0, ROLES[5].1, project_id)
+        ];
 
         let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
 
@@ -362,11 +359,12 @@ fn it_works_for_full_cycle_sign_annual_report_gold_standard() {
         );
         crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
 
-        let mut tuple_vec = Vec::new();
-        tuple_vec.push((owner, REPORT_AUDITOR_SIGN_PENDING));
-        tuple_vec.push((auditor, REPORT_STANDARD_SIGN_PENDING));
-        tuple_vec.push((standard_acc, REPORT_REGISTRY_SIGN_PENDING));
-        tuple_vec.push((registry, REPORT_ISSUED));
+        let tuple_vec = vec![
+            (owner, REPORT_AUDITOR_SIGN_PENDING),
+            (auditor, REPORT_STANDARD_SIGN_PENDING),
+            (standard_acc, REPORT_REGISTRY_SIGN_PENDING),
+            (registry, REPORT_ISSUED)
+        ];
 
         tuple_vec.iter()
             .map(|account_state_tuple| {
@@ -636,7 +634,6 @@ fn it_fails_sign_annual_report_not_an_registry_role_gold_standard() {
 }
 
 #[test]
-#[allow(clippy::vec_init_then_push)] 
 fn it_fails_sign_annual_report_already_issued_gold_standard() {
     new_test_ext().execute_with(|| {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
@@ -655,11 +652,12 @@ fn it_fails_sign_annual_report_already_issued_gold_standard() {
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), standard_acc, ROLES[3].1, project_id);
         let _ = CarbonCredits::assign_last_annual_report_signer(Origin::signed(owner), registry, ROLES[5].1, project_id);
 
-        let mut result_vec = Vec::with_capacity(4);
-        result_vec.push(CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id));
-        result_vec.push(CarbonCredits::sign_last_annual_report(Origin::signed(auditor), project_id));
-        result_vec.push(CarbonCredits::sign_last_annual_report(Origin::signed(standard_acc), project_id));
-        result_vec.push(CarbonCredits::sign_last_annual_report(Origin::signed(registry), project_id));
+        let result_vec = vec![
+            CarbonCredits::sign_last_annual_report(Origin::signed(owner), project_id),
+            CarbonCredits::sign_last_annual_report(Origin::signed(auditor), project_id),
+            CarbonCredits::sign_last_annual_report(Origin::signed(standard_acc), project_id),
+            CarbonCredits::sign_last_annual_report(Origin::signed(registry), project_id)
+        ];
 
         result_vec.iter().for_each(|res|{
             assert_ok!(res);
@@ -848,7 +846,6 @@ fn it_works_for_create_new_annual_report_deposit_event_gold_standard() {
 }
 
 #[test]
-#[allow(clippy::vec_init_then_push)] 
 fn it_works_sign_annual_report_deposit_events_gold_standard() {
     new_test_ext_with_event().execute_with(|| {
         let (_, project_id, owner) = get_registerd_project_and_owner_gold_standard();
@@ -863,11 +860,12 @@ fn it_works_sign_annual_report_deposit_events_gold_standard() {
         );
         crate::tests::helpers::assign_annual_report_mock_users_required_signers_gold_standard(project_id);
 
-        let mut tuple_vec = Vec::with_capacity(4);
-        tuple_vec.push((owner, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSubmited(owner, 1))));
-        tuple_vec.push((auditor, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSignedByAuditor(auditor, 1))));
-        tuple_vec.push((standard_acc, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSignedByStandard(standard_acc, 1))));
-        tuple_vec.push((registry, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSignedByRegistry(registry, 1))));
+        let tuple_vec = vec![
+            (owner, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSubmited(owner, 1))),
+            (auditor, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSignedByAuditor(auditor, 1))),
+            (standard_acc, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSignedByStandard(standard_acc, 1))),
+            (registry, Event::pallet_carbon_credits(crate::RawEvent::AnnualReportSignedByRegistry(registry, 1))),
+        ];
 
         tuple_vec.iter()
             .for_each(|(acc, check_event)|{

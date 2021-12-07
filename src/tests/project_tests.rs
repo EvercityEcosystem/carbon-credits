@@ -1,13 +1,13 @@
 use crate::tests::mock::*;
 use frame_support::{assert_ok, assert_noop, dispatch::{
     DispatchResult,
-    Vec,
 }};
 use crate::standard::Standard;
 use pallet_evercity_accounts::accounts::*;
 use crate::project::*;
 use crate::tests::helpers::*;
 use crate::Error;
+use sp_std::vec;
 
 type RuntimeError = Error<TestRuntime>;
 
@@ -164,7 +164,6 @@ fn it_fails_for_change_file_id_not_owner() {
 }
 
 #[test]
-#[allow(clippy::vec_init_then_push)] 
 fn it_works_project_assign_signer() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
@@ -172,11 +171,12 @@ fn it_works_project_assign_signer() {
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
         let project_id = 1;
 
-        let mut assign_results = Vec::new();
-        assign_results.push(CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id));
-        assign_results.push(CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[2].0, ROLES[2].1, project_id));
-        assign_results.push(CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[3].0, ROLES[3].1, project_id));
-        assign_results.push(CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[5].0, ROLES[5].1, project_id));
+        let assign_results = vec![
+            CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[1].0, ROLES[1].1, project_id),
+            CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[2].0, ROLES[2].1, project_id),
+            CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[3].0, ROLES[3].1, project_id),
+            CarbonCredits::assign_project_signer(Origin::signed(owner), ROLES[5].0, ROLES[5].1, project_id)
+        ];
 
         let project = CarbonCredits::get_proj_by_id(1).unwrap();
 
@@ -275,7 +275,6 @@ fn it_fails_remove_signed_signer() {
 // Project Owner submits PDD (changing status to Registration) => 
 // => Auditor Approves PDD => Standard Certifies PDD => Registry Registers PDD (changing status to Issuance)
 #[test]
-#[allow(clippy::vec_init_then_push)] 
 fn it_works_for_full_cycle_sign_project_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
@@ -289,11 +288,12 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, project_doc_id);
         crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
 
-        let mut tuple_vec = Vec::new();
-        tuple_vec.push((owner, AUDITOR_SIGN_PENDING, ProjectStatus::REGISTRATION));
-        tuple_vec.push((auditor, STANDARD_SIGN_PENDING, ProjectStatus::REGISTRATION));
-        tuple_vec.push((standard_acc, REGISTRY_SIGN_PENDING, ProjectStatus::REGISTRATION));
-        tuple_vec.push((registry, REGISTERED, ProjectStatus::ISSUANCE));
+        let tuple_vec = vec![
+            (owner, AUDITOR_SIGN_PENDING, ProjectStatus::REGISTRATION),
+            (auditor, STANDARD_SIGN_PENDING, ProjectStatus::REGISTRATION),
+            (standard_acc, REGISTRY_SIGN_PENDING, ProjectStatus::REGISTRATION),
+            (registry, REGISTERED, ProjectStatus::ISSUANCE)
+        ];
 
         let _ = EvercityFilesign::create_new_file(Origin::signed(owner), 
                 "my_some_other_file".to_owned().as_bytes().to_vec(),
@@ -401,8 +401,6 @@ fn it_fails_sign_project_not_auditor_signer_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;
-        // let standard_acc = ROLES[3].0;
-        // let registry = ROLES[5].0;
         let standard = Standard::GOLD_STANDARD;
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
@@ -424,7 +422,6 @@ fn it_fails_sign_project_not_standard_signer_gold_standard() {
         let owner = ROLES[1].0;
         let auditor = ROLES[2].0;
         let standard_acc = ROLES[3].0;
-        // let registry = ROLES[5].0;
         let standard = Standard::GOLD_STANDARD;
 
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
@@ -637,7 +634,6 @@ fn it_works_for_create_new_project_deposit_event_gold_standard() {
 }
 
 #[test]
-#[allow(clippy::vec_init_then_push)]
 fn it_works_sign_project_deposit_events_gold_standard() {
     new_test_ext_with_event().execute_with(|| {
         let owner = ROLES[1].0;
@@ -650,11 +646,12 @@ fn it_works_sign_project_deposit_events_gold_standard() {
         let _ = CarbonCredits::create_project(Origin::signed(owner), standard, create_project_documentation_file(owner));
         crate::tests::helpers::assign_project_mock_users_required_signers_gold_standard(1);
 
-        let mut tuple_vec = Vec::new();
-        tuple_vec.push((owner, Event::pallet_carbon_credits(crate::RawEvent::ProjectSubmited(owner, 1))));
-        tuple_vec.push((auditor, Event::pallet_carbon_credits(crate::RawEvent::ProjectSignedByAduitor(auditor, 1))));
-        tuple_vec.push((standard_acc, Event::pallet_carbon_credits(crate::RawEvent::ProjectSignedByStandard(standard_acc, 1))));
-        tuple_vec.push((registry, Event::pallet_carbon_credits(crate::RawEvent::ProjectSignedByRegistry(registry, 1))));
+        let tuple_vec = vec![
+            (owner, Event::pallet_carbon_credits(crate::RawEvent::ProjectSubmited(owner, 1))),
+            (auditor, Event::pallet_carbon_credits(crate::RawEvent::ProjectSignedByAduitor(auditor, 1))),
+            (standard_acc, Event::pallet_carbon_credits(crate::RawEvent::ProjectSignedByStandard(standard_acc, 1))),
+            (registry, Event::pallet_carbon_credits(crate::RawEvent::ProjectSignedByRegistry(registry, 1)))
+        ];
 
         // sign here:
         tuple_vec.iter()
