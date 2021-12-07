@@ -37,16 +37,15 @@ use frame_support::sp_std::{
         Eq, 
         PartialEq}, 
 };
-pub use pallet_evercity_assets::weights::WeightInfo;
-pub use pallet_evercity_assets as pallet_assets;
-
-use pallet_evercity_accounts as accounts;
 use project::{ProjectStruct, ProjectId};
 use standard::Standard;
 use pallet_evercity_filesign::{FileId};
 use pallet_evercity_accounts::accounts::RoleMask;
 use carbon_credits_passport::CarbonCreditsPassport;
 use burn_certificate::CarbonCreditsBurnCertificate;
+
+use pallet_evercity_assets as pallet_assets;
+use pallet_evercity_accounts as accounts;
 
 type Timestamp<T> = pallet_timestamp::Module<T>;
  
