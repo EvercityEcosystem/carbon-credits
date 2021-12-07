@@ -96,6 +96,8 @@ decl_event!(
 
         /// \[ProjectOwner, ProjectId\]
         ProjectCreated(AccountId, ProjectId),
+        /// \[ProjectOwner, ProjectId, FileId\]
+        ProjectFileIdChanged(AccountId, ProjectId, FileId),
         /// \[ProjectOwner, ProjectId, OldStandard, NewStandard\]
         ProjectStandardChanged(AccountId, ProjectId, Standard, Standard),
         /// \[ProjectOwner, ProjectId\]
@@ -265,6 +267,36 @@ decl_module! {
         }
 
         /// <pre>
+        /// Method: change_project_file_id(standard: Standard, file_id: FileId)
+        /// Arguments: origin: AccountId - Transaction caller
+        ///            project_id: ProjectId - Carbon Credits Standard
+        ///            file_id: FileId - id of file in filesign pallet
+        /// Access: Project Owner Role
+        ///
+        /// Changes project file id, availible before signing starts
+        /// </pre>
+        #[weight = 10_000 + T::DbWeight::get().reads_writes(1, 1)]
+        pub fn change_project_file_id(origin, project_id: ProjectId, file_id: FileId) -> DispatchResult {
+            let caller = ensure_signed(origin)?;
+            ensure!(pallet_evercity_accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
+            ensure!(pallet_evercity_filesign::Module::<T>::address_is_owner_for_file(file_id, &caller), Error::<T>::AccountNotFileOwner);
+            ProjectById::<T>::try_mutate(
+                project_id, |project_to_mutate| -> DispatchResult {
+                    match project_to_mutate  {
+                        None => return Err(Error::<T>::ProjectNotExist.into()),
+                        Some(project) => {
+                            ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
+                            ensure!(project.state == project::PROJECT_OWNER_SIGN_PENDING, Error::<T>::InvalidState);
+                            project.file_id = Some(file_id);
+                        }
+                    }
+                    Ok(())
+                })?;
+            Self::deposit_event(RawEvent::ProjectFileIdChanged(caller, project_id, file_id));
+            Ok(())
+        }
+
+        /// <pre>
         /// Method: assign_project_signer(signer: T::AccountId, role: RoleMask, project_id: ProjectId)
         /// Arguments: origin: AccountId - Transaction caller
         ///            signer: T::AccountId - assign signer account
@@ -297,7 +329,7 @@ decl_module! {
                     }
 
                     Ok(())
-             })?;
+            })?;
             Self::deposit_event(RawEvent::ProjectSignerAdded(caller, signer, role, project_id));
             Ok(())
         }
@@ -340,7 +372,7 @@ decl_module! {
                     }
 
                     Ok(())
-             })?;
+            })?;
             Self::deposit_event(RawEvent::ProjectSignerRemoved(caller, signer, role, project_id));
             Ok(())
         }
@@ -375,7 +407,7 @@ decl_module! {
                         }
                     }
                     Ok(())
-             })?;
+                })?;
             if let Some(event) = event_opt {
                 Self::deposit_event(event);
             }
@@ -849,9 +881,6 @@ impl<T: Config> Module<T> {
     /// Changes state of an annual report by signing
     fn change_project_annual_report_state(project: &mut ProjectStruct<T::AccountId, T, T::Balance>, caller: T::AccountId, event: &mut Option<Event<T>>) -> DispatchResult {
         let standard = project.get_standard().clone();
-        let owner = project.owner.clone();
-        
-        // let report = project.annual_reports.last_mut().unwrap();
         let report = match project.annual_reports.last_mut(){
             None => return Err(Error::<T>::NoAnnualReports.into()),
             Some(rep) => rep
@@ -863,7 +892,7 @@ impl<T: Config> Module<T> {
                 match report.state {
                     annual_report::REPORT_PROJECT_OWNER_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
-                        ensure!(owner == caller, Error::<T>::AccountNotOwner);
+                        ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
                         ensure!(Self::is_correct_annual_report_signer(report, caller.clone(), accounts::accounts::CC_PROJECT_OWNER_ROLE_MASK),
                             Error::<T>::IncorrectProjectSigner);
                         ensure!(report.carbon_credits_meta.is_metadata_valid(), Error::<T>::BadMetadataParameters);
