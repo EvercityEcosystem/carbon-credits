@@ -360,16 +360,20 @@ decl_module! {
             let caller = ensure_signed(origin.clone())?;
             let mut event_opt: Option<Event<T>> = None;
             ProjectById::<T>::try_mutate(
-                project_id, |project_to_mutate| -> DispatchResult {
-                    ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                    let project_documentation_file_id = match project_to_mutate.as_ref().unwrap().file_id {
-                        None => return Err(Error::<T>::IncorrectFileId.into()),
-                        Some(id) => id
-                    };
-                    ensure!(pallet_evercity_filesign::Module::<T>::address_is_signer_for_file(project_documentation_file_id, &caller), 
-                        Error::<T>::IncorrectProjectSigner);
-                    Self::change_project_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
-                    pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, project_documentation_file_id)?;
+                project_id, |project_option| -> DispatchResult {
+                    match project_option {
+                        None => return Err(Error::<T>::ProjectNotExist.into()),
+                        Some(project) => {
+                            let project_documentation_file_id = match project.file_id {
+                                None => return Err(Error::<T>::IncorrectFileId.into()),
+                                Some(id) => id
+                            };
+                            ensure!(pallet_evercity_filesign::Module::<T>::address_is_signer_for_file(project_documentation_file_id, &caller), 
+                                Error::<T>::IncorrectProjectSigner);
+                            Self::change_project_state(project, caller, &mut event_opt)?;
+                            pallet_evercity_filesign::Module::<T>::sign_latest_version(origin, project_documentation_file_id)?;
+                        }
+                    }
                     Ok(())
              })?;
             if let Some(event) = event_opt {
@@ -771,7 +775,7 @@ decl_module! {
             BurnCertificates::<T>::try_mutate(
                 credits_holder.clone(), |certificates| -> DispatchResult {
                     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                    // !!!!!! O(n) insert and O(n) read - TODO - try fix after buisiness tells if this logic is right !!!!!!
+                    // !!!!!! O(n) insert and O(n) read
                     match certificates.iter_mut().find(|x| x.asset_id == asset_id) {
                         Some(cert) => {
                             cert.burn_amount += amount;
@@ -806,6 +810,7 @@ impl<T: Config> Module<T> {
                     project::PROJECT_OWNER_SIGN_PENDING => {
                         ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
                         ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
+                        ensure!(project.is_ready_for_signing(), Error::<T>::IncorrectFileId);
                         ensure!(Self::is_correct_project_signer(project, caller.clone(), accounts::accounts::CC_PROJECT_OWNER_ROLE_MASK), 
                             Error::<T>::IncorrectProjectSigner);
                         project.state = project::AUDITOR_SIGN_PENDING;
@@ -846,7 +851,11 @@ impl<T: Config> Module<T> {
         let standard = project.get_standard().clone();
         let owner = project.owner.clone();
         
-        let report = project.annual_reports.last_mut().unwrap();
+        // let report = project.annual_reports.last_mut().unwrap();
+        let report = match project.annual_reports.last_mut(){
+            None => return Err(Error::<T>::NoAnnualReports.into()),
+            Some(rep) => rep
+        };
         match standard {
             // Project Owner sends report for verification =>  Auditor provides and submits verification report => 
             // Standard Approves carbon credit issuance => Registry issues carbon credits

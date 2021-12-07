@@ -82,6 +82,10 @@ impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where
     pub fn is_required_signer(&self, signer: RequiredSigner<AccountId>) -> bool {
         self.required_signers.iter().any(|(acc, role)| *acc == signer.0 && *role == signer.1)
     }
+
+    pub fn is_ready_for_signing(&self) -> bool {
+        self.file_id.is_some()
+    }
 }
 
 #[derive(Encode, Decode, Clone, RuntimeDebug, PartialEq)]
