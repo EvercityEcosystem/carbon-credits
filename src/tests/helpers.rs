@@ -3,6 +3,7 @@ use pallet_evercity_filesign::{file::H256, FileId};
 use crate::standard::Standard;
 use crate::project::{ProjectId, ProjectStruct};
 use crate::annual_report::*;
+use sp_std::vec;
 
 pub const TEST_CARBON_CREDITS_COUNT: u64 = 15000;
 pub const TEST_CARBON_CREDITS_DECIMAL: u8 = 0;
@@ -63,7 +64,6 @@ pub(crate) fn full_sign_annual_report_gold_standard() -> (ProjectStruct<u64, Tes
     get_annual_report_and_owner_custom_signers(assign_annual_report_mock_users_required_signers_gold_standard)
 }
 
-#[allow(clippy::vec_init_then_push)] 
 pub(crate) fn get_annual_report_and_owner_custom_signers<F>(sign_func: F) -> (ProjectStruct<u64, TestRuntime, Balance>, ProjectId, u64) where F: Fn(ProjectId) {
     let (project, proj_id, owner) = get_registerd_project_and_owner_gold_standard();
     let auditor = ROLES[2].0;
@@ -75,11 +75,12 @@ pub(crate) fn get_annual_report_and_owner_custom_signers<F>(sign_func: F) -> (Pr
     );
     sign_func(proj_id);
 
-    let mut tuple_vec = Vec::with_capacity(4);
-    tuple_vec.push((owner, REPORT_AUDITOR_SIGN_PENDING));
-    tuple_vec.push((auditor, REPORT_STANDARD_SIGN_PENDING));
-    tuple_vec.push((standard_acc, REPORT_REGISTRY_SIGN_PENDING));
-    tuple_vec.push((registry, REPORT_ISSUED));
+    let tuple_vec = vec![
+        (owner, REPORT_AUDITOR_SIGN_PENDING),
+        (auditor, REPORT_STANDARD_SIGN_PENDING),
+        (standard_acc, REPORT_REGISTRY_SIGN_PENDING),
+        (registry, REPORT_ISSUED)
+    ];
 
     tuple_vec.iter()
         .map(|account_state_tuple| {
