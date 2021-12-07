@@ -327,9 +327,8 @@ decl_module! {
                             pallet_evercity_filesign::Module::<T>::assign_signer(origin, file_id, signer.clone())?;
                         }
                     }
-
                     Ok(())
-            })?;
+                })?;
             Self::deposit_event(RawEvent::ProjectSignerAdded(caller, signer, role, project_id));
             Ok(())
         }

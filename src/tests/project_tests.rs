@@ -38,6 +38,22 @@ fn it_works_for_create_new_project_gold_standard() {
 }
 
 #[test]
+fn it_works_for_create_new_project_file_not_specified_gold_standard() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let standard = Standard::default();
+        let create_project_result = CarbonCredits::create_project(Origin::signed(owner), standard.clone(), None);
+        let project = CarbonCredits::get_proj_by_id(1).unwrap();
+
+        assert_eq!(owner, project.owner);
+        assert_eq!(standard, *project.get_standard());
+        assert_eq!(1, project.id);
+        assert_eq!(None, project.file_id);
+        assert_ok!(create_project_result, ());
+    });
+}
+
+#[test]
 fn it_fails_for_create_new_project_not_owner_role_gold_standard() {
     new_test_ext().execute_with(|| {
         let auditor = ROLES[3].0;
@@ -87,6 +103,63 @@ fn it_fails_for_create_new_project_other_owner_file_gold_standard() {
             create_project_result,
             RuntimeError::AccountNotFileOwner
         );
+    });
+}
+
+#[test]
+fn it_works_for_change_file_id() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let standard = Standard::default();
+        let not_existing_file_id = None;
+        let create_project_result = CarbonCredits::create_project(Origin::signed(owner), standard, not_existing_file_id);
+        let project_before_change = CarbonCredits::get_proj_by_id(1);
+        let file_id = create_project_documentation_file(owner);
+        let change_id_result = CarbonCredits::change_project_file_id(Origin::signed(owner), 1, file_id.unwrap());
+        let project_after_change = CarbonCredits::get_proj_by_id(1);
+
+        assert_ok!(create_project_result, ());
+        assert_ok!(change_id_result, ());
+        assert_eq!(None, project_before_change.unwrap().file_id);
+        assert_eq!(Some(1), project_after_change.unwrap().file_id);
+    });
+}
+
+#[test]
+fn it_fails_for_change_file_id_not_file_owner() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let auditor = ROLES[2].0;
+        let standard = Standard::default();
+        let not_existing_file_id = None;
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, not_existing_file_id);
+        let project_before_change = CarbonCredits::get_proj_by_id(1);
+        let file_id = create_project_documentation_file(auditor);
+        let change_id_result = CarbonCredits::change_project_file_id(Origin::signed(owner), 1, file_id.unwrap());
+        let project_after_change = CarbonCredits::get_proj_by_id(1);
+
+        assert_noop!(change_id_result, RuntimeError::AccountNotFileOwner);
+        assert_eq!(None, project_before_change.unwrap().file_id);
+        assert_eq!(None, project_after_change.unwrap().file_id);
+    });
+}
+
+#[test]
+fn it_fails_for_change_file_id_not_owner() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let new_owner_id = create_user_with_owner_role();
+        let standard = Standard::default();
+        let not_existing_file_id = None;
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, not_existing_file_id);
+        let project_before_change = CarbonCredits::get_proj_by_id(1);
+        let file_id = create_project_documentation_file(new_owner_id);
+        let change_id_result = CarbonCredits::change_project_file_id(Origin::signed(new_owner_id), 1, file_id.unwrap());
+        let project_after_change = CarbonCredits::get_proj_by_id(1);
+
+        assert_noop!(change_id_result, RuntimeError::AccountNotOwner);
+        assert_eq!(None, project_before_change.unwrap().file_id);
+        assert_eq!(None, project_after_change.unwrap().file_id);
     });
 }
 
@@ -222,6 +295,13 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
         tuple_vec.push((standard_acc, REGISTRY_SIGN_PENDING, ProjectStatus::REGISTRATION));
         tuple_vec.push((registry, REGISTERED, ProjectStatus::ISSUANCE));
 
+        let _ = EvercityFilesign::create_new_file(Origin::signed(owner), 
+                "my_some_other_file".to_owned().as_bytes().to_vec(),
+             pallet_evercity_filesign::file::H256::from([0x96; 32]));
+
+        // the file id would be 2
+        let file_id = 2;
+
         // sign here:
         tuple_vec.iter()
             .map(|account_state_tuple| {
@@ -229,20 +309,25 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
                 let state = account_state_tuple.1;
                 let result = CarbonCredits::sign_project(Origin::signed(acc), 1);
                 let status = account_state_tuple.2.clone();
+
+                // Check, that file id could not be changed
+                let change_id_result = CarbonCredits::change_project_file_id(Origin::signed(owner), 1, file_id);
             
-                (acc, state, result, status)
+                (acc, state, result, status, change_id_result)
             })
             .for_each(|account_state_result_status_tuple|{
                 let acc = account_state_result_status_tuple.0;
                 let state = account_state_result_status_tuple.1;
                 let result = account_state_result_status_tuple.2;
                 let status = account_state_result_status_tuple.3;
+                let change_id_result = account_state_result_status_tuple.4;
                 let project = CarbonCredits::get_proj_by_id(1).unwrap();
 
                 assert_ok!(result, ());
                 assert_eq!(state, project.state);
                 assert!(EvercityFilesign::address_has_signed_the_file(project_doc_id.unwrap(), &acc));
                 assert_eq!(status, project.status);
+                assert_noop!(change_id_result, RuntimeError::InvalidState);
             });
 
         let project_after_registry_sign = CarbonCredits::get_proj_by_id(1).unwrap();    
@@ -291,6 +376,22 @@ fn it_fails_sign_project_not_owner_signer_gold_standard() {
         assert_noop!(
             owner_sign_result,
             RuntimeError::IncorrectProjectSigner
+        );
+    });
+}
+
+#[test]
+fn it_fails_sign_project_no_file_id() {
+    new_test_ext().execute_with(|| {
+        let owner = ROLES[1].0;
+        let standard = Standard::GOLD_STANDARD;
+
+        let _ = CarbonCredits::create_project(Origin::signed(owner), standard, None);
+        let owner_sign_result = CarbonCredits::sign_project(Origin::signed(owner), 1);
+
+        assert_noop!(
+            owner_sign_result,
+            RuntimeError::IncorrectFileId
         );
     });
 }
