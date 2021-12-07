@@ -79,6 +79,9 @@ decl_storage! {
         /// Storage for user burn sertificates
         BurnCertificates
             get(fn cert_by_account_id):
+            // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+            // !!!!!! O(n) insert and O(n) read
+            // now it could be that "n" is not big
             map hasher(blake2_128_concat) T::AccountId => Vec<CarbonCreditsBurnCertificate<AssetId<T>, T::Balance>>;
     }
 }
@@ -806,6 +809,7 @@ decl_module! {
                 credits_holder.clone(), |certificates| -> DispatchResult {
                     // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                     // !!!!!! O(n) insert and O(n) read
+                    // now it could be that "n" is not big
                     match certificates.iter_mut().find(|x| x.asset_id == asset_id) {
                         Some(cert) => {
                             cert.burn_amount += amount;
