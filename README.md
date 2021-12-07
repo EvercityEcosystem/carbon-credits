@@ -50,7 +50,9 @@ Here is the basic scenario on of carbon credits releasing and offetting:
 
 - Project owner creates document and stores its hash into filesign pallet (extrinsic - pallet_evercity_filesign - create_new_file())
 
-- Project owner creates a Project in Carbon Credits pallet, choosing a carbon credits standard and adds file id (extrinsic - create_project())
+- Project owner creates a Project in Carbon Credits pallet, choosing a carbon credits standard(extrinsic - create_project())
+
+- Project owner can change project file id in a Project in Carbon Credits pallet to a new ine(extrinsic - change_project_file_id())
 
 - Project owner adds signers and their roles to project(extrinsic - assign_project_signer())
 
