@@ -77,7 +77,7 @@ fn it_fails_for_create_new_project_other_owner_file_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::default();
-        let not_existing_file_id = 666;
+        let not_existing_file_id = Some(666);
         let create_project_result = CarbonCredits::create_project(Origin::signed(owner), standard, not_existing_file_id);
         let project_opt = CarbonCredits::get_proj_by_id(1);
 
@@ -241,7 +241,7 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
 
                 assert_ok!(result, ());
                 assert_eq!(state, project.state);
-                assert!(EvercityFilesign::address_has_signed_the_file(project_doc_id, &acc));
+                assert!(EvercityFilesign::address_has_signed_the_file(project_doc_id.unwrap(), &acc));
                 assert_eq!(status, project.status);
             });
 
@@ -410,7 +410,7 @@ fn it_fails_sign_project_not_an_auditor_gold_standard() {
                 assert_ne!(auditor_sign_result, DispatchResult::Ok(()));
             });
 
-        let signatures_len = EvercityFilesign::get_file_by_id(proj_file_id)
+        let signatures_len = EvercityFilesign::get_file_by_id(proj_file_id.unwrap())
                                                 .unwrap()
                                                 .versions.last()
                                                 .unwrap()
@@ -441,7 +441,7 @@ fn it_fails_sign_project_not_a_standard_acc_gold_standard() {
                 assert_ne!(standard_sign_result, DispatchResult::Ok(()));
             });
 
-        let signatures_len = EvercityFilesign::get_file_by_id(proj_file_id)
+        let signatures_len = EvercityFilesign::get_file_by_id(proj_file_id.unwrap())
                                         .unwrap()
                                         .versions.last()
                                         .unwrap()
@@ -475,7 +475,7 @@ fn it_fails_sign_project_not_a_registry_gold_standard() {
                 assert_ne!(registry_sign_result, DispatchResult::Ok(()));
             });
         
-        let signatures_len = EvercityFilesign::get_file_by_id(proj_file_id)
+        let signatures_len = EvercityFilesign::get_file_by_id(proj_file_id.unwrap())
                                         .unwrap()
                                         .versions.last()
                                         .unwrap()

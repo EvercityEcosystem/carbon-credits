@@ -22,10 +22,10 @@ pub(crate) fn get_test_carbon_credits_symbol() -> Vec<u8> {
     "CT".to_owned().as_bytes().to_vec()
 }
 
-pub(crate) fn create_project_documentation_file(account: u64) -> FileId {
+pub(crate) fn create_project_documentation_file(account: u64) -> Option<FileId> {
     let filehash = H256::from([0x66; 32]);
     let _ = EvercityFilesign::create_new_file(Origin::signed(account), "my_project_documentation".to_owned().as_bytes().to_vec(), filehash);
-    1
+    Some(1)
 }
 
 pub(crate) fn create_annual_report_file(account: u64) -> FileId {

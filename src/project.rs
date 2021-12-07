@@ -29,7 +29,7 @@ pub struct ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq 
     pub id: ProjectId,
     pub status: ProjectStatus,
     pub state: ProjectStateMask,
-    pub file_id: FileId,
+    pub file_id: Option<FileId>,
     pub annual_reports: Vec<AnnualReportStruct<AccountId, Moment, Balance>>,
     required_signers: Vec<RequiredSigner<AccountId>>,
     standard: Standard,
@@ -37,7 +37,7 @@ pub struct ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq 
 
 impl<AccountId, Moment, Balance> ProjectStruct<AccountId, Moment, Balance> where AccountId: PartialEq + Clone, Moment: pallet_timestamp::Config, Balance: Clone {
     /// constructor for project
-    pub fn new(owner: AccountId, id: u32, standard: Standard, file_id: FileId) -> Self {
+    pub fn new(owner: AccountId, id: u32, standard: Standard, file_id: Option<FileId>) -> Self {
         ProjectStruct{
             file_id, 
             owner,

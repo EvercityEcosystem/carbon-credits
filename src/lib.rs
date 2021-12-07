@@ -226,6 +226,10 @@ decl_error! {
         IncorrectProjectSigner,
         /// Signer does not exist in annual report required signers
         IncorrectAnnualReportSigner,
+
+        // File errors
+
+        IncorrectFileId,
     }
 }
 
@@ -244,11 +248,12 @@ decl_module! {
         /// Creates new project with relation to PDD file in filesign
         /// </pre>
         #[weight = 10_000 + T::DbWeight::get().reads_writes(1, 2)]
-        pub fn create_project(origin, standard: Standard, file_id: FileId) -> DispatchResult {
+        pub fn create_project(origin, standard: Standard, file_id: Option<FileId>) -> DispatchResult {
             let caller = ensure_signed(origin)?;
             ensure!(accounts::Module::<T>::account_is_cc_project_owner(&caller), Error::<T>::AccountNotOwner);
-            ensure!(pallet_evercity_filesign::Module::<T>::address_is_owner_for_file(file_id, &caller), Error::<T>::AccountNotFileOwner);
-
+            if let Some(id) = file_id {
+                ensure!(pallet_evercity_filesign::Module::<T>::address_is_owner_for_file(id, &caller), Error::<T>::AccountNotFileOwner);
+            }
             let new_id = LastID::get() + 1;
             let new_project = ProjectStruct::<<T as frame_system::Config>::AccountId, T, T::Balance>::new(caller.clone(), new_id, standard, file_id);
             <ProjectById<T>>::insert(new_id, new_project);
@@ -280,11 +285,14 @@ decl_module! {
                 project_id, |project_to_mutate| -> DispatchResult {
                     match project_to_mutate  {
                         None => return Err(Error::<T>::ProjectNotExist.into()),
-                        Some(proj) => {
-                            ensure!(proj.owner == caller, Error::<T>::AccountNotOwner);
-                            proj.assign_required_signer((signer.clone(), role));
-
-                            pallet_evercity_filesign::Module::<T>::assign_signer(origin, proj.file_id, signer.clone())?;
+                        Some(project) => {
+                            ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
+                            project.assign_required_signer((signer.clone(), role));
+                            let file_id = match project.file_id {
+                                None => return Err(Error::<T>::IncorrectFileId.into()),
+                                Some(id) => id
+                            };
+                            pallet_evercity_filesign::Module::<T>::assign_signer(origin, file_id, signer.clone())?;
                         }
                     }
 
@@ -318,12 +326,16 @@ decl_module! {
                         Some(project) => {
                             ensure!(project.owner == caller, Error::<T>::AccountNotOwner);
                             ensure!(project.is_required_signer((signer.clone(), role)), Error::<T>::AccountNotGivenRoleSigner);
+                            let file_id = match project.file_id {
+                                None => return Err(Error::<T>::IncorrectFileId.into()),
+                                Some(id) => id
+                            };
                             // Check if signer did not already sign the project
-                            let has_signed = pallet_evercity_filesign::Module::<T>::address_has_signed_the_file(project.file_id, &signer);
+                            let has_signed = pallet_evercity_filesign::Module::<T>::address_has_signed_the_file(file_id, &signer);
                             ensure!(!has_signed, Error::<T>::AccountAlreadySigned);
                             project.remove_required_signer((signer.clone(), role));
                             // delete from filesign:
-                            pallet_evercity_filesign::Module::<T>::delete_signer(origin, project.file_id, signer.clone())?;
+                            pallet_evercity_filesign::Module::<T>::delete_signer(origin, file_id, signer.clone())?;
                         }
                     }
 
@@ -350,7 +362,10 @@ decl_module! {
             ProjectById::<T>::try_mutate(
                 project_id, |project_to_mutate| -> DispatchResult {
                     ensure!(project_to_mutate.is_some(), Error::<T>::ProjectNotExist);
-                    let project_documentation_file_id = project_to_mutate.as_ref().unwrap().file_id;
+                    let project_documentation_file_id = match project_to_mutate.as_ref().unwrap().file_id {
+                        None => return Err(Error::<T>::IncorrectFileId.into()),
+                        Some(id) => id
+                    };
                     ensure!(pallet_evercity_filesign::Module::<T>::address_is_signer_for_file(project_documentation_file_id, &caller), 
                         Error::<T>::IncorrectProjectSigner);
                     Self::change_project_state(&mut project_to_mutate.as_mut().unwrap(), caller, &mut event_opt)?;
