@@ -4,7 +4,7 @@ use frame_support::{
     dispatch::Vec,
 };
 use crate::required_signers::RequiredSigner;
-use pallet_evercity_filesign::FileId;
+use pallet_evercity_filesign::file::FileId;
 
 pub type AnnualReportStateMask = u16;
 pub const REPORT_PROJECT_OWNER_SIGN_PENDING: AnnualReportStateMask = 1;

@@ -2,7 +2,7 @@
 authors = ["Dima Bushuev diman1ghtly@gmail.com"]
 name = "pallet-evercity-carbon-credits"
 description = 'Pallet for evercity carbon credits'
-version = "0.1.12"
+version = "0.1.13"
 edition = "2018"
 homepage = 'https://evercity.io'
 license = 'Apache-2.0'
@@ -34,7 +34,7 @@ sp-std = { default-features = false, version = '3.0.0' }
 pallet-evercity-assets = { default-features = false, version = '0.1.0', git = 'https://github.com/EvercityEcosystem/evercity-assets' }
 pallet-evercity-accounts = { default-features = false, version = '0.1.7', git = 'https://github.com/EvercityEcosystem/evercity-accounts' }
 # add filesign with temp branch:
-pallet-evercity-filesign = { default-features = false, version = '0.1.2', git = 'https://github.com/EvercityEcosystem/filesign'}
+pallet-evercity-filesign = { default-features = false, version = '0.1.3', git = 'https://github.com/EvercityEcosystem/filesign'}
 
 [dev-dependencies]
 sp-core = {  version = '3.0.0' }

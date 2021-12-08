@@ -8,6 +8,7 @@ use crate::project::*;
 use crate::tests::helpers::*;
 use crate::Error;
 use sp_std::vec;
+use pallet_evercity_filesign::file::generate_file_id;
 
 type RuntimeError = Error<TestRuntime>;
 
@@ -93,7 +94,7 @@ fn it_fails_for_create_new_project_other_owner_file_gold_standard() {
     new_test_ext().execute_with(|| {
         let owner = ROLES[1].0;
         let standard = Standard::default();
-        let not_existing_file_id = Some(666);
+        let not_existing_file_id = Some(generate_file_id());
         let create_project_result = CarbonCredits::create_project(Origin::signed(owner), standard, not_existing_file_id);
         let project_opt = CarbonCredits::get_proj_by_id(1);
 
@@ -121,7 +122,7 @@ fn it_works_for_change_file_id() {
         assert_ok!(create_project_result, ());
         assert_ok!(change_id_result, ());
         assert_eq!(None, project_before_change.unwrap().file_id);
-        assert_eq!(Some(1), project_after_change.unwrap().file_id);
+        assert_eq!(file_id, project_after_change.unwrap().file_id);
     });
 }
 
@@ -295,12 +296,12 @@ fn it_works_for_full_cycle_sign_project_gold_standard() {
             (registry, REGISTERED, ProjectStatus::ISSUANCE)
         ];
 
+        let file_id = generate_file_id();
         let _ = EvercityFilesign::create_new_file(Origin::signed(owner), 
                 "my_some_other_file".to_owned().as_bytes().to_vec(),
-             pallet_evercity_filesign::file::H256::from([0x96; 32]));
-
-        // the file id would be 2
-        let file_id = 2;
+             pallet_evercity_filesign::file::H256::from([0x96; 32]),
+                     Some(file_id)
+            );
 
         // sign here:
         tuple_vec.iter()

@@ -82,7 +82,7 @@ fn it_failss_for_create_new_annual_report_empty_name_gold_standard() {
 fn it_fails_for_create_new_annual_report_no_file() {
     new_test_ext().execute_with(|| {
         let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
-        let unexisting_file_id = 666;
+        let unexisting_file_id = pallet_evercity_filesign::file::generate_file_id();
 
         let create_report_result = CarbonCredits::create_annual_report(
             Origin::signed(owner), project_id, unexisting_file_id, TEST_CARBON_CREDITS_COUNT,

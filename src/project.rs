@@ -5,7 +5,7 @@ use frame_support::{
 };
 use crate::standard::Standard;
 use crate::annual_report::*;
-use pallet_evercity_filesign::FileId;
+use pallet_evercity_filesign::file::FileId;
 use frame_support::sp_std::{
     cmp::{
         PartialEq}, 
