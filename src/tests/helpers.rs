@@ -1,5 +1,5 @@
 use crate::tests::mock::*;
-use pallet_evercity_filesign::file::{H256, FileId, generate_file_id};
+use pallet_evercity_filesign::file::{H256, FileId};
 use crate::standard::Standard;
 use crate::project::{ProjectId, ProjectStruct};
 use crate::annual_report::*;
@@ -25,14 +25,14 @@ pub(crate) fn get_test_carbon_credits_symbol() -> Vec<u8> {
 
 pub(crate) fn create_project_documentation_file(account: u64) -> Option<FileId> {
     let filehash = H256::from([0x66; 32]);
-    let file_id = Some(generate_file_id());
+    let file_id = Some([6; 16]);
     let _ = EvercityFilesign::create_new_file(Origin::signed(account), "my_project_documentation".to_owned().as_bytes().to_vec(), filehash, file_id);
     file_id
 }
 
 pub(crate) fn create_annual_report_file(account: u64) -> FileId {
     let filehash = H256::from([0x88; 32]);
-    let file_id = generate_file_id();
+    let file_id = [6; 16];
     let _ = EvercityFilesign::create_new_file(Origin::signed(account), "my_annual_report".to_owned().as_bytes().to_vec(), filehash, Some(file_id));
     file_id
 }
