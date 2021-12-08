@@ -32,7 +32,7 @@ pub(crate) fn create_project_documentation_file(account: u64) -> Option<FileId> 
 
 pub(crate) fn create_annual_report_file(account: u64) -> FileId {
     let filehash = H256::from([0x88; 32]);
-    let file_id = [6; 16];
+    let file_id = [9; 16];
     let _ = EvercityFilesign::create_new_file(Origin::signed(account), "my_annual_report".to_owned().as_bytes().to_vec(), filehash, Some(file_id));
     file_id
 }
