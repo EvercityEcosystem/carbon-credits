@@ -804,8 +804,6 @@ decl_module! {
 
             BurnCertificates::<T>::try_mutate(
                 credits_holder.clone(), |certificates| -> DispatchResult {
-                    // O(n) insert and O(n) search
-                    // now it could be that "n" is not big
                     match certificates.iter_mut().find(|x| x.asset_id == asset_id) {
                         Some(cert) => {
                             cert.burn_amount += amount;
