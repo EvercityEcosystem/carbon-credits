@@ -52,7 +52,7 @@ Here is the basic scenario on of carbon credits releasing and offetting:
 
 - Project owner creates a Project in Carbon Credits pallet, choosing a carbon credits standard(extrinsic - create_project())
 
-- Project owner can change project file id in a Project in Carbon Credits pallet to a new ine(extrinsic - change_project_file_id())
+- Project owner can change project file id in a Project in Carbon Credits pallet to a new one. Available before signing starts(extrinsic - change_project_file_id())
 
 - Project owner adds signers and their roles to project(extrinsic - assign_project_signer())
 
