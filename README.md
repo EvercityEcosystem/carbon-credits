@@ -12,6 +12,7 @@ The value of the global carbon market increased by 20% in 2020 to $272 billion a
 - build trust among climate actors
 - make incentive mechanisms for climate action accessible to the poorest
 - support mobilization of green finance
+
 (https://unfccc.int/news/un-supports-blockchain-technology-for-climate-action)
 
 At the same time, a challenge preventing rapid blockchain adoption in climate finance still lies in the high carbon footprint of main PoW blockchains including Ethereum. Parity Substrate blockchain has many advantages having a low carbon footprint, as well as enabling interoperability and scalability. 
