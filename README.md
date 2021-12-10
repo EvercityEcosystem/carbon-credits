@@ -137,22 +137,13 @@ construct_runtime!(
 );
 ```
 
-### 6.5 Check on smart sustainable bond node
-
-```bash
-git clone https://github.com/EvercityEcosystem/smart-sustainable-bond.git
-cd smart-sustainable-bond
-git checkout add_carbon_credits #temporary
-make run
-```
-
-### 6.6 Run Unit Tests
+### 6.5 Run Unit Tests
 
 ```bash
 make test
 ```
 
-### 6.7 Launch linter
+### 6.6 Launch linter
 
 ```bash
 make lint
