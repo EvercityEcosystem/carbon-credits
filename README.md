@@ -1,6 +1,6 @@
 # 1. Evercity Carbon Credits Pallet
 
-This repositary contains source code of blockchain node, which is a main part of Evercity's Carbon Credits project.
+This repository contains source code of blockchain node, which is a main part of Evercity's Carbon Credits project.
 
 # 2. Introduction
 
@@ -9,7 +9,7 @@ Carbon credits are financial instruments, tradable certificates that represent a
 
 # 3. Overview
 
-Powered by Parity Substrate blockchain engine, Pallet Carbon Credits is an open-source software which allows participants to issue, transfer and monitor carbon credits.
+Powered by Parity Substrate blockchain engine, Carbon Credits Pallet is an open-source software which allows participants to issue, transfer and monitor carbon credits.
 
 # 4. Evercity carbon credits project main entities
 
@@ -17,7 +17,7 @@ Carbon Credits pallet has several main entities:
 
 ### 4.1 Project 
 
-Entity for carbon credits project documentation signing and annual reports creating 
+Entity for signing carbon credits project documentation and creating annual reports 
 
 ### 4.2 Annual Report 
 
@@ -36,9 +36,9 @@ Entity for registering carbon credits as assets
 
 ### 5.1 Roles
 
-The evercity role model presented in evercity accounts pallet https://github.com/EvercityEcosystem/evercity-accounts
+The system of roles in Evercity is presented in Evercity accounts pallet https://github.com/EvercityEcosystem/evercity-accounts
 
-- CC_PROJECT_OWNER: the role which can create carbon projects, annual report and issue caebon credits
+- CC_PROJECT_OWNER: the role which can create carbon projects, annual reports and issue carbon credits
 - CC_AUDITOR: the role to sign project documentation and annual reports according to carbon credits standard
 - CC_STANDARD: the role to sign project documentation and annual reports according to carbon credits standard
 - CC_REGISTRY: the role to sign project documentation and annual reports according to carbon credits standard
