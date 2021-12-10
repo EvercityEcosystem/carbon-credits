@@ -17,19 +17,19 @@ Carbon Credits pallet has several main entities:
 
 ### 4.1 Project 
 
-Is the main entity for carbon credits project documentation signing and annual reports creating 
+Entity for carbon credits project documentation signing and annual reports creating 
 
 ### 4.2 Annual Report 
 
-Is the main entity for signing carbon credits annual gain 
+Entity for confirming annual volume of carbon credit issuance
 
-### 4.3 Annual Report Burn Certificate 
+### 4.3 Carbon Offset Certificate 
 
-Is the main entity for granting certificates for carbon credits offceting 
+Entity for granting certificates for carbon emissions offsetting using carbon credits
 
-### 4.4 Carbon Credits Passport 
+### 4.4 Carbon Credit Passport 
 
-Is the entity for registering carbon credits as assets  
+Entity for registering carbon credits as assets  
 
 
 # 5. Evercity Roles and Carbon Creditis project scenario
@@ -42,7 +42,6 @@ The evercity role model presented in evercity accounts pallet https://github.com
 - CC_AUDITOR: the role to sign project documentation and annual reports according to carbon credits standard
 - CC_STANDARD: the role to sign project documentation and annual reports according to carbon credits standard
 - CC_REGISTRY: the role to sign project documentation and annual reports according to carbon credits standard
-- CC_INVESTOR: carbon credits investor
 
 ### 5.2 Basic scenario
 
