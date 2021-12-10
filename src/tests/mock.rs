@@ -28,6 +28,7 @@ frame_support::construct_runtime!(
 		Timestamp: pallet_timestamp::{ Module, Call, Storage, Inherent},
         Assets: pallet_assets::{ Module, Call, Storage, Event<T> },
         EvercityFilesign: pallet_evercity_filesign::{ Module, Call, Storage, Event<T> },
+        RandomnessCollectiveFlip: pallet_randomness_collective_flip::{Module, Call, Storage},
 	}
 );
 
@@ -122,8 +123,8 @@ impl pallet_assets::Config for TestRuntime {
 
 impl pallet_evercity_filesign::Config for TestRuntime {
     type Event = Event;
+    type Randomness = RandomnessCollectiveFlip;
 }
-
 
 // (AccountId, role)
 pub static ROLES: [(u64, RoleMask); 6] = [

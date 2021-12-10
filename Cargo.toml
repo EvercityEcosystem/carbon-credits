@@ -35,6 +35,7 @@ pallet-evercity-assets = { default-features = false, version = '0.1.0', git = 'h
 pallet-evercity-accounts = { default-features = false, version = '0.1.7', git = 'https://github.com/EvercityEcosystem/evercity-accounts' }
 # add filesign with temp branch:
 pallet-evercity-filesign = { default-features = false, version = '0.1.4', git = 'https://github.com/EvercityEcosystem/filesign', branch = 'add_random_ticker' }
+pallet-randomness-collective-flip = { default-features = false, version = '3.0.0' }
 
 [dev-dependencies]
 sp-core = {  version = '3.0.0' }
