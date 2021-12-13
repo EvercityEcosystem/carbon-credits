@@ -508,7 +508,6 @@ decl_module! {
             ensure!(meta.is_metadata_valid(), Error::<T>::BadMetadataParameters);
             ProjectById::<T>::try_mutate(
                 project_id, |project_option| -> DispatchResult {
-                    pallet_evercity_filesign::Module::<T>::create_new_file(origin, tag, filehash, Some(file_id))?;
                     match project_option {
                         None => Err(Error::<T>::ProjectNotExist.into()),
                         Some(project) => {
@@ -518,6 +517,7 @@ decl_module! {
                                         .all(|x| x.state == annual_report::REPORT_ISSUED),
                                 Error::<T>::NotIssuedAnnualReportsExist
                             );
+                            pallet_evercity_filesign::Module::<T>::create_new_file(origin, tag, filehash, Some(file_id))?;
                             project.annual_reports
                                         .push(annual_report::AnnualReportStruct::<T::AccountId, T, T::Balance>::new(file_id, carbon_credits_count, Timestamp::<T>::get(), meta));
                             Ok(())
