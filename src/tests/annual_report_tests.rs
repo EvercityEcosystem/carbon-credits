@@ -12,6 +12,105 @@ use sp_std::vec;
 
 type RuntimeError = Error<TestRuntime>;
 
+
+#[test]
+fn it_works_for_create_new_annual_report_with_file() {
+    new_test_ext().execute_with(|| {
+        let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+
+        let file_id = [11, 22, 33, 44, 55, 66, 77, 88, 99, 0, 11, 12, 13, 14, 15, 16];
+        let tag = "my_annual_report".to_owned().as_bytes().to_vec();
+        let filehash = pallet_evercity_filesign::file::H256::from([0x88; 32]);
+
+        let create_report_result = CarbonCredits::create_annual_report_with_file(
+            Origin::signed(owner), project_id, file_id, filehash, tag, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
+
+
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assert_eq!(project.annual_reports.len() + 1, project_with_report.annual_reports.len());
+        assert_eq!(REPORT_PROJECT_OWNER_SIGN_PENDING, project_with_report.annual_reports.last().unwrap().state);
+        assert_ok!(create_report_result, ());
+    });
+}
+
+#[test]
+fn it_fails_for_create_new_annual_report_with_file_not_project_owner() {
+    new_test_ext().execute_with(|| {
+        let (project, project_id, _) = get_registerd_project_and_owner_gold_standard();
+
+        let other_owner = create_user_with_owner_role();
+
+        let file_id = [11, 22, 33, 44, 55, 66, 77, 88, 99, 0, 11, 12, 13, 14, 15, 16];
+        let tag = "my_annual_report".to_owned().as_bytes().to_vec();
+        let filehash = pallet_evercity_filesign::file::H256::from([0x88; 32]);
+
+        let create_report_result = CarbonCredits::create_annual_report_with_file(
+            Origin::signed(other_owner), project_id, file_id, filehash, tag, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
+
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
+        assert_noop!(create_report_result, RuntimeError::AccountNotOwner);
+    });
+}
+
+#[test]
+fn it_fails_for_create_new_annual_report_with_file_not_owner_role() {
+    new_test_ext().execute_with(|| {
+        let (project, project_id, _) = get_registerd_project_and_owner_gold_standard();
+
+        let not_owner = ROLES[2].0;
+
+        let file_id = [11, 22, 33, 44, 55, 66, 77, 88, 99, 0, 11, 12, 13, 14, 15, 16];
+        let tag = "my_annual_report".to_owned().as_bytes().to_vec();
+        let filehash = pallet_evercity_filesign::file::H256::from([0x88; 32]);
+
+        let create_report_result = CarbonCredits::create_annual_report_with_file(
+            Origin::signed(not_owner), project_id, file_id, filehash, tag, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
+
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
+        assert_noop!(create_report_result, RuntimeError::AccountNotOwner);
+    });
+}
+
+#[test]
+fn it_fails_for_create_new_annual_report_with_file_bad_metadata() {
+    new_test_ext().execute_with(|| {
+        let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
+
+        let file_id = [11, 22, 33, 44, 55, 66, 77, 88, 99, 0, 11, 12, 13, 14, 15, 16];
+        let tag = "my_annual_report".to_owned().as_bytes().to_vec();
+        let filehash = pallet_evercity_filesign::file::H256::from([0x88; 32]);
+
+        let create_report_empty_name_result = CarbonCredits::create_annual_report_with_file(
+            Origin::signed(owner), project_id, file_id, filehash, tag.clone(), TEST_CARBON_CREDITS_COUNT,
+            Vec::new() , get_test_carbon_credits_symbol(), TEST_CARBON_CREDITS_DECIMAL
+        );
+
+        let create_report_empty_symbol_result = CarbonCredits::create_annual_report_with_file(
+            Origin::signed(owner), project_id, file_id, filehash, tag, TEST_CARBON_CREDITS_COUNT,
+            get_test_carbon_credits_name() , Vec::new(), TEST_CARBON_CREDITS_DECIMAL
+        );
+
+
+        let project_with_report = CarbonCredits::get_proj_by_id(project_id).unwrap();
+
+        assert_eq!(project.annual_reports.len(), project_with_report.annual_reports.len());
+        assert_noop!(create_report_empty_name_result, RuntimeError::BadMetadataParameters);
+        assert_noop!(create_report_empty_symbol_result, RuntimeError::BadMetadataParameters);
+    });
+}
+
+
 #[test]
 fn it_works_for_create_new_annual_report_gold_standard() {
     new_test_ext().execute_with(|| {
@@ -51,7 +150,7 @@ fn it_works_for_create_new_annual_report_multiple_annual_reports_gold_standard()
 }
 
 #[test]
-fn it_failss_for_create_new_annual_report_empty_name_gold_standard() {
+fn it_fails_for_create_new_annual_report_empty_name_gold_standard() {
     new_test_ext().execute_with(|| {
         let (project, project_id, owner) = get_registerd_project_and_owner_gold_standard();
         let results = vec![
