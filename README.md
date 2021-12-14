@@ -50,37 +50,37 @@ Here is the basic scenario on of carbon credits releasing and offetting:
 - Project owner creates document and stores its hash into filesign pallet (extrinsic - pallet_evercity_filesign - create_new_file()). 
 Any account can access this extrinsic.
 
-- Project owner creates a Project in Carbon Credits pallet, choosing a carbon credits standard(extrinsic - create_project())
+- Project owner creates a Project in Carbon Credits pallet, choosing a carbon credits standard(extrinsic - create_project()).
 Only project owner account with CC_PROJECT_OWNER role mask can run this step.
 
-- Project owner can change project file id in a Project in Carbon Credits pallet to a new one. Available before signing starts(extrinsic - change_project_file_id())
+- Project owner can change project file id in a Project in Carbon Credits pallet to a new one. Available before signing starts(extrinsic - change_project_file_id()).
 Only project owner account with CC_PROJECT_OWNER role mask can run this step. Also it must be the project owner and file owner in blockchain storage.
 
-- Project owner adds signers and their roles to project(extrinsic - assign_project_signer())
+- Project owner adds signers and their roles to project(extrinsic - assign_project_signer()).
 Only project owner account with CC_PROJECT_OWNER role mask can run this step. Also it must be the project owner in blockchain storage.
 
 - Then starts project signing, the sign order depends on carbon credits standard. 
-At the end, the project owner is ready for producing annual report for carbon credits production (extrinsic - sign_project())
+At the end, the project owner is ready for producing annual report for carbon credits production (extrinsic - sign_project()).
 The role, which can access this step id defined by carbon credits standard. For example, gold standard  sequence is CC_PROJECT_OWNER -> CC_AUDITOR -> CC_STANDARD -> CC_REGISTRY. 
 Also signers must be holed in blockchain storage.
 
-- Project owner creates document and annual report in project with carbon credits asset_id and asset metadata (extrinsic - create_annual_report())
+- Project owner creates document and annual report in project with carbon credits asset_id and asset metadata (extrinsic - create_annual_report()).
 Only project owner account with CC_PROJECT_OWNER role mask can run this step. Also it must be the project owner in blockchain storage.
 
-- Project owner adds signers and their roles to annual report (extrinsic - assign_last_annual_report_signer())
+- Project owner adds signers and their roles to annual report (extrinsic - assign_last_annual_report_signer()).
 Only project owner account with CC_PROJECT_OWNER role mask can run this step. Also it must be the project owner in blockchain storage.
 
-- Then starts report signing, the sign order depends on carbon credits standard (extrinsic - sign_last_annual_report())
+- Then starts report signing, the sign order depends on carbon credits standard (extrinsic - sign_last_annual_report()).
 The role, which can access this step id defined by carbon credits standard. For example, gold standard  sequence is CC_PROJECT_OWNER -> CC_AUDITOR -> CC_STANDARD -> CC_REGISTRY. 
 Also signers must be holed in blockchain storage.
 
-- At the end, the project owner can release carbon credits (extrinsic - release_carbon_credits())
+- At the end, the project owner can release carbon credits (extrinsic - release_carbon_credits()).
 Only project owner account with CC_PROJECT_OWNER role mask can run this step. Also it must be the project owner in blockchain storage.
 
-- User can transfer carbon credits (extrinsic - transfer_carbon_credits())
+- User can transfer carbon credits (extrinsic - transfer_carbon_credits()).
 Any carbon credits holder can access this function.
 
-- User can burn carbon credits (extrinsic - burn_carbon_credits())
+- User can burn carbon credits (extrinsic - burn_carbon_credits()).
 Any carbon credits holder can access this function.
 
 
