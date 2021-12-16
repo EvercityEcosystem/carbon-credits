@@ -1,15 +1,26 @@
 # 1. Evercity Carbon Credits Pallet
 
-This repositary contains source code of blockchain node, which is a main part of Evercity's Carbon Credits project.
+This repository contains source code of blockchain node, which is a main part of Evercity's Carbon Credits project.
 
 # 2. Introduction
 
-Evercity Carbon Credits Pallet provides Substrate-based Sustainable Finance Protocol to issue and monitor carbon credits, as well as to integrate carbon credits with green and sustainability-linked bonds. 
-Carbon credits are financial instruments, tradable certificates that represent a right to emit one ton of CO2. Carbon markets can be divided into three main parts: UNFCCC-led international carbon market which is compulsory for countries operating under Kyoto protocol (CDM), national compulsory carbon markets (e.g. in China) and voluntary carbon markets which are led by voluntary standards (VCS, Gold Standard, and others). 
+Evercity Carbon Credits Pallet allows to issue and monitor carbon credits - green financial instruments. The main goal of carbon credits is to increase investment in activities that reduce greenhouse gas emissions or remove carbon from the atmosphere. Each carbon credit represents one ton of CO2 (reduced or removed), which was verified by internationally accepted standards using robust methodologies. Main demand for carbon credits is now driven by investors and corporations who want to achieve net zero goals, as well as by blockchain projects that want to offset their carbon emissions. 
+
+The value of the global carbon market increased by 20% in 2020 to $272 billion and is expected to grow further. However, there are currently several challenges that prevent market development: low transparency and fraud risk; low liquidity; double accounting, etc. Representatives of UNFCCC state that blockchain technology could help solve many of these problems, namely:
+- strengthen monitoring, reporting and verification of the impacts of climate action
+- improve transparency, traceability and cost-effectiveness of climate action
+- build trust among climate actors
+- make incentive mechanisms for climate action accessible to the poorest
+- support mobilization of green finance
+
+(https://unfccc.int/news/un-supports-blockchain-technology-for-climate-action)
+
+At the same time, a challenge preventing rapid blockchain adoption in climate finance still lies in the high carbon footprint of main PoW blockchains including Ethereum. Parity Substrate blockchain has many advantages having a low carbon footprint, as well as enabling interoperability and scalability. 
+ 
 
 # 3. Overview
 
-Powered by Parity Substrate blockchain engine, Pallet Carbon Credits is an open-source software which allows participants to issue, transfer and monitor carbon credits.
+Evercity Carbon Credits pallet allows issuing carbon credits according to any standard (or even creating own standard using customizable frameworks) as a result of interaction between various stakeholders: project owners, standard representatives, auditors and registries. We are replicating the globally accepted life cycle of carbon credits on blockchain making it more transparent, efficient and accessible. Key target audience of our product are project owners who issue carbon credits, companies who want to offset their emissions as well as blockchain projects who want to offset the carbon footprint of their transactions. 
 
 # 4. Evercity carbon credits project main entities
 
@@ -17,31 +28,33 @@ Carbon Credits pallet has several main entities:
 
 ### 4.1 Project 
 
-Entity for carbon credits project documentation signing and annual reports creating 
+Entity for signing carbon credits project documentation and creating annual reports 
 
-### 4.2 Annual Report 
+### 4.2 Carbon Standard
+
+Entity which determines the order of signature among three roles: CC_AUDITOR, CC_STANDARD, CC_REGISTRY
+
+### 4.3 Annual Report 
 
 Entity for confirming annual volume of carbon credit issuance
-
-### 4.3 Carbon Offset Certificate 
-
-Entity for granting certificates for carbon emissions offsetting using carbon credits
 
 ### 4.4 Carbon Credit Passport 
 
 Entity for registering carbon credits as assets  
+
+### 4.5 Carbon Offset Certificate 
+
+Entity for granting certificates for carbon emissions offsetting using carbon credits
 
 
 # 5. Evercity Roles and Carbon Creditis project scenario
 
 ### 5.1 Roles
 
-The evercity role model presented in evercity accounts pallet https://github.com/EvercityEcosystem/evercity-accounts
+The system of roles in Evercity is presented in Evercity accounts pallet https://github.com/EvercityEcosystem/evercity-accounts
 
-- CC_PROJECT_OWNER: the role which can create carbon projects, annual report and issue caebon credits
-- CC_AUDITOR: the role to sign project documentation and annual reports according to carbon credits standard
-- CC_STANDARD: the role to sign project documentation and annual reports according to carbon credits standard
-- CC_REGISTRY: the role to sign project documentation and annual reports according to carbon credits standard
+- CC_PROJECT_OWNER: the role which can create carbon projects, annual reports and issue carbon credits
+- CC_STANDARD; CC_AUDITOR; CC_REGISTRY: the roles which sign project documentation and annual reports (the order of signatures is determined by Carbon Standard entity)
 
 ### 5.2 Basic scenario
 
@@ -49,14 +62,13 @@ Here is the basic scenario on of carbon credits releasing and offetting:
 
 - Project owner creates document and stores its hash into filesign pallet (extrinsic - pallet_evercity_filesign - create_new_file())
 
-- Project owner creates a Project in Carbon Credits pallet, choosing a carbon credits standard(extrinsic - create_project())
+- Project owner creates a Project in Carbon Credits pallet, choosing a Carbon Standard(extrinsic - create_project())
 
 - Project owner can change project file id in a Project in Carbon Credits pallet to a new one. Available before signing starts(extrinsic - change_project_file_id())
 
 - Project owner adds signers and their roles to project(extrinsic - assign_project_signer())
 
-- Then starts project signing, the sign order depends on carbon credits standard. 
-At the end, the project owner is ready for producing annual report for carbon credits production (extrinsic - sign_project())
+- Then project is signed by different stakeholders, the order depends on Carbon Standard. At the end, the project owner is ready for producing annual report for carbon credits issuance (extrinsic - sign_project())
 
 - Project owner creates document for annual report and stores its hash into filesign pallet(extrinsic - pallet_evercity_filesign - create_new_file())
 
@@ -64,7 +76,7 @@ At the end, the project owner is ready for producing annual report for carbon cr
 
 - Project owner adds signers and their roles to annual report (extrinsic - assign_last_annual_report_signer())
 
-- Then starts report signing, the sign order depends on carbon credits standard (extrinsic - sign_last_annual_report())
+- Then report is signed by different stakeholders, the order depends on Carbon Standard. (extrinsic - sign_last_annual_report())
 
 - At the end, the project owner can release carbon credits (extrinsic - release_carbon_credits())
 
