@@ -1,51 +1,91 @@
 {
-  "RequiredSigner": "(AccountId, RoleMask)",
-  "Standard": {
-    "_enum": [
-      "GOLD_STANDARD"
-    ]
-  },
-  "ProjectStateMask": "u16",
-  "ProjectStatus": {
-    "_enum": [
-      "PREPARING",
-      "REGISTRATION",
-      "ISSUANCE"
-    ]
-  },
-  "ProjectId": "u32",
-  "ProjectStruct": {
-    "owner": "AccountId",
-    "id": "ProjectId",
-    "status": "ProjectStatus",
-    "state": "ProjectStateMask",
-    "file_id": "Option<FileId>",
-    "annual_reports": "Vec<AnnualReportStruct<AccountId, Moment, Balance>>",
-    "required_signers": "Vec<RequiredSigner<AccountId>>",
-    "standard": "Standard"
-  },
-  "AnnualReportStateMask": "u16",
-  "CarbonCreditsMeta": {
-    "name": "Vec<u8>",
-    "symbol": "Vec<u8>",
-    "decimals": "u8"
-  },
-  "AnnualReportStruct": {
-    "file_id": "FileId",
-    "state": "AnnualReportStateMask",
-    "carbon_credits_meta": "CarbonCreditsMeta",
-    "create_time": "Compact<Moment>",
-    "carbon_credits_count": "Balance",
-    "carbon_credits_released": "bool",
-    "required_signers": "Vec<RequiredSigner>"
-  },
-  "CarbonCreditsPassport": {
-    "asset_id": "AssetId",
-    "project_id": "ProjectId",
-    "annual_report_index": "u64"
-  },
-  "CarbonCreditsBurnCertificate": {
-    "asset_id": "AssetId",
-    "burned_amount": "Balance"
+    "Address": "MultiAddress",
+    "LookupSource": "MultiAddress",
+    "Moment": "u64",
+    "FileId": "[u8; 16]",
+    "SigStruct": {
+      "address": "AccountId",
+      "signed": "bool"
+    },
+    "VersionStruct": {
+      "tag": "Vec<u8>",
+      "filehash": "H256",
+      "signatures": "Vec<SigStruct<AccountId>>"
+    },
+    "FileStruct": {
+      "owner": "AccountId",
+      "id": "u32",
+      "versions": "Vec<VersionStruct<AccountId>>",
+      "signers": "Vec<AccountId>"
+    },
+    "RoleMask": "u32",
+    "AccountStruct": {
+      "roles": "RoleMask"
+    },
+    "RequiredSigner": "(AccountId, RoleMask)",
+    "Standard": {
+      "_enum": [
+        "GOLD_STANDARD"
+      ]
+    },
+    "ProjectStateMask": "u16",
+    "ProjectStatus": {
+      "_enum": [
+        "PREPARING",
+        "REGISTRATION",
+        "ISSUANCE"
+      ]
+    },
+    "ProjectId": "u32",
+    "ProjectStruct": {
+      "owner": "AccountId",
+      "id": "ProjectId",
+      "status": "ProjectStatus",
+      "state": "ProjectStateMask",
+      "file_id": "Option<FileId>",
+      "annual_reports": "Vec<AnnualReportStruct<AccountId, Moment, Balance>>",
+      "required_signers": "Vec<RequiredSigner<AccountId>>",
+      "standard": "Standard"
+    },
+    "AnnualReportStateMask": "u16",
+    "CarbonCreditsMeta": {
+      "name": "Vec<u8>",
+      "symbol": "Vec<u8>",
+      "decimals": "u8"
+    },
+    "AnnualReportStruct": {
+      "file_id": "FileId",
+      "state": "AnnualReportStateMask",
+      "carbon_credits_meta": "CarbonCreditsMeta",
+      "create_time": "Compact<Moment>",
+      "carbon_credits_count": "Balance",
+      "carbon_credits_released": "bool",
+      "required_signers": "Vec<RequiredSigner>"
+    },
+    "CarbonCreditsPassport": {
+      "asset_id": "AssetId",
+      "project_id": "ProjectId",
+      "annual_report_index": "u64"
+    },
+    "CarbonCreditsBurnCertificate": {
+      "asset_id": "AssetId",
+      "burned_amount": "Balance"
+    },
+    "Balance": "u128",
+    "AssetId": "u64",
+    "TAssetBalance": "Balance",
+    "TAssetDepositBalance": "Balance",
+    "AssetDetails": {
+      "onwer": "AccountId",
+      "issuer": "AccountId",
+      "admin": "AccountId",
+      "freezer": "AccountId",
+      "supply": "Balance",
+      "deposit": "TAssetDepositBalance",
+      "max_zombies": "u32",
+      "min_balance": "Balance",
+      "zombies": "u32",
+      "accounts": "u32",
+      "is_frozen": "bool"
+    }
   }
-}

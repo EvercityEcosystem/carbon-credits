@@ -96,21 +96,29 @@ Some other functions:
 
 # 6. Pallet Carbon Credits documentation
 
-### 6.1 Runtime methods
+### 6.1 Quickstart
 
-<!-- Methods of pallet-evercity are described in Rust documentation [here](http://51.15.47.43/doc/pallet_evercity/) [TEMP] -->
+The pallet is designed to work in the existing runtime
 
-### 6.2 Build
+To start your environment from scratch use docker:
 
 ```bash
-git clone https://github.com/EvercityEcosystem/carbon-credits
-cd carbon-credits
-make build
+docker build ./
+docker run -p 30300:30300 -p 9933:9933 -p 9944:9944 {CONTAINER_ID}
 ```
-### 6.3 Add to runtime cargo.toml
+Then check on https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/extrinsics
+
+Types are described in the types.json file
+
+### 6.2 Launching with existing runtime
+
+Add to runtime cargo.toml
 
 ```toml
-pallet-evercity-carbon-credits = { default-features = false, version = '0.1.12', git = 'https://github.com/EvercityEcosystem/carbon-credits' }
+pallet-evercity-carbon-credits = { default-features = false, version = '0.1.13', git = 'https://github.com/EvercityEcosystem/carbon-credits' }
+pallet-evercity-filesign = { default-features = false, version = '0.1.3', git = 'https://github.com/EvercityEcosystem/filesign'}
+pallet-evercity-assets = { default-features = false, version = '0.1.0', git = 'https://github.com/EvercityEcosystem/evercity-assets' }
+pallet-evercity-accounts = { default-features = false, version = '0.1.7', git = 'https://github.com/EvercityEcosystem/evercity-accounts' }
 #...
 [features]
 default = ['std']
@@ -118,11 +126,13 @@ default = ['std']
 std = [
     #...
     'pallet-evercity-carbon-credits/std',
+    'pallet-evercity-filesign/std',
+    'pallet-evercity-assets/std',
+    'pallet-evercity-accounts/std'
     #...
 ]
-```
 
-### 6.4 Add to runtime constructing
+Add to runtime constructing
 
 ```rust
 pub use pallet_evercity_carbon_credits;
@@ -147,28 +157,24 @@ construct_runtime!(
     }
 );
 ```
+### 6.3 Build
 
-### 6.5 Run Unit Tests
+```bash
+git clone https://github.com/EvercityEcosystem/carbon-credits
+cd carbon-credits
+make build
+```
+
+### 6.4 Run Unit Tests
 
 ```bash
 make test
 ```
 
-### 6.6 Launch linter
+### 6.5 Launch linter
 
 ```bash
 make lint
-```
-
-### 6.7 Launch in docker
-
-The pallet is designed to work in the existing runtime
-
-To start your environment from scratch use docker:
-
-```bash
-docker build ./
-docker run -p 30300:30300 -p 9933:9933 -p 9944:9944 {CONTAINER_ID}
 ```
 
 # 7. Dependent evercity pallets
