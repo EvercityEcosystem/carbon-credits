@@ -104,7 +104,7 @@ To start your environment from scratch use docker:
 
 ```bash
 docker build ./
-docker run -p 30300:30300 -p 9933:9933 -p 9944:9944 {CONTAINER_ID}
+docker run -p 30300:30300 -p 9933:9933 -p 9944:9944 {IMAGE_ID}
 ```
 Then check on https://polkadot.js.org/apps/?rpc=ws%3A%2F%2F127.0.0.1%3A9944#/extrinsics
 
