@@ -5,7 +5,7 @@ WORKDIR /home/source
 
 RUN git clone -b v3.0.0 --depth 1 https://github.com/substrate-developer-hub/substrate-node-template.git /home/source
 COPY ./node_override ./
-# COPY ./ ./pallets/filesign
+RUN cargo update -p serde
 RUN cargo update -p parity-db
 RUN cargo update -p wasm-bindgen
 RUN cargo test && cargo build --$PROFILE
