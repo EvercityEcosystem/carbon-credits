@@ -160,6 +160,17 @@ make test
 make lint
 ```
 
+### 6.7 Launch in docker
+
+The pallet is designed to work in the existing runtime
+
+To start your environment from scratch use docker:
+
+```bash
+docker build ./
+docker run -p 30300:30300 -p 9933:9933 -p 9944:9944 {CONTAINER_ID}
+```
+
 # 7. Dependent evercity pallets
 
 Check documentation on dependent pallets:
